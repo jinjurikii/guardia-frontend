@@ -96,6 +96,7 @@ export default function LobbyShell() {
           });
           if (res.ok) {
             const data = await res.json();
+            localStorage.setItem("guardia_client_id", data.id);
             setJwt(storedJwt);
             setClient(data);
             setAuthState("authenticated");
@@ -106,6 +107,7 @@ export default function LobbyShell() {
           // Token invalid
         }
         localStorage.removeItem("guardia_jwt");
+        localStorage.removeItem("guardia_client_id");
       }
 
       setAuthState("login");
@@ -154,6 +156,7 @@ export default function LobbyShell() {
   // ============================================
   const handleAuthSuccess = useCallback(async (token: string, clientData: ClientContext, isSetup: boolean) => {
     localStorage.setItem("guardia_jwt", token);
+    localStorage.setItem("guardia_client_id", clientData.id);
     setJwt(token);
     setClient(clientData);
     setAuthState("authenticated");
@@ -171,6 +174,7 @@ export default function LobbyShell() {
 
   const handleLogout = useCallback(() => {
     localStorage.removeItem("guardia_jwt");
+    localStorage.removeItem("guardia_client_id");
     setJwt(null);
     setClient(null);
     setMessages([]);
