@@ -125,6 +125,15 @@ interface BottomNavProps {
   onChange: (id: string) => void;
 }
 
+interface UserProfile {
+  id: string;
+  business_name: string;
+  contact_name: string;
+  contact_email: string;
+  tier: 'spark' | 'pro' | 'unleashed';
+  username: string;
+}
+
 // =============================================================================
 // ICONS
 // =============================================================================
@@ -752,6 +761,35 @@ const ConnectedAccountsSection = () => {
 export default function GuardiaAccount() {
   const [activeTab, setActiveTab] = useState('account');
   const [notifications, setNotifications] = useState(true);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  // Fetch user profile on mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const jwt = localStorage.getItem('guardia_jwt');
+      if (!jwt) {
+        setProfileLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}/client/me`, {
+          headers: { Authorization: `Bearer ${jwt}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setProfile(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch profile:', err);
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   return (
     <div 
@@ -772,11 +810,23 @@ export default function GuardiaAccount() {
       <div className="px-4">
         {/* Profile */}
         <div className="mb-6">
-          <ProfileHeader
-            name="Alex Thompson"
-            email="alex@example.com"
-            tier="pro"
-          />
+          {profileLoading ? (
+            <div
+              className="p-5 rounded-2xl flex items-center justify-center"
+              style={{ backgroundColor: tokens.bg.surface }}
+            >
+              <div
+                className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin"
+                style={{ borderColor: tokens.accent.primary, borderTopColor: 'transparent' }}
+              />
+            </div>
+          ) : (
+            <ProfileHeader
+              name={profile?.contact_name || profile?.business_name || 'User'}
+              email={profile?.contact_email || ''}
+              tier={profile?.tier || 'spark'}
+            />
+          )}
         </div>
 
         {/* Usage */}
