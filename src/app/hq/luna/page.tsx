@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import DaemonRoomsIndicator from "@/components/DaemonRoomsIndicator";
+import { useLunaNotifications } from "@/hooks/useLunaNotifications";
 
 const API_BASE = "https://api.guardiacontent.com";
 const HQ_CREDENTIALS = { username: "jinjurikii", pin: "1991" };
@@ -54,6 +56,8 @@ interface Message {
   model: string | null;
   created_at: string;
   attachments?: Attachment[];
+  proactive?: boolean; // Mark as proactive/unsolicited message
+  isNew?: boolean; // For animation purposes
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -135,10 +139,12 @@ export default function LunaPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [mentionFilter, setMentionFilter] = useState("");
   const [showNewRoom, setShowNewRoom] = useState(false);
-  
+  const [notificationStatus, setNotificationStatus] = useState<string | null>(null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<any>(null);
+  const messageIdsRef = useRef<Set<number>>(new Set()); // Track message IDs to prevent duplicates
 
   // Check auth
   useEffect(() => {
@@ -187,7 +193,7 @@ export default function LunaPage() {
       recognitionRef.current = new SpeechRecognition();
       recognitionRef.current.continuous = true;
       recognitionRef.current.interimResults = true;
-      
+
       recognitionRef.current.onresult = (event: any) => {
         let transcript = "";
         for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -195,10 +201,70 @@ export default function LunaPage() {
         }
         setInput(transcript);
       };
-      
+
       recognitionRef.current.onend = () => setIsListening(false);
     }
   }, []);
+
+  // Proactive notifications via SSE
+  const { isConnected: sseConnected, lastNotification } = useLunaNotifications({
+    enabled: authenticated,
+    onMessage: (notification) => {
+      console.log("[Luna] Proactive notification received:", notification);
+
+      // Create unique message ID
+      const msgId = Date.now() + Math.random();
+
+      // Prevent duplicate messages
+      if (messageIdsRef.current.has(msgId)) {
+        console.log("[Luna] Skipping duplicate message");
+        return;
+      }
+      messageIdsRef.current.add(msgId);
+
+      // Only add to messages if we're in the relevant room (or no room_id specified = lobby message)
+      const shouldDisplay = !notification.room_id || notification.room_id === activeRoomId;
+
+      if (shouldDisplay) {
+        const proactiveMsg: Message = {
+          id: msgId,
+          role: "assistant",
+          speaker: notification.speaker || "luna",
+          content: notification.text,
+          model: null,
+          created_at: notification.timestamp,
+          proactive: true,
+          isNew: true, // For animation
+        };
+
+        setMessages((prev) => [...prev, proactiveMsg]);
+
+        // Show brief status indicator
+        setNotificationStatus("Luna noticed something...");
+        setTimeout(() => setNotificationStatus(null), 3000);
+
+        // Remove isNew flag after animation
+        setTimeout(() => {
+          setMessages((prev) =>
+            prev.map((m) => (m.id === msgId ? { ...m, isNew: false } : m))
+          );
+        }, 500);
+
+        // Optional: Auto-speak proactive messages if enabled
+        if (autoSpeak && "speechSynthesis" in window) {
+          const utterance = new SpeechSynthesisUtterance(notification.text);
+          utterance.rate = 1.1;
+          window.speechSynthesis.speak(utterance);
+        }
+      }
+    },
+    onConnectionChange: (connected) => {
+      console.log(`[Luna SSE] Connection status: ${connected ? "connected" : "disconnected"}`);
+    },
+    onError: (error) => {
+      console.error("[Luna SSE] Error:", error);
+    },
+  });
 
   const loadRooms = async () => {
     try {
@@ -642,6 +708,27 @@ export default function LunaPage() {
           )}
         </div>
 
+        {/* Daemon Rooms Indicator */}
+        <div className="p-3 border-t border-[#1a1a1f]">
+          <DaemonRoomsIndicator />
+
+          {/* Live Notifications Status */}
+          <div className="mt-2 p-2 rounded-lg bg-[#0d0d0e] border border-[#1a1a1f]">
+            <div className="flex items-center gap-2 text-xs">
+              <div
+                className={`w-2 h-2 rounded-full transition-all ${
+                  sseConnected
+                    ? "bg-green-500 animate-pulse"
+                    : "bg-red-500/50"
+                }`}
+              />
+              <span className="text-[#888]">
+                {sseConnected ? "Live notifications active" : "Notifications offline"}
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* Team */}
         <div className="p-3 border-t border-[#1a1a1f]">
           <div className="text-[#555] text-xs uppercase tracking-wider mb-2">Team</div>
@@ -667,8 +754,26 @@ export default function LunaPage() {
           <div className="px-4 py-3 border-b border-[#1a1a1f] bg-[#0a0a0b] flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="text-lg">{specialists[activeRoom.default_persona]?.emoji || "💬"}</span>
-              <div>
-                <div className="text-[#ccc] text-sm font-medium">{activeRoom.title}</div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <div className="text-[#ccc] text-sm font-medium">{activeRoom.title}</div>
+                  {/* SSE Connection Indicator */}
+                  <div className="flex items-center gap-1.5">
+                    <div
+                      className={`w-1.5 h-1.5 rounded-full transition-all ${
+                        sseConnected
+                          ? "bg-green-500 animate-pulse"
+                          : "bg-red-500/50"
+                      }`}
+                      title={sseConnected ? "Live notifications connected" : "Notifications disconnected"}
+                    />
+                    {notificationStatus && (
+                      <span className="text-violet-400 text-xs animate-fade-in">
+                        {notificationStatus}
+                      </span>
+                    )}
+                  </div>
+                </div>
                 <div className="text-[#555] text-xs">
                   Default: @{activeRoom.default_persona} • {roomTypes[activeRoom.room_type]?.description}
                 </div>
@@ -700,16 +805,21 @@ export default function LunaPage() {
                 const isUser = msg.role === "user";
                 const speaker = msg.speaker || "luna";
                 const spec = specialists[speaker] || { emoji: "🌙", color: "#a78bfa" };
-                
+                const isProactive = msg.proactive === true;
+
                 return (
                   <div
                     key={msg.id}
-                    className={`flex ${isUser ? "justify-end" : "justify-start"}`}
+                    className={`flex ${isUser ? "justify-end" : "justify-start"} ${
+                      msg.isNew ? "animate-slide-in" : ""
+                    }`}
                   >
                     <div
-                      className={`max-w-[70%] rounded-lg p-3 ${
+                      className={`max-w-[70%] rounded-lg p-3 transition-all ${
                         isUser
                           ? "bg-violet-600/20 border border-violet-500/30"
+                          : isProactive
+                          ? "bg-violet-500/10 border border-violet-500/40 shadow-lg shadow-violet-500/10"
                           : "bg-[#0d0d0e] border border-[#1a1a1f]"
                       }`}
                     >
@@ -719,6 +829,11 @@ export default function LunaPage() {
                           <span className="text-xs font-medium capitalize" style={{ color: spec.color }}>
                             {speaker}
                           </span>
+                          {isProactive && (
+                            <span className="text-[#666] text-[10px] px-1.5 py-0.5 rounded bg-violet-500/20 border border-violet-500/30">
+                              proactive
+                            </span>
+                          )}
                           {msg.model && (
                             <span className="text-[#444] text-xs font-mono">
                               {msg.model}
