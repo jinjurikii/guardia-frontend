@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 const API_BASE = "https://api.guardiacontent.com";
 const HQ_CREDENTIALS = { username: "jinjurikii", pin: "1991" };
@@ -35,6 +37,15 @@ interface Room {
   default_persona: string;
 }
 
+interface Attachment {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+  url?: string;
+  preview?: string;
+}
+
 interface Message {
   id: number;
   role: "user" | "assistant";
@@ -42,6 +53,7 @@ interface Message {
   content: string;
   model: string | null;
   created_at: string;
+  attachments?: Attachment[];
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -118,6 +130,9 @@ export default function LunaPage() {
   const [isListening, setIsListening] = useState(false);
   const [autoSpeak, setAutoSpeak] = useState(false);
   const [showMentions, setShowMentions] = useState(false);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [mentionFilter, setMentionFilter] = useState("");
   const [showNewRoom, setShowNewRoom] = useState(false);
   
@@ -245,13 +260,15 @@ export default function LunaPage() {
   };
 
   const handleSend = async () => {
-    if (!input.trim() || !activeRoomId || sending) return;
+    if ((!input.trim() && attachments.length === 0) || !activeRoomId || sending) return;
 
     const message = input.trim();
+    const currentAttachments = [...attachments];
     setInput("");
+    setAttachments([]);
     setSending(true);
 
-    // Optimistic user message
+    // Optimistic user message with attachments
     const userMsgId = Date.now();
     const tempMsg: Message = {
       id: userMsgId,
@@ -259,7 +276,8 @@ export default function LunaPage() {
       speaker: null,
       content: message,
       model: null,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      attachments: currentAttachments.length > 0 ? currentAttachments : undefined
     };
     setMessages(prev => [...prev, tempMsg]);
 
@@ -275,11 +293,20 @@ export default function LunaPage() {
     };
     setMessages(prev => [...prev, assistantMsg]);
 
+    // Prepare attachments for API (only images for now)
+    const imageAttachments = currentAttachments
+      .filter(a => a.type.startsWith("image/") && a.url)
+      .map(a => ({ name: a.name, type: a.type, data: a.url }));
+
     try {
       const res = await fetch(`${API_BASE}/luna/chat/stream`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ room_id: activeRoomId, message })
+        body: JSON.stringify({
+          room_id: activeRoomId,
+          message,
+          attachments: imageAttachments.length > 0 ? imageAttachments : undefined
+        })
       });
 
       if (!res.ok) {
@@ -413,6 +440,78 @@ export default function LunaPage() {
       recognitionRef.current.stop();
       setIsListening(false);
     }
+  };
+
+  const processFiles = (files: FileList | File[]) => {
+    const newAttachments: Attachment[] = [];
+    Array.from(files).forEach(file => {
+      const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const attachment: Attachment = {
+        id,
+        name: file.name,
+        type: file.type,
+        size: file.size,
+      };
+
+      // Create preview for images
+      if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setAttachments(prev => prev.map(a =>
+            a.id === id ? { ...a, preview: e.target?.result as string } : a
+          ));
+        };
+        reader.readAsDataURL(file);
+      }
+
+      // Store file data for upload
+      const dataReader = new FileReader();
+      dataReader.onload = (e) => {
+        setAttachments(prev => prev.map(a =>
+          a.id === id ? { ...a, url: e.target?.result as string } : a
+        ));
+      };
+      dataReader.readAsDataURL(file);
+
+      newAttachments.push(attachment);
+    });
+    setAttachments(prev => [...prev, ...newAttachments]);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      processFiles(e.target.files);
+    }
+    // Reset input so same file can be selected again
+    e.target.value = "";
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      processFiles(e.dataTransfer.files);
+    }
+  };
+
+  const removeAttachment = (id: string) => {
+    setAttachments(prev => prev.filter(a => a.id !== id));
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
   const timeAgo = (dateStr: string) => {
@@ -627,8 +726,69 @@ export default function LunaPage() {
                           )}
                         </div>
                       )}
-                      <div className="text-[#ccc] text-sm whitespace-pre-wrap">
-                        {msg.content}
+                      {/* Attachments */}
+                      {msg.attachments && msg.attachments.length > 0 && (
+                        <div className="flex gap-2 mb-2 flex-wrap">
+                          {msg.attachments.map(att => (
+                            att.type.startsWith("image/") && (att.preview || att.url) ? (
+                              <img
+                                key={att.id}
+                                src={att.preview || att.url}
+                                alt={att.name}
+                                className="max-h-48 rounded-lg border border-[#1a1a1f]"
+                              />
+                            ) : (
+                              <div
+                                key={att.id}
+                                className="flex items-center gap-2 bg-[#0a0a0b] px-2 py-1 rounded text-xs text-[#888]"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                  <polyline points="14 2 14 8 20 8" />
+                                </svg>
+                                {att.name}
+                              </div>
+                            )
+                          ))}
+                        </div>
+                      )}
+                      <div className="text-[#ccc] text-sm">
+                        {isUser ? (
+                          msg.content && <span className="whitespace-pre-wrap">{msg.content}</span>
+                        ) : (
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                              p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                              code: ({ className, children, ...props }) => {
+                                const isInline = !className;
+                                return isInline ? (
+                                  <code className="bg-[#1a1a1f] px-1.5 py-0.5 rounded text-violet-300 text-xs font-mono" {...props}>
+                                    {children}
+                                  </code>
+                                ) : (
+                                  <code className="block bg-[#0a0a0b] p-3 rounded-lg text-xs font-mono overflow-x-auto my-2 text-[#ccc]" {...props}>
+                                    {children}
+                                  </code>
+                                );
+                              },
+                              pre: ({ children }) => <pre className="my-2">{children}</pre>,
+                              ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1">{children}</ul>,
+                              ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1">{children}</ol>,
+                              li: ({ children }) => <li>{children}</li>,
+                              h1: ({ children }) => <h1 className="text-lg font-bold mb-2 text-white">{children}</h1>,
+                              h2: ({ children }) => <h2 className="text-base font-bold mb-2 text-white">{children}</h2>,
+                              h3: ({ children }) => <h3 className="text-sm font-bold mb-1 text-white">{children}</h3>,
+                              a: ({ href, children }) => <a href={href} className="text-violet-400 hover:underline" target="_blank" rel="noopener noreferrer">{children}</a>,
+                              blockquote: ({ children }) => <blockquote className="border-l-2 border-violet-500/50 pl-3 my-2 text-[#888]">{children}</blockquote>,
+                              table: ({ children }) => <table className="border-collapse my-2 text-xs">{children}</table>,
+                              th: ({ children }) => <th className="border border-[#333] px-2 py-1 bg-[#1a1a1f]">{children}</th>,
+                              td: ({ children }) => <td className="border border-[#333] px-2 py-1">{children}</td>,
+                            }}
+                          >
+                            {msg.content}
+                          </ReactMarkdown>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -638,10 +798,24 @@ export default function LunaPage() {
             </div>
 
             {/* Input */}
-            <div className="border-t border-[#1a1a1f] p-3 bg-[#0a0a0b] relative">
+            <div
+              className={`border-t border-[#1a1a1f] p-3 bg-[#0a0a0b] relative transition-all ${
+                isDragging ? "bg-violet-500/10 border-violet-500/50" : ""
+              }`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              {/* Drag overlay */}
+              {isDragging && (
+                <div className="absolute inset-0 flex items-center justify-center bg-violet-500/10 border-2 border-dashed border-violet-500/50 rounded-lg z-10 pointer-events-none">
+                  <span className="text-violet-400 text-sm font-medium">Drop files here</span>
+                </div>
+              )}
+
               {/* Mention Popup */}
               {showMentions && filteredSpecialists.length > 0 && (
-                <div className="absolute bottom-full left-3 mb-2 bg-[#0d0d0e] border border-[#1a1a1f] rounded-lg shadow-xl overflow-hidden">
+                <div className="absolute bottom-full left-3 mb-2 bg-[#0d0d0e] border border-[#1a1a1f] rounded-lg shadow-xl overflow-hidden z-20">
                   {filteredSpecialists.map(([name, spec]) => (
                     <button
                       key={name}
@@ -658,7 +832,69 @@ export default function LunaPage() {
                 </div>
               )}
 
+              {/* Attachment Preview */}
+              {attachments.length > 0 && (
+                <div className="flex gap-2 mb-2 flex-wrap">
+                  {attachments.map(attachment => (
+                    <div
+                      key={attachment.id}
+                      className="relative group bg-[#0d0d0e] border border-[#1a1a1f] rounded-lg overflow-hidden"
+                    >
+                      {attachment.type.startsWith("image/") && attachment.preview ? (
+                        <img
+                          src={attachment.preview}
+                          alt={attachment.name}
+                          className="h-16 w-16 object-cover"
+                        />
+                      ) : (
+                        <div className="h-16 w-16 flex flex-col items-center justify-center p-2">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#555]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                          </svg>
+                          <span className="text-[10px] text-[#555] truncate w-full text-center mt-1">
+                            {attachment.name.slice(0, 8)}
+                          </span>
+                        </div>
+                      )}
+                      <button
+                        onClick={() => removeAttachment(attachment.id)}
+                        className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        ×
+                      </button>
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-1 py-0.5 text-[8px] text-[#888] truncate">
+                        {formatFileSize(attachment.size)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept="image/*,.pdf,.txt,.md,.json,.csv"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+
               <div className="flex gap-2 items-end">
+                {/* File Attachment Button */}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={sending}
+                  className="p-3 rounded-lg bg-[#050506] border border-[#1a1a1f] text-[#666] hover:text-[#888] hover:border-[#333] transition-all disabled:opacity-50"
+                  title="Attach files"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                  </svg>
+                </button>
+
                 {/* Voice Button */}
                 <button
                   type="button"
@@ -716,7 +952,7 @@ export default function LunaPage() {
                 {/* Send Button */}
                 <button
                   onClick={handleSend}
-                  disabled={sending || !input.trim()}
+                  disabled={sending || (!input.trim() && attachments.length === 0)}
                   className="p-3 rounded-lg bg-violet-600 hover:bg-violet-500 text-white disabled:opacity-50 disabled:hover:bg-violet-600"
                 >
                   {sending ? (
