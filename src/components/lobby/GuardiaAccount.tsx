@@ -1,22 +1,15 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 /**
  * GUARDIA ACCOUNT — Settings & Profile
- *
- * Standard account management:
- * - Profile info
- * - Subscription tier & usage
- * - Connected accounts (with real-time status from API)
- * - Settings
- * - Logout
+ * 
+ * 2B Calm aesthetic with slide-out profile editor
  */
 
-// API Configuration
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.guardiacontent.com';
 
-// Get client ID from localStorage or auth context
 const getClientId = () => {
   if (typeof window !== 'undefined') {
     return localStorage.getItem('guardia_client_id') || localStorage.getItem('clientId');
@@ -24,47 +17,43 @@ const getClientId = () => {
   return null;
 };
 
-// =============================================================================
-// DESIGN TOKENS
-// =============================================================================
-
+// 2B Calm Design System
 const tokens = {
   bg: {
-    base: '#121214',
-    surface: '#1c1c1e',
-    elevated: '#2a2a2c',
-    overlay: '#3a3a3c',
+    base: '#0c0c0d',
+    surface: '#111113',
+    elevated: '#1a1a1c',
+    overlay: '#222224',
   },
   text: {
     primary: '#e8e8e8',
-    secondary: '#a0a0a0',
-    tertiary: '#6a6a6a',
+    secondary: '#888888',
+    tertiary: '#555555',
   },
   accent: {
-    primary: '#e8a060',
-    glow: 'rgba(232, 160, 96, 0.2)',
+    primary: '#f59e0b',
+    glow: 'rgba(245, 158, 11, 0.15)',
   },
   status: {
-    connected: '#10b981',
+    connected: '#22c55e',
     needs_refresh: '#f59e0b',
     limited: '#f59e0b',
-    disconnected: '#6a6a6a',
+    disconnected: '#444444',
   },
   tier: {
     spark: '#f59e0b',
-    pro: '#8b5cf6',
-    unleashed: '#ec4899',
+    pro: '#3b82f6',
+    unleashed: '#8b5cf6',
+  },
+  shadow: {
+    inset: 'inset 0 2px 4px rgba(0,0,0,0.3), inset 0 -1px 2px rgba(255,255,255,0.02)',
+    raised: '0 4px 12px rgba(0,0,0,0.3)',
+    button: 'inset 0 1px 1px rgba(255,255,255,0.03), 2px 2px 6px rgba(0,0,0,0.3)',
   }
 };
 
-// =============================================================================
-// TYPES
-// =============================================================================
-
-interface IconProps {
-  size?: number;
-  color?: string;
-}
+// Types
+interface IconProps { size?: number; color?: string; }
 
 interface Connection {
   platform: string;
@@ -77,54 +66,6 @@ interface Connection {
   needs_action?: boolean;
 }
 
-interface ConnectionsResponse {
-  connections: Connection[];
-  facebook: boolean;
-  instagram: boolean;
-  warnings: Array<{ platform: string; message: string }>;
-  healthy: boolean;
-}
-
-interface ProfileHeaderProps {
-  name: string;
-  email: string;
-  tier: 'spark' | 'pro' | 'unleashed';
-}
-
-interface UsageStatsProps {
-  used: number;
-  total: number;
-  period: string;
-}
-
-interface ConnectedAccountProps {
-  platform: string;
-  icon: React.ComponentType<IconProps>;
-  connection?: Connection;
-  onConnect?: () => void;
-  onDisconnect?: (platform: string) => void;
-  isLoading?: boolean;
-}
-
-interface MenuItemProps {
-  icon: React.ComponentType<IconProps>;
-  label: string;
-  onClick?: () => void;
-  danger?: boolean;
-  toggle?: boolean;
-  toggled?: boolean;
-}
-
-interface SectionProps {
-  title?: string;
-  children: React.ReactNode;
-}
-
-interface BottomNavProps {
-  active: string;
-  onChange: (id: string) => void;
-}
-
 interface UserProfile {
   id: string;
   business_name: string;
@@ -132,12 +73,10 @@ interface UserProfile {
   contact_email: string;
   tier: 'spark' | 'pro' | 'unleashed';
   username: string;
+  profile_image_url?: string;
 }
 
-// =============================================================================
-// ICONS
-// =============================================================================
-
+// Icons
 const Icons = {
   User: ({ size = 24, color }: IconProps) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5">
@@ -154,12 +93,6 @@ const Icons = {
   BarChart: ({ size = 24, color }: IconProps) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5">
       <path d="M12 20V10M18 20V4M6 20v-4"/>
-    </svg>
-  ),
-  Link: ({ size = 24, color }: IconProps) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5">
-      <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
-      <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
     </svg>
   ),
   Bell: ({ size = 24, color }: IconProps) => (
@@ -192,6 +125,17 @@ const Icons = {
       <path d="M9 18l6-6-6-6"/>
     </svg>
   ),
+  X: ({ size = 24, color }: IconProps) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round">
+      <path d="M18 6L6 18M6 6l12 12"/>
+    </svg>
+  ),
+  Camera: ({ size = 24, color }: IconProps) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5">
+      <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+      <circle cx="12" cy="13" r="4"/>
+    </svg>
+  ),
   Facebook: ({ size = 24, color }: IconProps) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
       <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
@@ -202,92 +146,388 @@ const Icons = {
       <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
     </svg>
   ),
-  Check: ({ size = 24, color }: IconProps) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M5 12l5 5L19 7"/>
-    </svg>
-  ),
 };
 
 // =============================================================================
-// COMPONENTS
+// PROFILE PANEL (Slide-out editor)
 // =============================================================================
+interface ProfilePanelProps {
+  isOpen: boolean;
+  onClose: () => void;
+  profile: UserProfile | null;
+  onSave: (updates: Partial<UserProfile>) => Promise<void>;
+}
 
-// Profile header
-const ProfileHeader = ({ name, email, tier }: ProfileHeaderProps) => {
-  const tierColors = {
-    spark: tokens.tier.spark,
-    pro: tokens.tier.pro,
-    unleashed: tokens.tier.unleashed,
+function ProfilePanel({ isOpen, onClose, profile, onSave }: ProfilePanelProps) {
+  const [businessName, setBusinessName] = useState(profile?.business_name || '');
+  const [contactName, setContactName] = useState(profile?.contact_name || '');
+  const [contactEmail, setContactEmail] = useState(profile?.contact_email || '');
+  const [username, setUsername] = useState(profile?.username || '');
+  const [imageUrl, setImageUrl] = useState(profile?.profile_image_url || '');
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync state when profile changes
+  useEffect(() => {
+    if (profile) {
+      setBusinessName(profile.business_name || '');
+      setContactName(profile.contact_name || '');
+      setContactEmail(profile.contact_email || '');
+      setUsername(profile.username || '');
+      setImageUrl(profile.profile_image_url || '');
+    }
+  }, [profile]);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setUploading(true);
+    try {
+      const jwt = localStorage.getItem('guardia_jwt');
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const res = await fetch(`${API_BASE}/lobby/client/profile-image`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${jwt}` },
+        body: formData,
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setImageUrl(data.url);
+      }
+    } catch (err) {
+      console.error('Upload failed:', err);
+    }
+    setUploading(false);
   };
 
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await onSave({
+        business_name: businessName,
+        contact_name: contactName,
+        contact_email: contactEmail,
+        username,
+        profile_image_url: imageUrl,
+      });
+      onClose();
+    } catch (err) {
+      console.error('Save failed:', err);
+    }
+    setSaving(false);
+  };
+
+  const hasChanges = profile && (
+    businessName !== profile.business_name ||
+    contactName !== profile.contact_name ||
+    contactEmail !== profile.contact_email ||
+    username !== profile.username ||
+    imageUrl !== (profile.profile_image_url || '')
+  );
+
   return (
-    <div 
-      className="p-5 rounded-2xl flex items-center gap-4"
-      style={{ backgroundColor: tokens.bg.surface }}
+    <>
+      {/* Backdrop */}
+      <div 
+        className={`fixed inset-0 z-40 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+        onClick={onClose}
+      />
+      
+      {/* Panel */}
+      <div 
+        className={`fixed top-0 right-0 h-full w-full max-w-md z-50 transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+        style={{
+          background: 'linear-gradient(180deg, #111113, #0c0c0d)',
+          boxShadow: '-4px 0 24px rgba(0,0,0,0.5)'
+        }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-white/5">
+          <h2 className="text-lg font-semibold text-[#e8e8e8]">Edit Profile</h2>
+          <button 
+            onClick={onClose}
+            className="w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-95"
+            style={{
+              background: 'linear-gradient(145deg, #1a1a1c, #0f0f10)',
+              boxShadow: tokens.shadow.button
+            }}
+          >
+            <Icons.X size={18} color="#888" />
+          </button>
+        </div>
+
+        <div className="p-4 space-y-6 overflow-y-auto" style={{ height: 'calc(100% - 140px)' }}>
+          {/* Profile Image */}
+          <div className="flex flex-col items-center">
+            <div className="relative">
+              <div 
+                className="w-24 h-24 rounded-full flex items-center justify-center overflow-hidden"
+                style={{
+                  background: imageUrl ? 'none' : `linear-gradient(145deg, ${tokens.accent.glow}, ${tokens.bg.elevated})`,
+                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.3)'
+                }}
+              >
+                {imageUrl ? (
+                  <img src={imageUrl} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-3xl font-bold" style={{ color: tokens.accent.primary }}>
+                    {(contactName || businessName || 'U').charAt(0)}
+                  </span>
+                )}
+              </div>
+              
+              {/* Upload button overlay */}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="absolute bottom-0 right-0 w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-95"
+                style={{
+                  background: 'linear-gradient(145deg, #f59e0b, #d97706)',
+                  boxShadow: '0 2px 8px rgba(245,158,11,0.4)'
+                }}
+              >
+                {uploading ? (
+                  <div className="w-4 h-4 border-2 border-[#0c0c0d]/30 border-t-[#0c0c0d] rounded-full animate-spin" />
+                ) : (
+                  <Icons.Camera size={14} color="#0c0c0d" />
+                )}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+            </div>
+            <p className="text-xs text-[#555] mt-2">Tap to change photo</p>
+          </div>
+
+          {/* Form Fields */}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs text-[#555] uppercase tracking-wider mb-2">Business Name</label>
+              <input
+                type="text"
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl text-sm text-[#e8e8e8] placeholder-[#444] focus:outline-none transition-all"
+                style={{
+                  background: '#0a0a0a',
+                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(255,255,255,0.03)',
+                  border: 'none'
+                }}
+                placeholder="Your business name"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs text-[#555] uppercase tracking-wider mb-2">Contact Name</label>
+              <input
+                type="text"
+                value={contactName}
+                onChange={(e) => setContactName(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl text-sm text-[#e8e8e8] placeholder-[#444] focus:outline-none transition-all"
+                style={{
+                  background: '#0a0a0a',
+                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(255,255,255,0.03)',
+                  border: 'none'
+                }}
+                placeholder="Your name"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs text-[#555] uppercase tracking-wider mb-2">Email</label>
+              <input
+                type="email"
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl text-sm text-[#e8e8e8] placeholder-[#444] focus:outline-none transition-all"
+                style={{
+                  background: '#0a0a0a',
+                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(255,255,255,0.03)',
+                  border: 'none'
+                }}
+                placeholder="you@example.com"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs text-[#555] uppercase tracking-wider mb-2">Username</label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl text-sm text-[#e8e8e8] placeholder-[#444] focus:outline-none transition-all"
+                style={{
+                  background: '#0a0a0a',
+                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(255,255,255,0.03)',
+                  border: 'none'
+                }}
+                placeholder="username"
+              />
+            </div>
+          </div>
+
+          {/* Tier badge (read-only) */}
+          {profile?.tier && (
+            <div 
+              className="p-4 rounded-xl"
+              style={{
+                background: 'linear-gradient(145deg, #111113, #0a0a0b)',
+                boxShadow: tokens.shadow.inset
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-[#555]">Current Plan</span>
+                <div 
+                  className="px-3 py-1 rounded-full text-xs font-medium capitalize"
+                  style={{
+                    backgroundColor: `${tokens.tier[profile.tier]}20`,
+                    color: tokens.tier[profile.tier]
+                  }}
+                >
+                  {profile.tier}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Save Button */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/5" style={{ background: '#0c0c0d' }}>
+          <button
+            onClick={handleSave}
+            disabled={!hasChanges || saving}
+            className="w-full py-3 rounded-xl font-semibold text-sm transition-all active:scale-[0.98]"
+            style={{
+              background: hasChanges 
+                ? 'linear-gradient(145deg, #f59e0b, #d97706)' 
+                : 'linear-gradient(145deg, #1a1a1c, #0f0f10)',
+              boxShadow: hasChanges
+                ? '0 2px 8px rgba(245,158,11,0.3), inset 0 1px 1px rgba(255,255,255,0.2)'
+                : 'inset 0 1px 2px rgba(0,0,0,0.3)',
+              color: hasChanges ? '#0c0c0d' : '#444'
+            }}
+          >
+            {saving ? 'Saving...' : hasChanges ? 'Save Changes' : 'No Changes'}
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// =============================================================================
+// PROFILE HEADER (clickable)
+// =============================================================================
+interface ProfileHeaderProps {
+  name: string;
+  email: string;
+  tier: 'spark' | 'pro' | 'unleashed';
+  imageUrl?: string;
+  onClick: () => void;
+}
+
+const ProfileHeader = ({ name, email, tier, imageUrl, onClick }: ProfileHeaderProps) => {
+  return (
+    <button 
+      onClick={onClick}
+      className="w-full p-5 rounded-2xl flex items-center gap-4 text-left transition-all active:scale-[0.99]"
+      style={{ 
+        background: 'linear-gradient(145deg, #111113, #0a0a0b)',
+        boxShadow: `${tokens.shadow.inset}, ${tokens.shadow.raised}`
+      }}
     >
       {/* Avatar */}
       <div 
-        className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold"
+        className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold overflow-hidden flex-shrink-0"
         style={{ 
-          backgroundColor: tokens.accent.glow,
-          color: tokens.accent.primary,
+          background: imageUrl ? 'none' : `linear-gradient(145deg, ${tokens.accent.glow}, ${tokens.bg.elevated})`,
+          boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)'
         }}
       >
-        {name.charAt(0)}
+        {imageUrl ? (
+          <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
+        ) : (
+          <span style={{ color: tokens.accent.primary }}>{name.charAt(0)}</span>
+        )}
       </div>
       
       {/* Info */}
-      <div className="flex-1">
-        <h2 className="text-lg font-semibold" style={{ color: tokens.text.primary }}>
+      <div className="flex-1 min-w-0">
+        <h2 className="text-lg font-semibold truncate" style={{ color: tokens.text.primary }}>
           {name}
         </h2>
-        <p className="text-sm" style={{ color: tokens.text.tertiary }}>
+        <p className="text-sm truncate" style={{ color: tokens.text.tertiary }}>
           {email}
         </p>
         <div 
           className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full text-xs font-medium"
           style={{ 
-            backgroundColor: `${tierColors[tier]}20`,
-            color: tierColors[tier],
+            backgroundColor: `${tokens.tier[tier]}20`,
+            color: tokens.tier[tier],
           }}
         >
           <span className="capitalize">{tier}</span>
           <span>Plan</span>
         </div>
       </div>
-    </div>
+
+      {/* Edit indicator */}
+      <Icons.ChevronRight size={20} color={tokens.text.tertiary} />
+    </button>
   );
 };
 
-// Usage stats
+// =============================================================================
+// USAGE STATS
+// =============================================================================
+interface UsageStatsProps {
+  used: number;
+  total: number;
+  period: string;
+}
+
 const UsageStats = ({ used, total, period }: UsageStatsProps) => {
   const percentage = Math.round((used / total) * 100);
   
   return (
     <div 
       className="p-4 rounded-2xl"
-      style={{ backgroundColor: tokens.bg.surface }}
+      style={{ 
+        background: 'linear-gradient(145deg, #111113, #0a0a0b)',
+        boxShadow: `${tokens.shadow.inset}, ${tokens.shadow.raised}`
+      }}
     >
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-medium" style={{ color: tokens.text.secondary }}>
-          Monthly Usage
-        </h3>
-        <span className="text-xs" style={{ color: tokens.text.tertiary }}>
-          {period}
-        </span>
+        <h3 className="text-sm font-medium" style={{ color: tokens.text.secondary }}>Monthly Usage</h3>
+        <span className="text-xs" style={{ color: tokens.text.tertiary }}>{period}</span>
       </div>
       
-      {/* Progress bar */}
+      {/* Progress track */}
       <div 
         className="h-2 rounded-full overflow-hidden mb-2"
-        style={{ backgroundColor: tokens.bg.elevated }}
+        style={{ 
+          background: '#0a0a0a',
+          boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.5)'
+        }}
       >
         <div 
           className="h-full rounded-full transition-all"
           style={{ 
             width: `${percentage}%`,
-            backgroundColor: percentage > 80 ? tokens.tier.spark : tokens.accent.primary,
+            background: percentage > 80 
+              ? 'linear-gradient(90deg, #ef4444, #f87171)' 
+              : 'linear-gradient(90deg, #f59e0b, #fbbf24)',
+            boxShadow: `0 0 8px ${percentage > 80 ? 'rgba(239,68,68,0.4)' : 'rgba(245,158,11,0.4)'}`
           }}
         />
       </div>
@@ -297,10 +537,7 @@ const UsageStats = ({ used, total, period }: UsageStatsProps) => {
           <span className="font-semibold">{used}</span>
           <span style={{ color: tokens.text.tertiary }}> / {total} posts</span>
         </span>
-        <span 
-          className="text-xs"
-          style={{ color: percentage > 80 ? tokens.tier.spark : tokens.text.tertiary }}
-        >
+        <span className="text-xs" style={{ color: percentage > 80 ? '#ef4444' : tokens.text.tertiary }}>
           {percentage}% used
         </span>
       </div>
@@ -308,194 +545,128 @@ const UsageStats = ({ used, total, period }: UsageStatsProps) => {
   );
 };
 
-// Connected account item with full status support
-const ConnectedAccount = ({
-  platform,
-  icon: Icon,
-  connection,
-  onConnect,
-  onDisconnect,
-  isLoading
-}: ConnectedAccountProps) => {
-  const [showConfirm, setShowConfirm] = useState(false);
+// =============================================================================
+// CONNECTED ACCOUNT
+// =============================================================================
+interface ConnectedAccountProps {
+  platform: string;
+  icon: React.ComponentType<IconProps>;
+  connection?: Connection;
+  onConnect?: () => void;
+}
 
+const ConnectedAccount = ({ platform, icon: Icon, connection, onConnect }: ConnectedAccountProps) => {
   const status = connection?.status || 'disconnected';
   const handle = connection?.handle;
-  const daysUntilExpiry = connection?.days_until_expiry;
-  const message = connection?.message;
-
-  const statusConfig = {
-    connected: {
-      color: tokens.status.connected,
-      label: 'Connected',
-      icon: '🟢',
-    },
-    needs_refresh: {
-      color: tokens.status.needs_refresh,
-      label: daysUntilExpiry !== null ? `Expires in ${daysUntilExpiry}d` : 'Needs Refresh',
-      icon: '🟡',
-    },
-    limited: {
-      color: tokens.status.limited,
-      label: 'Limited',
-      icon: '🟡',
-    },
-    disconnected: {
-      color: tokens.status.disconnected,
-      label: 'Disconnected',
-      icon: '⚪',
-    },
-  };
-
-  const config = statusConfig[status] || statusConfig.disconnected;
   const isConnected = status === 'connected' || status === 'needs_refresh' || status === 'limited';
 
-  const handleDisconnect = () => {
-    setShowConfirm(false);
-    onDisconnect?.(platform.toLowerCase());
+  const statusConfig = {
+    connected: { color: tokens.status.connected, label: 'Connected', icon: '🟢' },
+    needs_refresh: { color: tokens.status.needs_refresh, label: 'Reconnect', icon: '🟡' },
+    limited: { color: tokens.status.limited, label: 'Limited', icon: '🟡' },
+    disconnected: { color: tokens.status.disconnected, label: 'Disconnected', icon: '⚪' },
+  };
+  const config = statusConfig[status];
+
+  const handleConnect = () => {
+    const clientId = localStorage.getItem('guardia_client_id');
+    window.location.href = `https://api.guardiacontent.com/auth/facebook/connect?client_id=${clientId}`;
   };
 
   return (
     <div
       className="p-4 rounded-xl"
-      style={{ backgroundColor: tokens.bg.elevated }}
+      style={{ 
+        background: 'rgba(255,255,255,0.02)',
+        border: '1px solid rgba(255,255,255,0.03)'
+      }}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div
             className="w-10 h-10 rounded-full flex items-center justify-center"
-            style={{ backgroundColor: tokens.bg.overlay }}
+            style={{ 
+              background: 'linear-gradient(145deg, #1a1a1c, #0f0f10)',
+              boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.3)'
+            }}
           >
             <Icon size={20} color={isConnected ? tokens.text.primary : tokens.text.tertiary} />
           </div>
           <div>
-            <p className="text-sm font-medium" style={{ color: tokens.text.primary }}>
-              {platform}
-            </p>
+            <p className="text-sm font-medium" style={{ color: tokens.text.primary }}>{platform}</p>
             {handle && (
               <p className="text-xs" style={{ color: tokens.text.tertiary }}>
-                {handle.startsWith('@') ? handle : `@${handle}`}
+                @{handle.replace('@', '')}
               </p>
             )}
           </div>
         </div>
-
-        <div className="flex items-center gap-2">
-          {/* Status indicator */}
+        
+        <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
             <span className="text-xs">{config.icon}</span>
-            <span className="text-xs" style={{ color: config.color }}>
-              {config.label}
-            </span>
+            <span className="text-xs" style={{ color: config.color }}>{config.label}</span>
           </div>
+          
+          {(status === 'disconnected' || status === 'needs_refresh') && (
+            <button
+              onClick={onConnect || handleConnect}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all active:scale-95"
+              style={{
+                background: 'linear-gradient(145deg, #f59e0b, #d97706)',
+                color: '#0c0c0d',
+                boxShadow: '0 2px 6px rgba(245,158,11,0.3)'
+              }}
+            >
+              {status === 'needs_refresh' ? 'Reconnect' : 'Connect'}
+            </button>
+          )}
         </div>
-      </div>
-
-      {/* Warning message for needs_refresh */}
-      {status === 'needs_refresh' && message && (
-        <div
-          className="mt-3 p-2 rounded-lg text-xs"
-          style={{
-            backgroundColor: `${tokens.status.needs_refresh}15`,
-            color: tokens.status.needs_refresh,
-          }}
-        >
-          ⚠️ {message}
-        </div>
-      )}
-
-      {/* Action buttons */}
-      <div className="mt-3 flex gap-2">
-        {isConnected ? (
-          <>
-            {status === 'needs_refresh' && (
-              <button
-                onClick={() => onConnect?.()}
-                disabled={isLoading}
-                className="flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-opacity"
-                style={{
-                  backgroundColor: tokens.accent.primary,
-                  color: tokens.bg.base,
-                  opacity: isLoading ? 0.5 : 1,
-                }}
-              >
-                Reconnect
-              </button>
-            )}
-            {!showConfirm ? (
-              <button
-                onClick={() => setShowConfirm(true)}
-                disabled={isLoading}
-                className="px-3 py-2 rounded-lg text-xs font-medium"
-                style={{
-                  backgroundColor: tokens.bg.overlay,
-                  color: tokens.text.secondary,
-                }}
-              >
-                Disconnect
-              </button>
-            ) : (
-              <div className="flex gap-2">
-                <button
-                  onClick={handleDisconnect}
-                  disabled={isLoading}
-                  className="px-3 py-2 rounded-lg text-xs font-medium"
-                  style={{
-                    backgroundColor: '#ef4444',
-                    color: 'white',
-                  }}
-                >
-                  Confirm
-                </button>
-                <button
-                  onClick={() => setShowConfirm(false)}
-                  className="px-3 py-2 rounded-lg text-xs font-medium"
-                  style={{
-                    backgroundColor: tokens.bg.overlay,
-                    color: tokens.text.secondary,
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
-            )}
-          </>
-        ) : (
-          <button
-            onClick={() => onConnect?.()}
-            disabled={isLoading}
-            className="flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-opacity"
-            style={{
-              backgroundColor: tokens.accent.glow,
-              color: tokens.accent.primary,
-              opacity: isLoading ? 0.5 : 1,
-            }}
-          >
-            {isLoading ? 'Connecting...' : 'Connect'}
-          </button>
-        )}
       </div>
     </div>
   );
 };
 
-// Settings menu item
+// =============================================================================
+// SECTION & MENU ITEM
+// =============================================================================
+const Section = ({ title, children }: { title?: string; children: React.ReactNode }) => (
+  <div className="mb-6">
+    {title && (
+      <h3 className="text-xs font-medium uppercase tracking-wider mb-3 px-1" style={{ color: tokens.text.tertiary }}>
+        {title}
+      </h3>
+    )}
+    <div 
+      className="rounded-2xl overflow-hidden"
+      style={{ 
+        background: 'linear-gradient(145deg, #111113, #0a0a0b)',
+        boxShadow: `${tokens.shadow.inset}, ${tokens.shadow.raised}`
+      }}
+    >
+      {children}
+    </div>
+  </div>
+);
+
+interface MenuItemProps {
+  icon: React.ComponentType<IconProps>;
+  label: string;
+  onClick?: () => void;
+  danger?: boolean;
+  toggle?: boolean;
+  toggled?: boolean;
+}
+
 const MenuItem = ({ icon: Icon, label, onClick, danger, toggle, toggled }: MenuItemProps) => (
   <button
     onClick={onClick}
-    className="w-full flex items-center justify-between p-4 rounded-xl transition-colors active:opacity-80"
-    style={{ backgroundColor: tokens.bg.surface }}
+    className="w-full flex items-center justify-between p-4 border-b border-white/5 last:border-0 transition-colors hover:bg-white/[0.02]"
   >
     <div className="flex items-center gap-3">
-      <Icon size={20} color={danger ? tokens.tier.spark : tokens.text.secondary} />
-      <span 
-        className="text-sm font-medium"
-        style={{ color: danger ? tokens.tier.spark : tokens.text.primary }}
-      >
-        {label}
-      </span>
+      <Icon size={20} color={danger ? '#ef4444' : tokens.text.tertiary} />
+      <span className="text-sm" style={{ color: danger ? '#ef4444' : tokens.text.primary }}>{label}</span>
     </div>
-    
     {toggle ? (
       <div 
         className="w-11 h-6 rounded-full p-0.5 transition-colors"
@@ -504,253 +675,66 @@ const MenuItem = ({ icon: Icon, label, onClick, danger, toggle, toggled }: MenuI
         <div 
           className="w-5 h-5 rounded-full transition-transform"
           style={{ 
-            backgroundColor: tokens.text.primary,
-            transform: toggled ? 'translateX(20px)' : 'translateX(0)',
+            backgroundColor: '#fff',
+            transform: toggled ? 'translateX(20px)' : 'translateX(0)'
           }}
         />
       </div>
     ) : (
-      <Icons.ChevronRight size={20} color={tokens.text.tertiary} />
+      <Icons.ChevronRight size={18} color={tokens.text.tertiary} />
     )}
   </button>
 );
 
-// Section wrapper
-const Section = ({ title, children }: SectionProps) => (
-  <div className="mb-6">
-    {title && (
-      <h3 
-        className="text-xs font-medium uppercase tracking-wider px-1 mb-3"
-        style={{ color: tokens.text.tertiary }}
-      >
-        {title}
-      </h3>
-    )}
-    <div className="space-y-2">
-      {children}
-    </div>
-  </div>
-);
-
-// Bottom navigation
-const BottomNav = ({ active, onChange }: BottomNavProps) => {
-  const items = [
-    { id: 'home', label: 'Home', icon: (color: string, filled: boolean) => filled ? (
-      <svg width={24} height={24} viewBox="0 0 24 24" fill={color}><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-    ) : (
-      <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5"><path d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h3a1 1 0 001-1V10"/></svg>
-    )},
-    { id: 'gallery', label: 'Gallery', icon: (color: string, filled: boolean) => filled ? (
-      <svg width={24} height={24} viewBox="0 0 24 24" fill={color}><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-    ) : (
-      <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-    )},
-    { id: 'schedule', label: 'Schedule', icon: (color: string, filled: boolean) => filled ? (
-      <svg width={24} height={24} viewBox="0 0 24 24" fill={color}><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10z"/></svg>
-    ) : (
-      <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-    )},
-    { id: 'account', label: 'Account', icon: (color: string, filled: boolean) => filled ? (
-      <svg width={24} height={24} viewBox="0 0 24 24" fill={color}><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-    ) : (
-      <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg>
-    )},
-  ];
-
-  return (
-    <nav 
-      className="fixed bottom-0 left-0 right-0 pb-safe"
-      style={{ backgroundColor: tokens.bg.surface }}
-    >
-      <div className="flex justify-around items-center h-16">
-        {items.map(({ id, label, icon }) => {
-          const isActive = active === id;
-          return (
-            <button
-              key={id}
-              onClick={() => onChange(id)}
-              className="flex flex-col items-center justify-center"
-              style={{ width: 64, height: 48 }}
-            >
-              {icon(isActive ? tokens.accent.primary : tokens.text.tertiary, isActive)}
-              <span 
-                className="text-[10px] mt-1"
-                style={{ color: isActive ? tokens.accent.primary : tokens.text.tertiary }}
-              >
-                {label}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-    </nav>
-  );
-};
-
 // =============================================================================
-// MAIN ACCOUNT VIEW
+// CONNECTED ACCOUNTS SECTION
 // =============================================================================
-
-// Connected Accounts Section with API integration
 const ConnectedAccountsSection = () => {
   const [connections, setConnections] = useState<Connection[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
-
-  const clientId = getClientId();
-
-  const fetchConnections = useCallback(async () => {
-    if (!clientId) {
-      setError('No client ID found. Please log in again.');
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      setError(null);
-      const response = await fetch(`${API_BASE}/auth/facebook/status?client_id=${clientId}`);
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch connection status');
-      }
-
-      const data = await response.json();
-      setConnections(data.connections || []);
-    } catch (err) {
-      console.error('Error fetching connections:', err);
-      setError('Unable to load connection status');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [clientId]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchConnections();
-  }, [fetchConnections]);
+    const fetchConnections = async () => {
+      const jwt = localStorage.getItem('guardia_jwt');
+      const clientId = getClientId();
+      if (!jwt || !clientId) { setLoading(false); return; }
 
-  const handleConnect = (platform: string) => {
-    if (!clientId) {
-      setError('No client ID found. Please log in again.');
-      return;
-    }
-
-    setActionLoading(platform);
-    // Redirect to OAuth flow
-    window.location.href = `${API_BASE}/auth/facebook/connect?client_id=${clientId}`;
-  };
-
-  const handleDisconnect = async (platform: string) => {
-    if (!clientId) return;
-
-    setActionLoading(platform);
-
-    try {
-      const response = await fetch(
-        `${API_BASE}/auth/facebook/disconnect?client_id=${clientId}&platform=${platform}`
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to disconnect');
+      try {
+        const res = await fetch(`${API_BASE}/auth/facebook/status?client_id=${clientId}`, {
+          headers: { Authorization: `Bearer ${jwt}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setConnections(data.connections || []);
+        }
+      } catch (err) {
+        console.error('Connections fetch error:', err);
       }
+      setLoading(false);
+    };
+    fetchConnections();
+  }, []);
 
-      // Refresh the connections list
-      await fetchConnections();
-    } catch (err) {
-      console.error('Error disconnecting:', err);
-      setError('Failed to disconnect. Please try again.');
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  // Find connections by platform
-  const facebookConnection = connections.find(c => c.platform === 'facebook');
-  const instagramConnection = connections.find(c => c.platform === 'instagram');
-
-  if (isLoading) {
-    return (
-      <Section title="Connected Accounts">
-        <div
-          className="p-8 rounded-xl flex items-center justify-center"
-          style={{ backgroundColor: tokens.bg.elevated }}
-        >
-          <div className="flex items-center gap-3">
-            <div
-              className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin"
-              style={{ borderColor: tokens.accent.primary, borderTopColor: 'transparent' }}
-            />
-            <span className="text-sm" style={{ color: tokens.text.secondary }}>
-              Loading connections...
-            </span>
-          </div>
-        </div>
-      </Section>
-    );
-  }
-
-  if (error) {
-    return (
-      <Section title="Connected Accounts">
-        <div
-          className="p-4 rounded-xl"
-          style={{ backgroundColor: tokens.bg.elevated }}
-        >
-          <div
-            className="p-3 rounded-lg text-sm mb-3"
-            style={{ backgroundColor: '#ef444420', color: '#ef4444' }}
-          >
-            {error}
-          </div>
-          <button
-            onClick={() => {
-              setIsLoading(true);
-              setError(null);
-              fetchConnections();
-            }}
-            className="w-full px-4 py-2 rounded-lg text-sm font-medium"
-            style={{
-              backgroundColor: tokens.accent.glow,
-              color: tokens.accent.primary,
-            }}
-          >
-            Retry
-          </button>
-        </div>
-      </Section>
-    );
-  }
+  const fbConnection = connections.find(c => c.platform === 'facebook');
+  const igConnection = connections.find(c => c.platform === 'instagram');
+  const needsAttention = connections.some(c => c.needs_action);
 
   return (
     <Section title="Connected Accounts">
-      <div className="space-y-2">
-        <ConnectedAccount
-          platform="Facebook"
-          icon={Icons.Facebook}
-          connection={facebookConnection}
-          onConnect={() => handleConnect('facebook')}
-          onDisconnect={handleDisconnect}
-          isLoading={actionLoading === 'facebook'}
-        />
-        <ConnectedAccount
-          platform="Instagram"
-          icon={Icons.Instagram}
-          connection={instagramConnection}
-          onConnect={() => handleConnect('instagram')}
-          onDisconnect={handleDisconnect}
-          isLoading={actionLoading === 'instagram'}
-        />
+      <div className="p-4 space-y-3">
+        {loading ? (
+          <div className="flex justify-center py-4">
+            <div className="w-5 h-5 border-2 border-[#333] border-t-[#f59e0b] rounded-full animate-spin" />
+          </div>
+        ) : (
+          <>
+            <ConnectedAccount platform="Facebook" icon={Icons.Facebook} connection={fbConnection} />
+            <ConnectedAccount platform="Instagram" icon={Icons.Instagram} connection={igConnection} />
+          </>
+        )}
       </div>
-
-      {/* Health summary */}
-      {connections.length > 0 && connections.some(c => c.needs_action) && (
-        <div
-          className="mt-3 p-3 rounded-lg text-xs"
-          style={{
-            backgroundColor: `${tokens.status.needs_refresh}15`,
-            color: tokens.status.needs_refresh,
-          }}
-        >
+      {needsAttention && (
+        <div className="mx-4 mb-4 p-3 rounded-xl text-xs" style={{ backgroundColor: `${tokens.status.needs_refresh}15`, color: tokens.status.needs_refresh }}>
           ⚠️ Some connections need attention. Reconnect to maintain posting access.
         </div>
       )}
@@ -758,52 +742,68 @@ const ConnectedAccountsSection = () => {
   );
 };
 
+// =============================================================================
+// MAIN COMPONENT
+// =============================================================================
 export default function GuardiaAccount() {
-  const [activeTab, setActiveTab] = useState('account');
   const [notifications, setNotifications] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [profilePanelOpen, setProfilePanelOpen] = useState(false);
 
-  // Fetch user profile on mount
   useEffect(() => {
     const fetchProfile = async () => {
       const jwt = localStorage.getItem('guardia_jwt');
-      if (!jwt) {
-        setProfileLoading(false);
-        return;
-      }
+      if (!jwt) { setProfileLoading(false); return; }
 
       try {
-        const response = await fetch(`${API_BASE}/client/me`, {
+        const res = await fetch(`${API_BASE}/lobby/client/me`, {
           headers: { Authorization: `Bearer ${jwt}` }
         });
-        if (response.ok) {
-          const data = await response.json();
+        if (res.ok) {
+          const data = await res.json();
           setProfile(data);
         }
       } catch (err) {
-        console.error('Failed to fetch profile:', err);
-      } finally {
-        setProfileLoading(false);
+        console.error('Profile fetch error:', err);
       }
+      setProfileLoading(false);
     };
-
     fetchProfile();
   }, []);
 
+  const handleSaveProfile = async (updates: Partial<UserProfile>) => {
+    const jwt = localStorage.getItem('guardia_jwt');
+    if (!jwt) return;
+
+    const res = await fetch(`${API_BASE}/lobby/client/profile`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${jwt}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(updates)
+    });
+
+    if (res.ok) {
+      const updated = await res.json();
+      setProfile(prev => prev ? { ...prev, ...updated } : null);
+    } else {
+      throw new Error('Save failed');
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('guardia_jwt');
+    localStorage.removeItem('guardia_client_id');
+    window.location.href = '/';
+  };
+
   return (
-    <div 
-      className="min-h-screen pt-safe pb-20"
-      style={{ backgroundColor: tokens.bg.base }}
-    >
+    <div className="min-h-screen pt-safe pb-4" style={{ backgroundColor: tokens.bg.base }}>
       {/* Header */}
       <header className="px-5 py-4">
-        <h1 
-          className="text-xl font-semibold"
-          style={{ color: tokens.text.primary }}
-        >
-          Account
-        </h1>
+        <h1 className="text-xl font-semibold" style={{ color: tokens.text.primary }}>Account</h1>
       </header>
 
       {/* Content */}
@@ -811,31 +811,23 @@ export default function GuardiaAccount() {
         {/* Profile */}
         <div className="mb-6">
           {profileLoading ? (
-            <div
-              className="p-5 rounded-2xl flex items-center justify-center"
-              style={{ backgroundColor: tokens.bg.surface }}
-            >
-              <div
-                className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin"
-                style={{ borderColor: tokens.accent.primary, borderTopColor: 'transparent' }}
-              />
+            <div className="p-5 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(145deg, #111113, #0a0a0b)' }}>
+              <div className="w-5 h-5 border-2 border-[#333] border-t-[#f59e0b] rounded-full animate-spin" />
             </div>
           ) : (
             <ProfileHeader
               name={profile?.contact_name || profile?.business_name || 'User'}
               email={profile?.contact_email || ''}
               tier={profile?.tier || 'spark'}
+              imageUrl={profile?.profile_image_url}
+              onClick={() => setProfilePanelOpen(true)}
             />
           )}
         </div>
 
         {/* Usage */}
         <div className="mb-6">
-          <UsageStats
-            used={127}
-            total={150}
-            period="Jan 2025"
-          />
+          <UsageStats used={127} total={150} period="Jan 2025" />
         </div>
 
         {/* Connected Accounts */}
@@ -843,62 +835,36 @@ export default function GuardiaAccount() {
 
         {/* Subscription */}
         <Section title="Subscription">
-          <MenuItem
-            icon={Icons.CreditCard}
-            label="Manage Subscription"
-            onClick={() => {}}
-          />
-          <MenuItem
-            icon={Icons.BarChart}
-            label="Billing History"
-            onClick={() => {}}
-          />
+          <MenuItem icon={Icons.CreditCard} label="Manage Subscription" onClick={() => {}} />
+          <MenuItem icon={Icons.BarChart} label="Billing History" onClick={() => {}} />
         </Section>
 
         {/* Settings */}
         <Section title="Settings">
-          <MenuItem
-            icon={Icons.Bell}
-            label="Push Notifications"
-            toggle
-            toggled={notifications}
-            onClick={() => setNotifications(!notifications)}
-          />
-          <MenuItem
-            icon={Icons.Shield}
-            label="Privacy & Security"
-            onClick={() => {}}
-          />
-          <MenuItem
-            icon={Icons.HelpCircle}
-            label="Help & Support"
-            onClick={() => {}}
-          />
+          <MenuItem icon={Icons.Bell} label="Push Notifications" toggle toggled={notifications} onClick={() => setNotifications(!notifications)} />
+          <MenuItem icon={Icons.Shield} label="Privacy & Security" onClick={() => {}} />
+          <MenuItem icon={Icons.HelpCircle} label="Help & Support" onClick={() => {}} />
         </Section>
 
         {/* Logout */}
         <Section>
-          <MenuItem
-            icon={Icons.LogOut}
-            label="Log Out"
-            danger
-            onClick={() => {}}
-          />
+          <MenuItem icon={Icons.LogOut} label="Log Out" danger onClick={handleLogout} />
         </Section>
 
         {/* Version */}
-        <p 
-          className="text-center text-xs mt-6 mb-4"
-          style={{ color: tokens.text.tertiary }}
-        >
+        <p className="text-center text-xs mt-6 mb-4" style={{ color: tokens.text.tertiary }}>
           Guardia v1.0.0
         </p>
       </div>
 
-      {/* Bottom Nav */}
-      <BottomNav active={activeTab} onChange={setActiveTab} />
+      {/* Profile Panel */}
+      <ProfilePanel
+        isOpen={profilePanelOpen}
+        onClose={() => setProfilePanelOpen(false)}
+        profile={profile}
+        onSave={handleSaveProfile}
+      />
 
-      {/* Global styles */}
       <style jsx global>{`
         .pt-safe { padding-top: env(safe-area-inset-top, 12px); }
         .pb-safe { padding-bottom: env(safe-area-inset-bottom, 8px); }

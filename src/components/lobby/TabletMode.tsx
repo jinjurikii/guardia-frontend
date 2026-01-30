@@ -5,6 +5,10 @@ import { ClientContext, TabletTab } from "./LobbyShell";
 import CalendarTab from "./CalendarTab";
 import GalleryTab from "./GalleryTab";
 import GuardiaAccount from "./GuardiaAccount";
+import StyleTab from "./StyleTab";
+import PlannerTab from "./PlannerTab";
+import AnalyticsTab from "./AnalyticsTab";
+// VideoTab archived - see guardia-core/archive/video_pipeline_jan15/
 
 interface TabletModeProps {
   client: ClientContext | null;
@@ -23,6 +27,11 @@ export default function TabletMode({
   onClose,
   onMessage,
 }: TabletModeProps) {
+  // Calculate badge counts from client context
+  const galleryBadge = (client?.pending_uploads || 0) + (client?.styled_ready || 0);
+  const calendarBadge = client?.scheduled_posts || 0;
+  const needsSetup = client?.needs_platform_setup;
+
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center p-4 sm:p-6 md:p-8">
       {/* Backdrop */}
@@ -31,25 +40,17 @@ export default function TabletMode({
         onClick={onClose}
       />
 
-      {/* Tablet container - 90% of screen */}
+      {/* Tablet container */}
       <div className="relative w-full h-full max-w-[95vw] max-h-[95vh] bg-[#0c0c0c] border border-white/10 rounded-2xl overflow-hidden flex flex-col animate-tablet-open">
         {/* Top bar */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-white/[0.02]">
           {/* Left: Tabs */}
           <div className="flex items-center gap-1">
             <TabButton
-              active={activeTab === "calendar"}
-              onClick={() => setActiveTab("calendar")}
-              icon={
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              }
-              label="Calendar"
-            />
-            <TabButton
               active={activeTab === "gallery"}
               onClick={() => setActiveTab("gallery")}
+              badge={galleryBadge > 0 ? galleryBadge : undefined}
+              badgeColor="amber"
               icon={
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -58,8 +59,52 @@ export default function TabletMode({
               label="Gallery"
             />
             <TabButton
+              active={activeTab === "planner"}
+              onClick={() => setActiveTab("planner")}
+              icon={
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              }
+              label="Planner"
+            />
+            <TabButton
+              active={activeTab === "calendar"}
+              onClick={() => setActiveTab("calendar")}
+              badge={calendarBadge > 0 ? calendarBadge : undefined}
+              badgeColor="green"
+              icon={
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              }
+              label="Calendar"
+            />
+            <TabButton
+              active={activeTab === "styles"}
+              onClick={() => setActiveTab("styles")}
+              icon={
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                </svg>
+              }
+              label="Styles"
+            />
+            <TabButton
+              active={activeTab === "analytics"}
+              onClick={() => setActiveTab("analytics")}
+              icon={
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              }
+              label="Analytics"
+            />
+            <TabButton
               active={activeTab === "account"}
               onClick={() => setActiveTab("account")}
+              badge={needsSetup ? "!" : undefined}
+              badgeColor="red"
               icon={
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -69,9 +114,9 @@ export default function TabletMode({
             />
           </div>
 
-          {/* Right: Gio bubble + Settings + Close */}
+          {/* Right: Gio bubble + Close */}
           <div className="flex items-center gap-2">
-            {/* Gio chat bubble - notification style */}
+            {/* Gio chat bubble */}
             <button
               onClick={onClose}
               className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-white/10 rounded-full text-white/80 hover:text-white hover:border-white/20 transition-all"
@@ -81,17 +126,6 @@ export default function TabletMode({
                 G
               </div>
               <span className="text-xs">Chat</span>
-            </button>
-
-            {/* Settings gear */}
-            <button
-              className="p-2 text-white/50 hover:text-white hover:bg-white/5 rounded-lg transition-all"
-              title="Settings"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
             </button>
 
             {/* Close button */}
@@ -109,11 +143,29 @@ export default function TabletMode({
 
         {/* Tab content */}
         <div className="flex-1 overflow-hidden">
+          {activeTab === "planner" && (
+            <PlannerTab 
+              client={client} 
+              jwt={jwt} 
+              onMessage={onMessage} 
+              onSwitchTab={setActiveTab}
+            />
+          )}
           {activeTab === "calendar" && (
             <CalendarTab client={client} jwt={jwt} onMessage={onMessage} />
           )}
           {activeTab === "gallery" && (
             <GalleryTab client={client} jwt={jwt} onMessage={onMessage} />
+          )}
+          {activeTab === "styles" && client && jwt && (
+            <StyleTab
+              clientId={client.id}
+              jwt={jwt}
+              onStyleUpdated={() => onMessage("Your style has been updated! Future content will use this new look.")}
+            />
+          )}
+          {activeTab === "analytics" && (
+            <AnalyticsTab client={client} jwt={jwt} />
           )}
           {activeTab === "account" && (
             <div className="h-full overflow-y-auto">
@@ -143,22 +195,32 @@ export default function TabletMode({
   );
 }
 
-// Tab button component
+// Tab button component with optional badge
 function TabButton({
   active,
   onClick,
   icon,
   label,
+  badge,
+  badgeColor = "amber",
 }: {
   active: boolean;
   onClick: () => void;
   icon: React.ReactNode;
   label: string;
+  badge?: number | string;
+  badgeColor?: "amber" | "green" | "red";
 }) {
+  const badgeColors = {
+    amber: "bg-amber-500 text-amber-950",
+    green: "bg-emerald-500 text-emerald-950",
+    red: "bg-red-500 text-white",
+  };
+
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+      className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all min-h-[44px] ${
         active
           ? "bg-white/10 text-white"
           : "text-white/50 hover:text-white hover:bg-white/5"
@@ -166,6 +228,19 @@ function TabButton({
     >
       {icon}
       <span className="hidden sm:inline">{label}</span>
+      
+      {/* Badge */}
+      {badge !== undefined && (
+        <span 
+          className={`absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold ${badgeColors[badgeColor]}`}
+          style={{ 
+            boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+            padding: '0 5px'
+          }}
+        >
+          {badge}
+        </span>
+      )}
     </button>
   );
 }
