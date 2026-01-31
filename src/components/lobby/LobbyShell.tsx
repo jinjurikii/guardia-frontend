@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import GioMode from "./GioMode";
 import TabletMode from "./TabletMode";
 import WelcomeBubble from "./WelcomeBubble";
+import NotificationBubble from "./NotificationBubble";
 
 // ============================================
 // TYPES
@@ -20,6 +21,9 @@ export interface ClientContext {
   scheduled_posts: number;
   posted_this_month: number;
   last_post?: string;
+  facebook_connected?: boolean;
+  instagram_connected?: boolean;
+  needs_platform_setup?: boolean;
 }
 
 export interface Message {
@@ -30,7 +34,7 @@ export interface Message {
 
 type AuthState = "loading" | "setup" | "login" | "authenticated";
 export type LobbyMode = "gio" | "tablet";
-export type TabletTab = "calendar" | "gallery" | "account";
+export type TabletTab = "planner" | "calendar" | "gallery" | "styles" | "analytics" | "account";
 
 const API_BASE = "https://api.guardiacontent.com";
 
@@ -56,7 +60,7 @@ export default function LobbyShell() {
 
   // Mode state
   const [mode, setMode] = useState<LobbyMode>("gio");
-  const [activeTab, setActiveTab] = useState<TabletTab>("calendar");
+  const [activeTab, setActiveTab] = useState<TabletTab>("planner");
 
   // Chat state (shared so it persists across mode switches)
   const [messages, setMessages] = useState<Message[]>([]);
@@ -148,6 +152,11 @@ export default function LobbyShell() {
       status += ` ${ctx.pending_uploads} image${ctx.pending_uploads > 1 ? "s" : ""} awaiting styling.`;
     }
 
+    // Nudge for platform connection
+    if (ctx.needs_platform_setup) {
+      status += " To start posting automatically, connect your Facebook in the Account tab.";
+    }
+
     return `${timeGreeting}, ${name}! Welcome back.${status} How can I help you today?`;
   };
 
@@ -187,10 +196,10 @@ export default function LobbyShell() {
   // ============================================
   if (authState === "loading") {
     return (
-      <main className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+      <main className="min-h-screen bg-[#121214] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
-          <p className="text-white/60 text-sm">Loading...</p>
+          <div className="w-12 h-12 border-2 border-[#e8a060]/30 border-t-[#e8a060] rounded-full animate-spin" />
+          <p className="text-[#a0a0a0] text-sm">Loading...</p>
         </div>
   
       {/* Welcome Bubble - appears 60s after auth */}
@@ -199,6 +208,10 @@ export default function LobbyShell() {
         onEngage={(msg) => {
           setMessages((m) => [...m, { role: "assistant", content: msg }]);
           setMode("gio");
+        }}
+        onOpenTablet={(tab) => {
+          if (tab) setActiveTab(tab as TabletTab);
+          setMode("tablet");
         }}
       />
     </main>
@@ -223,17 +236,9 @@ export default function LobbyShell() {
   // RENDER: AUTHENTICATED — GIO + TABLET MODES
   // ============================================
   return (
-    <main className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
-      {/* Background effects */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-blue-500/8 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-purple-500/8 rounded-full blur-[120px]" />
-      </div>
+    <main className="min-h-screen bg-[#121214] relative overflow-hidden">
 
-      {/* Noise overlay */}
-      <div className="fixed inset-0 opacity-[0.035] pointer-events-none z-50" style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-      }} />
+      
 
       {/* Gio Mode (base layer, always rendered for depth) */}
       <div className={`relative z-10 ${mode === "tablet" ? "pointer-events-none" : ""}`}>
@@ -258,10 +263,12 @@ export default function LobbyShell() {
           onClose={() => setMode("gio")}
           onMessage={(msg) => {
             setMessages((m) => [...m, { role: "assistant", content: msg }]);
-            setMode("gio");
           }}
         />
       )}
+
+      {/* Notification Bubbles */}
+      <NotificationBubble jwt={jwt} />
     </main>
   );
 }
@@ -318,74 +325,67 @@ function AuthScreen({ mode, setupToken, setupData, onSuccess }: AuthScreenProps)
   };
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
-      {/* Background effects */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[120px]" />
-      </div>
+    <main className="min-h-screen bg-[#121214] relative overflow-hidden">
 
-      <div className="fixed inset-0 opacity-[0.035] pointer-events-none z-50" style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-      }} />
+      
 
       <div className="relative z-10 min-h-screen flex items-center justify-center p-6">
         <div className="w-full max-w-md">
           {/* Logo */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg" />
+              <div className="w-8 h-8 bg-[#e8a060] rounded-lg" />
               <span className="text-xl font-semibold text-white">Guardia</span>
             </div>
           </div>
 
           {/* Card */}
-          <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl p-8">
+          <div className="bg-[#1c1c1e] border border-[#2a2a2c] rounded-2xl p-8">
             {/* Giovanni avatar */}
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white text-xl">
+              <div className="w-12 h-12 bg-[#e8a060] rounded-xl flex items-center justify-center text-white text-xl">
                 G
               </div>
               <div>
                 <div className="text-white font-medium">Giovanni</div>
-                <div className="text-white/50 text-sm">Your Concierge</div>
+                <div className="text-[#a0a0a0] text-sm">Your Concierge</div>
               </div>
             </div>
 
             {/* Message */}
-            <div className="bg-white/[0.03] rounded-xl p-4 mb-6">
+            <div className="bg-[#1c1c1e] rounded-xl p-4 mb-6">
               {mode === "setup" ? (
                 <>
-                  <p className="text-white/90">
+                  <p className="text-[#e8e8e8]">
                     Welcome to Guardia, {setupData?.contact_name || "there"}! I'm Giovanni, your dedicated concierge for{" "}
-                    <span className="text-blue-400 font-medium">{setupData?.business_name}</span>.
+                    <span className="text-[#e8a060] font-medium">{setupData?.business_name}</span>.
                   </p>
-                  <p className="text-white/60 text-sm mt-2">
+                  <p className="text-[#a0a0a0] text-sm mt-2">
                     Let's set up your login credentials. Choose a username and 4-digit PIN.
                   </p>
                 </>
               ) : (
-                <p className="text-white/90">Welcome back! Enter your username and PIN to continue.</p>
+                <p className="text-[#e8e8e8]">Welcome back! Enter your username and PIN to continue.</p>
               )}
             </div>
 
             {/* Form */}
             <div className="space-y-4">
               <div>
-                <label className="block text-white/60 text-sm mb-2">Username</label>
+                <label className="block text-[#a0a0a0] text-sm mb-2">Username</label>
                 <input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ""))}
                   placeholder={mode === "setup" ? "e.g. sunnybakery" : "Your username"}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                  className="w-full px-4 py-3 bg-[#2a2a2c] border border-[#2a2a2c] rounded-xl text-white placeholder-[#6a6a6a] focus:outline-none focus:border-[#e8a060]/50 focus:ring-2 focus:ring-[#e8a060]/20 transition-all"
                   onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
                   disabled={loading}
                 />
               </div>
 
               <div>
-                <label className="block text-white/60 text-sm mb-2">{mode === "setup" ? "4-Digit PIN" : "PIN"}</label>
+                <label className="block text-[#a0a0a0] text-sm mb-2">{mode === "setup" ? "4-Digit PIN" : "PIN"}</label>
                 <input
                   type="password"
                   inputMode="numeric"
@@ -394,7 +394,7 @@ function AuthScreen({ mode, setupToken, setupData, onSuccess }: AuthScreenProps)
                   value={pin}
                   onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
                   placeholder="••••"
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all text-center tracking-[0.5em] text-xl"
+                  className="w-full px-4 py-3 bg-[#2a2a2c] border border-[#2a2a2c] rounded-xl text-white placeholder-[#6a6a6a] focus:outline-none focus:border-[#e8a060]/50 focus:ring-2 focus:ring-[#e8a060]/20 transition-all text-center tracking-[0.5em] text-xl"
                   onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
                   disabled={loading}
                 />
@@ -409,7 +409,7 @@ function AuthScreen({ mode, setupToken, setupData, onSuccess }: AuthScreenProps)
               <button
                 onClick={handleSubmit}
                 disabled={loading || !username.trim() || pin.length !== 4}
-                className="w-full py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-xl hover:from-blue-400 hover:to-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                className="w-full py-3 bg-[#e8a060] text-white font-semibold rounded-xl hover:bg-[#d4914f] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
@@ -423,9 +423,9 @@ function AuthScreen({ mode, setupToken, setupData, onSuccess }: AuthScreenProps)
             </div>
           </div>
 
-          <p className="text-center text-white/40 text-sm mt-6">
+          <p className="text-center text-[#6a6a6a] text-sm mt-6">
             Need help? Contact{" "}
-            <a href="mailto:support@guardiacontent.com" className="text-blue-400 hover:underline">
+            <a href="mailto:support@guardiacontent.com" className="text-[#e8a060] hover:underline">
               support@guardiacontent.com
             </a>
           </p>
