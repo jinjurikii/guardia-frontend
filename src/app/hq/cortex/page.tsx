@@ -15,10 +15,10 @@ interface FocusItem {
 }
 
 const PRIORITY_CONFIG = [
-  { p: 0, label: "P0 IDEAS", sublabel: "backlog", color: "#8b5cf6" },
   { p: 1, label: "P1 CRITICAL", sublabel: "now", color: "#ef4444" },
   { p: 2, label: "P2 IMPORTANT", sublabel: "soon", color: "#f59e0b" },
-  { p: 3, label: "P3 TODO", sublabel: "whenever", color: "#6b7280" },
+  { p: 3, label: "P3 TODO", sublabel: "this week", color: "#6b7280" },
+  { p: 99, label: "BACKLOG", sublabel: "someday", color: "#8b5cf6" },
 ];
 
 function FocusCard({ item, onExpand, expanded }: { item: FocusItem; onExpand: () => void; expanded: boolean }) {
@@ -90,17 +90,19 @@ export default function CortexPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`${API_BASE}/hq/cortex-state`)
+    fetch(`${API_BASE}/hq/cortex/focus`)
       .then(res => res.ok ? res.json() : Promise.reject("Failed to fetch"))
-      .then(data => setFocus(data.focus || []))
+      .then(data => setFocus(Array.isArray(data) ? data : []))
       .catch(e => setError(String(e)))
       .finally(() => setLoading(false));
   }, []);
 
-  // Group items by priority
+  // Group items by priority (p > 3 goes to backlog)
   const grouped = PRIORITY_CONFIG.map(config => ({
     config,
-    items: focus.filter(item => item.p === config.p)
+    items: focus.filter(item =>
+      config.p === 99 ? item.p > 3 : item.p === config.p
+    )
   }));
 
   return (
