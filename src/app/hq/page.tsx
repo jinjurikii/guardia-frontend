@@ -1,9 +1,9 @@
 "use client";
 
 import { Suspense } from "react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import Widget from "@/components/hq/Widget";
+import Link from "next/link";
 
 const API_BASE = "https://api.guardiacontent.com";
 
@@ -13,25 +13,21 @@ const API_BASE = "https://api.guardiacontent.com";
 
 interface PortfolioData {
   positions: unknown[];
-  summary: {
-    cash: number;
-    invested: number;
-    unrealized_pnl: number;
-  };
+  summary: { cash: number; invested: number; unrealized_pnl: number };
 }
 
 interface CortexData {
   focus: { p: number; task: string; owner: string }[];
-  pipeline: { scheduled: number; posted: number; failed: number; draft: number };
+  pipeline: { posts: { scheduled: number; posted: number; failed: number; cancelled: number } };
   services_online: number;
   services_total: number;
-  signals?: { type: string; content: string }[];
 }
 
 interface ClientData {
-  id: number;
+  id: string;
   business_name: string;
-  updated_at?: string;
+  tier: string;
+  status: string;
 }
 
 interface HealthData {
@@ -39,9 +35,30 @@ interface HealthData {
   status: string;
 }
 
+interface AtlasNode {
+  id: string;
+  name: string;
+  health: "green" | "amber" | "red";
+  online: number;
+  total: number;
+}
+
+interface AtlasData {
+  factory: AtlasNode[];
+  lobby: AtlasNode[];
+  total_services: number;
+  total_online: number;
+}
+
 interface LabData {
   outputs: number;
   pending: number;
+}
+
+interface AthernyxData {
+  orphan_designs: number;
+  open_threads: number;
+  current_chapter: { chapter: number; chapter_title: string; pages_written: number; status: string } | null;
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -70,34 +87,61 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
     <div className="min-h-screen bg-[#050506] flex items-center justify-center p-4">
       <form onSubmit={handleSubmit} className="bg-[#0d0d0e] border border-[#1a1a1f] rounded-xl p-6 sm:p-8 w-full max-w-[320px]">
         <div className="flex items-center gap-2 mb-6">
-          <span className="text-2xl">🌙</span>
+          <div className="w-5 h-5 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500" />
           <h1 className="text-[#888] font-semibold text-sm tracking-wider">GUARDIA HQ</h1>
         </div>
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="w-full bg-[#0a0a0b] border border-[#1a1a1f] rounded-lg px-3 py-2.5 text-[#ccc] text-sm mb-3 focus:outline-none focus:border-violet-500/50 transition-colors"
-        />
-        <input
-          type="password"
-          placeholder="PIN"
-          value={pin}
-          onChange={(e) => setPin(e.target.value)}
-          className="w-full bg-[#0a0a0b] border border-[#1a1a1f] rounded-lg px-3 py-2.5 text-[#ccc] text-sm mb-4 focus:outline-none focus:border-violet-500/50 transition-colors"
-        />
+        <input type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)}
+          className="w-full bg-[#0a0a0b] border border-[#1a1a1f] rounded-lg px-3 py-2.5 text-[#ccc] text-sm mb-3 focus:outline-none focus:border-violet-500/50" />
+        <input type="password" placeholder="PIN" value={pin} onChange={(e) => setPin(e.target.value)}
+          className="w-full bg-[#0a0a0b] border border-[#1a1a1f] rounded-lg px-3 py-2.5 text-[#ccc] text-sm mb-4 focus:outline-none focus:border-violet-500/50" />
         {error && <p className="text-red-400 text-xs mb-3">{error}</p>}
-        <button type="submit" className="w-full bg-violet-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-violet-500 transition-colors">
-          Enter
-        </button>
+        <button type="submit" className="w-full bg-violet-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-violet-500">Enter</button>
       </form>
     </div>
   );
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// WIDGET COMPONENTS - Each fetches its own data
+// WIDGET WRAPPER (no emoji, just colored dot)
+// ══════════════════════════════════════════════════════════════════════════════
+
+interface WidgetProps {
+  title: string;
+  color: string;
+  href: string;
+  loading?: boolean;
+  error?: string;
+  alert?: boolean;
+  children: React.ReactNode;
+}
+
+function Widget({ title, color, href, loading, error, alert, children }: WidgetProps) {
+  return (
+    <Link href={href}>
+      <div className="group relative bg-[#0a0a0b] border border-[#1a1a1f] rounded-xl p-5 transition-all duration-200 hover:border-[#2a2a2f] cursor-pointer min-h-[140px]">
+        {alert && <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full animate-pulse" style={{ backgroundColor: color }} />}
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
+          <h3 className="text-xs font-medium tracking-wider uppercase" style={{ color }}>{title}</h3>
+        </div>
+        {loading ? (
+          <div className="space-y-2">
+            <div className="h-4 bg-[#1a1a1f] rounded animate-pulse w-1/2" />
+            <div className="h-3 bg-[#1a1a1f] rounded animate-pulse w-3/4" />
+          </div>
+        ) : error ? (
+          <div className="text-xs">
+            <p className="text-red-400/60 mb-1">Error loading data</p>
+            <p className="text-[#444]">{error}</p>
+          </div>
+        ) : children}
+      </div>
+    </Link>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// WIDGETS
 // ══════════════════════════════════════════════════════════════════════════════
 
 function ParadiseWidget() {
@@ -106,116 +150,66 @@ function ParadiseWidget() {
   const [error, setError] = useState<string>();
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/hq/paradise/portfolio`);
-        if (!res.ok) throw new Error("Failed to fetch");
-        const json = await res.json();
-        setData(json);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Unknown error");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-    const interval = setInterval(fetchData, 60000); // Refresh every 60s
-    return () => clearInterval(interval);
+    fetch(`${API_BASE}/hq/paradise/portfolio`)
+      .then(res => res.ok ? res.json() : Promise.reject("Failed"))
+      .then(setData)
+      .catch(e => setError(String(e)))
+      .finally(() => setLoading(false));
   }, []);
 
   const nav = data ? data.summary.cash + data.summary.invested + data.summary.unrealized_pnl : 0;
   const pnl = data?.summary.unrealized_pnl || 0;
-  const positionCount = data?.positions?.length || 0;
 
   return (
-    <Widget
-      title="Paradise"
-      icon="🏆"
-      accentColor="#d4af37"
-      href="/hq/paradise"
-      loading={loading}
-      error={error}
-    >
+    <Widget title="Paradise" color="#d4af37" href="/hq/paradise" loading={loading} error={error}>
       <div className="space-y-3">
         <div>
-          <span className="text-[#6b6555] text-[10px] tracking-wider">NAV</span>
-          <p className="text-[#d4af37] font-mono text-lg">
-            ${nav.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </p>
+          <span className="text-[#555] text-[10px] tracking-wider">NAV</span>
+          <p className="text-[#d4af37] font-mono text-lg">${nav.toLocaleString("en-US", { minimumFractionDigits: 2 })}</p>
         </div>
         <div className="flex items-center gap-4 text-xs">
-          <div>
-            <span className="text-[#555]">P/L</span>
-            <span className={`ml-2 font-mono ${pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-              {pnl >= 0 ? "+" : ""}{pnl.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </span>
-          </div>
-          <div>
-            <span className="text-[#555]">Positions</span>
-            <span className="ml-2 text-[#888]">{positionCount}</span>
-          </div>
+          <span className="text-[#555]">P/L <span className={`ml-1 font-mono ${pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>{pnl >= 0 ? "+" : ""}{pnl.toFixed(2)}</span></span>
+          <span className="text-[#555]">Positions <span className="ml-1 text-[#888]">{data?.positions?.length || 0}</span></span>
         </div>
       </div>
     </Widget>
   );
 }
 
-function PipelineWidget() {
+function FactoryWidget() {
   const [data, setData] = useState<CortexData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/hq/cortex-state`);
-        if (!res.ok) throw new Error("Failed to fetch");
-        const json = await res.json();
-        setData(json);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Unknown error");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-    const interval = setInterval(fetchData, 30000); // Refresh every 30s
-    return () => clearInterval(interval);
+    fetch(`${API_BASE}/hq/cortex-state`)
+      .then(res => res.ok ? res.json() : Promise.reject("Failed"))
+      .then(setData)
+      .catch(e => setError(String(e)))
+      .finally(() => setLoading(false));
   }, []);
 
-  const pipeline = data?.pipeline || { scheduled: 0, posted: 0, failed: 0 };
-  const hasFailed = pipeline.failed > 0;
+  const posts = data?.pipeline?.posts || { scheduled: 0, posted: 0, failed: 0 };
+  const hasFailed = posts.failed > 0;
 
   return (
-    <Widget
-      title="Pipeline"
-      icon="📊"
-      accentColor="#10b981"
-      href="/hq/cortex-state"
-      loading={loading}
-      error={error}
-      alert={hasFailed}
-    >
+    <Widget title="Factory" color="#10b981" href="/hq/factory" loading={loading} error={error} alert={hasFailed}>
       <div className="space-y-3">
-        <div className="flex items-center gap-4 text-sm">
+        <div className="flex items-center gap-6">
           <div>
-            <span className="text-[#555] text-xs">Scheduled</span>
-            <p className="text-emerald-400 font-mono">{pipeline.scheduled}</p>
+            <span className="text-[#555] text-[10px] tracking-wider block">SCHEDULED</span>
+            <p className="text-emerald-400 font-mono text-lg">{posts.scheduled}</p>
           </div>
           <div>
-            <span className="text-[#555] text-xs">Posted</span>
-            <p className="text-[#888] font-mono">{pipeline.posted}</p>
+            <span className="text-[#555] text-[10px] tracking-wider block">POSTED</span>
+            <p className="text-[#888] font-mono text-lg">{posts.posted}</p>
           </div>
           <div>
-            <span className="text-[#555] text-xs">Failed</span>
-            <p className={`font-mono ${hasFailed ? "text-red-400" : "text-[#444]"}`}>
-              {pipeline.failed}
-            </p>
+            <span className="text-[#555] text-[10px] tracking-wider block">FAILED</span>
+            <p className={`font-mono text-lg ${hasFailed ? "text-red-400" : "text-[#444]"}`}>{posts.failed}</p>
           </div>
         </div>
-        {hasFailed && (
-          <p className="text-red-400/80 text-xs">⚠ {pipeline.failed} failed post{pipeline.failed > 1 ? "s" : ""}</p>
-        )}
+        {hasFailed && <p className="text-red-400/80 text-xs">Attention needed</p>}
       </div>
     </Widget>
   );
@@ -227,56 +221,20 @@ function CortexWidget() {
   const [error, setError] = useState<string>();
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/hq/cortex-state`);
-        if (!res.ok) throw new Error("Failed to fetch");
-        const json = await res.json();
-        setData(json);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Unknown error");
-      } finally {
-        setLoading(false);
-      }
-    };
-    // Stagger from Pipeline widget by 5s
-    const timeout = setTimeout(() => {
-      fetchData();
-      const interval = setInterval(fetchData, 30000);
-      return () => clearInterval(interval);
-    }, 5000);
-    return () => clearTimeout(timeout);
+    fetch(`${API_BASE}/hq/cortex-state`)
+      .then(res => res.ok ? res.json() : Promise.reject("Failed"))
+      .then(setData)
+      .catch(e => setError(String(e)))
+      .finally(() => setLoading(false));
   }, []);
 
   const focusCount = data?.focus?.length || 0;
-  const topFocus = data?.focus?.[0];
-  const latestSignal = data?.signals?.[0];
 
   return (
-    <Widget
-      title="Cortex"
-      icon="🧠"
-      accentColor="#8b5cf6"
-      href="/hq/cortex-state"
-      loading={loading}
-      error={error}
-    >
-      <div className="space-y-3">
-        <div>
-          <span className="text-[#555] text-xs">Focus Items</span>
-          <p className="text-violet-400 font-mono">{focusCount}</p>
-        </div>
-        {topFocus && (
-          <div className="text-xs">
-            <span className={`${topFocus.p === 0 ? "text-red-400" : "text-[#555]"}`}>P{topFocus.p}</span>
-            <span className="text-[#888] ml-2 line-clamp-1">{topFocus.task}</span>
-          </div>
-        )}
-        {latestSignal && (
-          <div className="text-xs text-[#666] line-clamp-1">
-            <span className="text-violet-400/60">[{latestSignal.type}]</span> {latestSignal.content}
-          </div>
-        )}
+    <Widget title="Cortex" color="#8b5cf6" href="/hq/cortex" loading={loading} error={error}>
+      <div>
+        <span className="text-[#555] text-[10px] tracking-wider">FOCUS ITEMS</span>
+        <p className="text-violet-400 font-mono text-lg">{focusCount}</p>
       </div>
     </Widget>
   );
@@ -288,112 +246,67 @@ function ClientsWidget() {
   const [error, setError] = useState<string>();
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/clients`);
-        if (!res.ok) throw new Error("Failed to fetch");
-        const json = await res.json();
-        setData(Array.isArray(json) ? json : json.clients || []);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Unknown error");
-      } finally {
-        setLoading(false);
-      }
-    };
-    // Stagger by 10s
-    const timeout = setTimeout(() => {
-      fetchData();
-      const interval = setInterval(fetchData, 120000); // Refresh every 2 min
-      return () => clearInterval(interval);
-    }, 10000);
-    return () => clearTimeout(timeout);
+    fetch(`${API_BASE}/hq/clients`)
+      .then(res => res.ok ? res.json() : Promise.reject("Failed"))
+      .then(d => setData(Array.isArray(d) ? d : []))
+      .catch(e => setError(String(e)))
+      .finally(() => setLoading(false));
   }, []);
 
-  const activeCount = data.length;
-  const recentClient = data.sort((a, b) =>
-    new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime()
-  )[0];
-
   return (
-    <Widget
-      title="Clients"
-      icon="👥"
-      accentColor="#e8a060"
-      href="/clients"
-      loading={loading}
-      error={error}
-    >
-      <div className="space-y-3">
+    <Widget title="Clients" color="#f59e0b" href="/clients" loading={loading} error={error}>
+      <div className="space-y-2">
         <div>
-          <span className="text-[#555] text-xs">Active Clients</span>
-          <p className="text-[#e8a060] font-mono text-lg">{activeCount}</p>
+          <span className="text-[#555] text-[10px] tracking-wider">ACTIVE</span>
+          <p className="text-amber-400 font-mono text-lg">{data.length}</p>
         </div>
-        {recentClient && (
-          <div className="text-xs">
-            <span className="text-[#555]">Recent:</span>
-            <span className="text-[#888] ml-2 line-clamp-1">{recentClient.business_name}</span>
-          </div>
-        )}
+        {data[0] && <p className="text-xs text-[#666] truncate">{data[0].business_name}</p>}
       </div>
     </Widget>
   );
 }
 
-function ServicesWidget() {
-  const [data, setData] = useState<HealthData | null>(null);
+function AtlasWidget() {
+  const [data, setData] = useState<AtlasData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/health`);
-        if (!res.ok) throw new Error("Failed to fetch");
-        const json = await res.json();
-        setData(json);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Unknown error");
-      } finally {
-        setLoading(false);
-      }
-    };
-    // Stagger by 15s
-    const timeout = setTimeout(() => {
-      fetchData();
-      const interval = setInterval(fetchData, 30000);
-      return () => clearInterval(interval);
-    }, 15000);
-    return () => clearTimeout(timeout);
+    fetch(`${API_BASE}/hq/services/map`)
+      .then(res => res.ok ? res.json() : Promise.reject("Failed"))
+      .then(setData)
+      .catch(e => setError(String(e)))
+      .finally(() => setLoading(false));
   }, []);
 
-  const services = data?.services || [];
-  const online = services.filter(s => s.status === "online" || s.status === "healthy").length;
-  const total = services.length;
-  const healthy = online === total && total > 0;
+  const healthy = data?.total_online === data?.total_services && (data?.total_services || 0) > 0;
+  const HEALTH_COLORS = { green: "bg-emerald-400", amber: "bg-amber-400", red: "bg-red-400" };
+
+  const renderDots = (nodes: AtlasNode[]) => (
+    <div className="flex items-center gap-1">
+      {nodes.map(n => (
+        <div key={n.id} className={`w-2 h-2 rounded-full ${HEALTH_COLORS[n.health]} ${n.health !== "green" ? "animate-pulse" : ""}`} title={n.name} />
+      ))}
+    </div>
+  );
 
   return (
-    <Widget
-      title="Services"
-      icon="⚡"
-      accentColor="#00d4d4"
-      href="/health"
-      loading={loading}
-      error={error}
-      alert={!healthy && total > 0}
-    >
+    <Widget title="Atlas" color="#06b6d4" href="/hq/atlas" loading={loading} error={error} alert={!healthy && !!data}>
       <div className="space-y-3">
-        <div className="flex items-center gap-3">
-          <div>
-            <span className="text-[#555] text-xs">Status</span>
-            <p className={`font-mono text-lg ${healthy ? "text-emerald-400" : "text-amber-400"}`}>
-              {online}/{total}
-            </p>
-          </div>
-          <div className={`w-3 h-3 rounded-full ${healthy ? "bg-emerald-400" : "bg-amber-400 animate-pulse"}`} />
+        <div className="flex items-center justify-between">
+          <span className="text-emerald-400/60 text-[10px] tracking-wider">FACTORY</span>
+          {data?.factory && renderDots(data.factory)}
         </div>
-        <p className={`text-xs ${healthy ? "text-emerald-400/60" : "text-amber-400/60"}`}>
-          {healthy ? "All systems operational" : `${total - online} service${total - online > 1 ? "s" : ""} degraded`}
-        </p>
+        <div className="flex items-center justify-between">
+          <span className="text-violet-400/60 text-[10px] tracking-wider">LOBBY</span>
+          {data?.lobby && renderDots(data.lobby)}
+        </div>
+        <div className="pt-1 border-t border-[#1a1a1f] flex items-center gap-2">
+          <div className={`w-2 h-2 rounded-full ${healthy ? "bg-emerald-400" : "bg-amber-400 animate-pulse"}`} />
+          <span className={`text-xs font-mono ${healthy ? "text-cyan-400" : "text-amber-400"}`}>
+            {data?.total_online || 0}/{data?.total_services || 0} healthy
+          </span>
+        </div>
       </div>
     </Widget>
   );
@@ -405,86 +318,63 @@ function LabWidget() {
   const [error, setError] = useState<string>();
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/hq/lab/status`);
-        if (!res.ok) throw new Error("Failed to fetch");
-        const json = await res.json();
-        setData(json);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Unknown error");
-      } finally {
-        setLoading(false);
-      }
-    };
-    // Stagger by 20s
-    const timeout = setTimeout(() => {
-      fetchData();
-      const interval = setInterval(fetchData, 60000);
-      return () => clearInterval(interval);
-    }, 20000);
-    return () => clearTimeout(timeout);
+    fetch(`${API_BASE}/hq/lab/status`)
+      .then(res => res.ok ? res.json() : Promise.reject("Failed"))
+      .then(setData)
+      .catch(e => setError(String(e)))
+      .finally(() => setLoading(false));
   }, []);
 
   return (
-    <Widget
-      title="Lab"
-      icon="🔬"
-      accentColor="#14b8a6"
-      href="/hq/lab"
-      loading={loading}
-      error={error}
-    >
-      <div className="space-y-3">
-        <div className="flex items-center gap-4">
-          <div>
-            <span className="text-[#555] text-xs">Outputs</span>
-            <p className="text-teal-400 font-mono">{data?.outputs || 0}</p>
-          </div>
-          <div>
-            <span className="text-[#555] text-xs">Pending</span>
-            <p className="text-[#888] font-mono">{data?.pending || 0}</p>
-          </div>
+    <Widget title="Lab" color="#14b8a6" href="/hq/lab" loading={loading} error={error}>
+      <div className="flex items-center gap-6">
+        <div>
+          <span className="text-[#555] text-[10px] tracking-wider">OUTPUTS</span>
+          <p className="text-teal-400 font-mono text-lg">{data?.outputs || 0}</p>
+        </div>
+        <div>
+          <span className="text-[#555] text-[10px] tracking-wider">PENDING</span>
+          <p className="text-[#888] font-mono text-lg">{data?.pending || 0}</p>
         </div>
       </div>
     </Widget>
   );
 }
 
-function AtheryxWidget() {
-  // Placeholder - endpoint TBD (MCP: athernyx_awareness or new endpoint)
+function AthernyxWidget() {
+  const [data, setData] = useState<AthernyxData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>();
 
   useEffect(() => {
-    // Simulate load for now
-    const timeout = setTimeout(() => setLoading(false), 1500);
-    return () => clearTimeout(timeout);
+    fetch(`${API_BASE}/hq/athernyx/status`)
+      .then(res => res.ok ? res.json() : Promise.reject("Failed"))
+      .then(setData)
+      .catch(e => setError(String(e)))
+      .finally(() => setLoading(false));
   }, []);
 
+  const chapter = data?.current_chapter;
+  const hasOrphans = (data?.orphan_designs || 0) > 0;
+
   return (
-    <Widget
-      title="Athernyx"
-      icon="✨"
-      accentColor="#a855f7"
-      href="/hq/lab"
-      loading={loading}
-    >
-      <div className="space-y-3">
-        <div className="flex items-center gap-4">
+    <Widget title="Athernyx" color="#a855f7" href="/hq/athernyx" loading={loading} error={error} alert={hasOrphans}>
+      <div className="space-y-2">
+        <div className="flex items-center gap-6">
           <div>
-            <span className="text-[#555] text-xs">Chapters</span>
-            <p className="text-purple-400 font-mono">1/3</p>
+            <span className="text-[#555] text-[10px] tracking-wider">CHAPTER</span>
+            <p className="text-purple-400 font-mono text-lg">{chapter?.chapter || "-"}</p>
           </div>
           <div>
-            <span className="text-[#555] text-xs">Threads</span>
-            <p className="text-[#888] font-mono">4</p>
+            <span className="text-[#555] text-[10px] tracking-wider">THREADS</span>
+            <p className="text-[#888] font-mono text-lg">{data?.open_threads || 0}</p>
           </div>
           <div>
-            <span className="text-[#555] text-xs">Orphans</span>
-            <p className="text-[#888] font-mono">2</p>
+            <span className="text-[#555] text-[10px] tracking-wider">ORPHANS</span>
+            <p className={`font-mono text-lg ${hasOrphans ? "text-amber-400" : "text-[#888]"}`}>{data?.orphan_designs || 0}</p>
           </div>
         </div>
-        <p className="text-purple-400/40 text-[10px]">Chapter 1: The Awakening</p>
+        {chapter && <p className="text-purple-400/60 text-[10px]">{chapter.chapter_title} • {chapter.pages_written}pg</p>}
       </div>
     </Widget>
   );
@@ -499,7 +389,6 @@ function HQPageContent() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [globalHealth, setGlobalHealth] = useState<"healthy" | "degraded" | "loading">("loading");
 
-  // Check auth - supports ?dev=serb bypass for Serberus
   useEffect(() => {
     const devKey = searchParams?.get("dev");
     if (devKey === DEV_BYPASS_KEY) {
@@ -510,72 +399,50 @@ function HQPageContent() {
     setIsAuthenticated(localStorage.getItem("hq_auth") === "true");
   }, [searchParams]);
 
-  // Global health indicator
   useEffect(() => {
     if (!isAuthenticated) return;
-    const checkHealth = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/health`);
-        if (res.ok) {
-          const data = await res.json();
-          const online = data.services?.filter((s: {status: string}) =>
-            s.status === "online" || s.status === "healthy"
-          ).length || 0;
-          const total = data.services?.length || 0;
-          setGlobalHealth(online === total ? "healthy" : "degraded");
-        }
-      } catch {
-        setGlobalHealth("degraded");
-      }
-    };
-    checkHealth();
-    const interval = setInterval(checkHealth, 30000);
-    return () => clearInterval(interval);
+    fetch(`${API_BASE}/health`)
+      .then(res => res.json())
+      .then(data => {
+        const online = data.services?.filter((s: {status: string}) => s.status === "online" || s.status === "healthy").length || 0;
+        const total = data.services?.length || 0;
+        setGlobalHealth(online === total ? "healthy" : "degraded");
+      })
+      .catch(() => setGlobalHealth("degraded"));
   }, [isAuthenticated]);
 
-  if (!isAuthenticated) {
-    return <LoginScreen onLogin={() => setIsAuthenticated(true)} />;
-  }
+  if (!isAuthenticated) return <LoginScreen onLogin={() => setIsAuthenticated(true)} />;
 
   return (
     <div className="min-h-screen bg-[#050506] text-[#e8e8e8]">
-      {/* Header */}
-      <header className="border-b border-[#1a1a1f] bg-[#0a0a0b] px-6 py-4">
+      <header className="border-b border-[#1a1a1f] bg-[#0a0a0b]/50 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">🌙</span>
+            <div className="w-5 h-5 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500" />
             <h1 className="text-[#888] font-semibold text-sm tracking-wider">GUARDIA HQ</h1>
           </div>
           <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full transition-colors ${
-              globalHealth === "loading" ? "bg-[#444] animate-pulse" :
-              globalHealth === "healthy" ? "bg-emerald-400" : "bg-amber-400 animate-pulse"
-            }`} />
-            <span className="text-[#666] text-xs font-mono uppercase">
-              {globalHealth === "loading" ? "..." : globalHealth}
-            </span>
+            <div className={`w-2 h-2 rounded-full ${globalHealth === "loading" ? "bg-[#444] animate-pulse" : globalHealth === "healthy" ? "bg-emerald-400" : "bg-amber-400 animate-pulse"}`} />
+            <span className="text-[#666] text-xs font-mono uppercase">{globalHealth === "loading" ? "..." : globalHealth}</span>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto p-6">
-        {/* Widget Grid - 7 widgets matching spec */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <ParadiseWidget />
-          <PipelineWidget />
+          <FactoryWidget />
           <CortexWidget />
           <ClientsWidget />
-          <ServicesWidget />
+          <AtlasWidget />
           <LabWidget />
-          <AtheryxWidget />
+          <AthernyxWidget />
         </div>
       </main>
     </div>
   );
 }
 
-// Wrapper with Suspense for useSearchParams
 export default function HQPage() {
   return (
     <Suspense fallback={<div className="min-h-screen bg-[#050506]" />}>
