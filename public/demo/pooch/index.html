@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>The Painted Pooch — Creative Grooming & Daycare | Sunbury, PA</title>
+<meta name="description" content="Every dog is a work of art. Creative grooming, daycare & love in downtown Sunbury since 2019. Internationally published, locally loved.">
+<meta property="og:title" content="The Painted Pooch — Sunbury, PA">
+<meta property="og:description" content="Creative grooming, daycare & love in downtown Sunbury. Every dog is a work of art.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,400;1,9..144,500&family=DM+Sans:wght@300;400;500;600&family=Josefin+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/lenis@1.1.20/dist/lenis.css">
+<style>
+/* ===================================================
+   PAINTED POOCH PATTERN v1 — Guardia Intelligence
+   GSAP + Lenis scroll storytelling
+   =================================================== */
+
+:root {
+  --teal: #6ABFAD;
+  --teal-deep: #4A9E8E;
+  --teal-light: #8DD4C5;
+  --teal-muted: #5AAFA0;
+  --cream: #FFF9F5;
+  --cream-dark: #F0E8E0;
+  --parchment: #E8DDD3;
+  --charcoal: #2A2A2A;
+  --charcoal-light: #3D3D3D;
+  --warmgray: #7A7068;
+  --coral: #E8746A;
+  --coral-deep: #D4605A;
+  --gold: #D4A84B;
+  --bark-green: #5C8A50;
+  --bark-green-light: #7BA86E;
+  --shadow-soft: 0 4px 20px rgba(42, 42, 42, 0.08);
+  --shadow-medium: 0 8px 40px rgba(42, 42, 42, 0.12);
+  --shadow-lift: 0 12px 48px rgba(42, 42, 42, 0.16);
+  --radius: 6px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* Lenis overrides */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: hidden; }
+
+html { font-size: 16px; }
+
+body {
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  background: var(--cream);
+  color: var(--charcoal);
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+/* === GRAIN OVERLAY === */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* === NAVIGATION === */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  padding: 0 2rem;
+  transition: background 0.4s ease, backdrop-filter 0.4s ease, box-shadow 0.4s ease;
+  background: transparent;
+}
+nav.scrolled {
+  background: rgba(255, 249, 245, 0.95);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 20px rgba(42, 42, 42, 0.08);
+}
+.nav-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 70px;
+}
+.logo-text {
+  font-family: 'Fraunces', serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #fff;
+  text-decoration: none;
+  transition: color 0.4s ease;
+}
+.logo-text span { color: var(--coral); transition: color 0.4s ease; }
+nav.scrolled .logo-text { color: var(--charcoal); }
+nav.scrolled .logo-text span { color: var(--teal-deep); }
+.nav-links { display: flex; gap: 2rem; list-style: none; }
+.nav-links a {
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 400;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  color: rgba(255,255,255,0.85);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+nav.scrolled .nav-links a { color: var(--charcoal); }
+.nav-links a:hover { color: var(--coral); }
+.nav-phone {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #fff;
+  text-decoration: none;
+  padding: 0.5rem 1.2rem;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 50px;
+  transition: all 0.3s ease;
+}
+nav.scrolled .nav-phone {
+  color: var(--teal-deep);
+  border-color: var(--teal);
+}
+.nav-phone:hover {
+  background: var(--teal);
+  color: #fff;
+  border-color: var(--teal);
+}
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .nav-phone { display: none; }
+  .nav-inner { height: 56px; }
+  .logo-text { font-size: 1.1rem; }
+}
+
+/* === SECTION HELPERS === */
+.section-label {
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 300;
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+.section-title {
+  font-family: 'Fraunces', serif;
+  font-optical-sizing: auto;
+  font-weight: 600;
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
+}
+.section-padding {
+  padding: 6rem 2rem;
+}
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* === HERO === */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  background: linear-gradient(135deg, var(--teal-deep) 0%, var(--teal) 40%, var(--teal-light) 100%);
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 70%, rgba(232,116,106,0.15) 0%, transparent 50%),
+              radial-gradient(circle at 70% 30%, rgba(212,168,75,0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+.hero-content {
+  position: relative;
+  z-index: 2;
+  padding: 2rem;
+  max-width: 800px;
+}
+.hero-badge {
+  display: inline-block;
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 300;
+  font-size: 0.75rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.8);
+  border: 1px solid rgba(255,255,255,0.3);
+  padding: 0.4rem 1.5rem;
+  border-radius: 50px;
+  margin-bottom: 2rem;
+}
+.hero h1 {
+  font-family: 'Fraunces', serif;
+  font-optical-sizing: auto;
+  font-weight: 800;
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  color: #fff;
+  line-height: 1.1;
+  margin-bottom: 1.5rem;
+}
+.hero h1 em {
+  font-style: italic;
+  color: var(--coral);
+}
+.hero-subtitle {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  color: rgba(255,255,255,0.85);
+  font-weight: 300;
+  margin-bottom: 2.5rem;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.hero-cta {
+  display: inline-block;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: var(--teal-deep);
+  background: #fff;
+  padding: 0.9rem 2.5rem;
+  border-radius: 50px;
+  text-decoration: none;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+.hero-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+}
+/* Hero image placeholder */
+.hero-image {
+  position: absolute;
+  bottom: 0; right: 5%;
+  width: 350px; height: 400px;
+  background: linear-gradient(135deg, var(--teal-muted) 0%, var(--teal-deep) 100%);
+  border-radius: 200px 200px 0 0;
+  opacity: 0.2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hero-image span {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+}
+/* Scroll indicator */
+.scroll-indicator {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+.scroll-indicator span {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+}
+.scroll-line {
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.5), transparent);
+  animation: scrollBounce 2s ease-in-out infinite;
+}
+@keyframes scrollBounce {
+  0%, 100% { transform: scaleY(1); opacity: 1; }
+  50% { transform: scaleY(0.5); opacity: 0.5; }
+}
+@media (max-width: 768px) {
+  .hero-image { display: none; }
+}
+
+/* === THE ARTIST (Shawnee's Story) === */
+.artist {
+  background: var(--cream);
+}
+.artist-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+.artist-portrait {
+  aspect-ratio: 4/5;
+  background: var(--teal-light);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-medium);
+  position: relative;
+  overflow: hidden;
+}
+.artist-portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 20%;
+}
+.artist-text .section-label { color: var(--teal-deep); }
+.artist-text .section-title {
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  color: var(--charcoal);
+}
+.artist-text p {
+  color: var(--warmgray);
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  line-height: 1.8;
+}
+.artist-text p strong {
+  color: var(--charcoal);
+  font-weight: 600;
+}
+.artist-credentials {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+.credential {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--teal-deep);
+  padding: 0.4rem 1rem;
+  border: 1px solid var(--teal-light);
+  border-radius: 50px;
+}
+.pull-quote {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 1.3rem;
+  color: var(--teal-deep);
+  border-left: 3px solid var(--coral);
+  padding-left: 1.5rem;
+  margin: 2rem 0;
+  line-height: 1.5;
+}
+.pull-quote cite {
+  display: block;
+  font-family: 'DM Sans', sans-serif;
+  font-style: normal;
+  font-size: 0.8rem;
+  color: var(--warmgray);
+  margin-top: 0.5rem;
+}
+@media (max-width: 768px) {
+  .artist-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .artist-portrait {
+    aspect-ratio: 3/4;
+    max-height: 400px;
+  }
+}
+
+/* === THE GALLERY === */
+.gallery {
+  background: var(--charcoal);
+  position: relative;
+}
+.gallery .section-label { color: var(--teal-light); }
+.gallery .section-title {
+  color: #fff;
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+}
+.gallery-subtitle {
+  color: rgba(255,255,255,0.6);
+  font-size: 1rem;
+  margin-bottom: 3rem;
+  max-width: 500px;
+}
+/* Before / After Showcase */
+.before-after {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+.ba-card {
+  flex: 1;
+  max-width: 340px;
+  background: #fff;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+  position: relative;
+}
+.ba-image {
+  aspect-ratio: 3/4;
+  overflow: hidden;
+}
+.ba-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 20%;
+}
+.ba-label {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 500;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.3rem 1rem;
+  border-radius: 50px;
+  z-index: 2;
+}
+.ba-before {
+  background: rgba(42,42,42,0.8);
+  color: rgba(255,255,255,0.9);
+}
+.ba-after {
+  background: var(--teal);
+  color: #fff;
+}
+.ba-arrow {
+  color: var(--teal-light);
+  flex-shrink: 0;
+}
+@media (max-width: 768px) {
+  .before-after { gap: 0.75rem; }
+  .ba-card { max-width: none; }
+  .ba-arrow svg { width: 24px; height: 24px; }
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+}
+.gallery-card {
+  background: #fff;
+  padding: 0.6rem 0.6rem 1.2rem;
+  border-radius: 2px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.gallery-card:nth-child(odd) { transform: rotate(-1.5deg); }
+.gallery-card:nth-child(even) { transform: rotate(1.5deg); }
+.gallery-card:hover {
+  transform: rotate(0deg) scale(1.03) !important;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+  z-index: 2;
+}
+.gallery-image {
+  aspect-ratio: 3/4;
+  background: linear-gradient(135deg, var(--teal-muted), var(--charcoal-light));
+  border-radius: 1px;
+  overflow: hidden;
+  position: relative;
+}
+.gallery-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 20%;
+}
+.gallery-image span {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  text-align: center;
+  padding: 0.5rem;
+}
+.gallery-caption {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.8rem;
+  color: var(--charcoal);
+  text-align: center;
+  margin-top: 0.8rem;
+  font-weight: 400;
+}
+.gallery-caption em {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--warmgray);
+  margin-top: 0.2rem;
+}
+@media (max-width: 768px) {
+  .gallery-grid { gap: 1rem; }
+  .gallery-card { transform: rotate(0deg) !important; }
+  .gallery-card:hover { transform: scale(1.02) !important; }
+}
+
+/* === SERVICES === */
+.services {
+  background: var(--cream);
+}
+.services .section-label { color: var(--teal-deep); }
+.services .section-title {
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  color: var(--charcoal);
+  text-align: center;
+}
+.services .section-label { text-align: center; }
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  margin-top: 3rem;
+}
+.service-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 2.5rem 2rem;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid transparent;
+  transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  text-align: center;
+}
+.service-card:hover {
+  border-color: var(--teal-light);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-medium);
+}
+.service-icon {
+  width: 60px; height: 60px;
+  margin: 0 auto 1.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+.service-icon.groom { background: linear-gradient(135deg, var(--teal-light), var(--teal)); }
+.service-icon.color { background: linear-gradient(135deg, var(--coral), var(--coral-deep)); }
+.service-icon.daycare { background: linear-gradient(135deg, var(--gold), #C49A3A); }
+.service-card h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--charcoal);
+  margin-bottom: 0.75rem;
+}
+.service-card p {
+  color: var(--warmgray);
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+@media (max-width: 768px) {
+  .services-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+}
+
+/* === BARKBURY (Pinned Scroll Section) === */
+.barkbury {
+  background: var(--charcoal);
+  position: relative;
+  overflow: hidden;
+}
+.barkbury::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 20% 50%, rgba(92,138,80,0.15) 0%, transparent 50%),
+              radial-gradient(circle at 80% 50%, rgba(106,191,173,0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+.barkbury-inner {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.barkbury-content {
+  max-width: 700px;
+  text-align: center;
+  padding: 2rem;
+}
+.barkbury .section-label { color: var(--bark-green-light); }
+.barkbury .section-title {
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  color: #fff;
+  margin-bottom: 2rem;
+}
+.barkbury-phase {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+}
+.barkbury-phase .phase-content {
+  max-width: 650px;
+  text-align: center;
+  padding: 2rem;
+}
+.barkbury-phase p {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+  color: rgba(255,255,255,0.9);
+  line-height: 1.6;
+  font-weight: 400;
+}
+.barkbury-phase .mayor-quote {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  color: var(--bark-green-light);
+  border-left: 3px solid var(--bark-green);
+  padding-left: 1.5rem;
+  text-align: left;
+  margin: 2rem auto;
+  max-width: 500px;
+  line-height: 1.6;
+}
+.barkbury-phase .mayor-quote cite {
+  display: block;
+  font-family: 'DM Sans', sans-serif;
+  font-style: normal;
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.5);
+  margin-top: 0.75rem;
+}
+.barkbury-phase .bark-cta {
+  display: inline-block;
+  margin-top: 2rem;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #fff;
+  padding: 0.8rem 2rem;
+  border: 1px solid var(--bark-green-light);
+  border-radius: 50px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+.barkbury-phase .bark-cta:hover {
+  background: var(--bark-green);
+  border-color: var(--bark-green);
+}
+/* Park concept placeholder */
+.park-placeholder {
+  width: 100%;
+  max-width: 400px;
+  aspect-ratio: 16/9;
+  background: linear-gradient(135deg, var(--bark-green) 0%, var(--bark-green-light) 100%);
+  border-radius: var(--radius);
+  margin: 2rem auto 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.5;
+}
+.park-placeholder span {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+}
+
+/* === TESTIMONIALS === */
+.testimonials {
+  background: var(--cream);
+  overflow: hidden;
+}
+.testimonials .section-label {
+  color: var(--coral);
+  text-align: center;
+}
+.testimonials .section-title {
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  color: var(--charcoal);
+  text-align: center;
+}
+.testimonials-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+.testimonial-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 2.5rem 2rem;
+  box-shadow: var(--shadow-soft);
+  position: relative;
+}
+.testimonial-card::before {
+  content: '\201C';
+  font-family: 'Fraunces', serif;
+  font-size: 4rem;
+  color: var(--teal-light);
+  position: absolute;
+  top: 0.5rem;
+  left: 1.5rem;
+  line-height: 1;
+  opacity: 0.5;
+}
+.testimonial-card p {
+  color: var(--charcoal);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  font-style: italic;
+  margin-bottom: 1rem;
+}
+.testimonial-card cite {
+  font-style: normal;
+  font-size: 0.8rem;
+  color: var(--warmgray);
+  font-weight: 500;
+}
+.paw-divider {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.3em;
+  color: var(--teal-light);
+}
+@media (max-width: 768px) {
+  .testimonials-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+}
+
+/* === SCHEDULE CTA === */
+.cta-section {
+  background: linear-gradient(135deg, var(--teal-deep) 0%, var(--teal) 50%, var(--teal-light) 100%);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.cta-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+.cta-section h2 {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  color: #fff;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+.cta-section .cta-sub {
+  font-size: 1.1rem;
+  color: rgba(255,255,255,0.85);
+  font-weight: 300;
+  margin-bottom: 2.5rem;
+}
+/* Chat tease mockup */
+.chat-tease {
+  max-width: 320px;
+  margin: 0 auto 2.5rem;
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(8px);
+  border-radius: 16px;
+  padding: 1.5rem;
+  text-align: left;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.chat-tease .chat-header {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 0.5rem;
+}
+.chat-tease .chat-body {
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.8);
+  line-height: 1.5;
+  margin-bottom: 1rem;
+}
+.chat-tease .chat-btn {
+  display: block;
+  text-align: center;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: var(--teal-deep);
+  background: #fff;
+  padding: 0.6rem 1.5rem;
+  border-radius: 50px;
+  text-decoration: none;
+  transition: transform 0.2s ease;
+}
+.chat-tease .chat-btn:hover { transform: scale(1.03); }
+.cta-phone {
+  display: inline-block;
+  font-family: 'Fraunces', serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #fff;
+  text-decoration: none;
+  margin-bottom: 0.5rem;
+  transition: color 0.3s ease;
+}
+.cta-phone:hover { color: var(--coral); }
+.cta-address {
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.7);
+}
+
+/* === FOOTER === */
+footer {
+  background: var(--charcoal);
+  padding: 3rem 2rem;
+  color: rgba(255,255,255,0.6);
+}
+.footer-grid {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+.footer-col h4 {
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 400;
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--teal-light);
+  margin-bottom: 1rem;
+}
+.footer-col p, .footer-col a {
+  font-size: 0.85rem;
+  line-height: 2;
+  color: rgba(255,255,255,0.5);
+  text-decoration: none;
+}
+.footer-col a:hover { color: var(--teal-light); }
+.footer-bottom {
+  max-width: 1100px;
+  margin: 2rem auto 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.footer-bottom span {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.3);
+}
+.guardia-badge {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.2);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+.guardia-badge:hover { color: rgba(255,255,255,0.4); }
+@media (max-width: 768px) {
+  .footer-grid { grid-template-columns: 1fr; text-align: center; gap: 1.5rem; }
+  .footer-bottom { flex-direction: column; gap: 0.5rem; text-align: center; }
+}
+
+/* === STICKY MOBILE CTA === */
+.sticky-cta {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 99;
+  background: var(--teal-deep);
+  padding: 0.75rem 1.5rem;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
+  transform: translateY(100%);
+  transition: transform 0.4s ease;
+}
+.sticky-cta.visible { transform: translateY(0); }
+.sticky-cta-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 500px;
+  margin: 0 auto;
+}
+.sticky-cta a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+.sticky-cta .book-btn {
+  background: var(--coral);
+  padding: 0.5rem 1.5rem;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background 0.3s ease;
+}
+.sticky-cta .book-btn:hover { background: var(--coral-deep); }
+@media (max-width: 768px) {
+  .sticky-cta { display: block; }
+  footer { padding-bottom: 5rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- NAVIGATION                                  -->
+<!-- ═══════════════════════════════════════════ -->
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="logo-text">The Painted <span>Pooch</span></a>
+    <ul class="nav-links">
+      <li><a href="#artist">The Artist</a></li>
+      <li><a href="#gallery">Gallery</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#barkbury">Barkbury</a></li>
+    </ul>
+    <a href="tel:+15705415020" class="nav-phone">(570) 541-5020</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- HERO                                        -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">Downtown Sunbury Since 2019</div>
+    <h1>Every Dog Is a<br>Work of <em>Art</em></h1>
+    <p class="hero-subtitle">Creative grooming, daycare & love in downtown Sunbury, PA</p>
+    <a href="#gallery" class="hero-cta">See the Gallery</a>
+  </div>
+  <div class="hero-image"><span>Hero Photo</span></div>
+  <div class="scroll-indicator">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- THE ARTIST                                  -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="artist section-padding" id="artist">
+  <div class="container">
+    <div class="artist-grid">
+      <div class="artist-portrait"><img src="images/painted_pooch_fb_image04.jpg" alt="Creative color poodle by The Painted Pooch"></div>
+      <div class="artist-text">
+        <div class="section-label">The Artist</div>
+        <h2 class="section-title">30 Years of Craft.<br>One Passion.</h2>
+        <p>It started at <strong>Sunbury Animal Hospital</strong> — just grooming one day a week. But one day a week became every day. The dogs deserved it, and Shawnee couldn't stop.</p>
+        <p>In September 2019, she opened <strong>The Painted Pooch</strong> on Market Street. By the end of the first year, business had tripled. Word got around — not just in Sunbury, but internationally.</p>
+        <p>Published in <strong>"I Fashion Pet"</strong> magazine. OPAWZ Certified creative groomer. 30+ years of experience. But if you ask her, it's simple:</p>
+        <blockquote class="pull-quote">
+          "When it comes to grooming, it's like art. That's why we called it The Painted Pooch."
+          <cite>— Shawnee, Owner & Artist</cite>
+        </blockquote>
+        <div class="artist-credentials">
+          <span class="credential">OPAWZ Certified</span>
+          <span class="credential">30+ Years</span>
+          <span class="credential">Internationally Published</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- THE GALLERY                                 -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="gallery section-padding" id="gallery">
+  <div class="container">
+    <div class="section-label">The Gallery</div>
+    <h2 class="section-title">Internationally Published.<br>Locally Loved.</h2>
+    <p class="gallery-subtitle">Safe, pet-friendly creative color by a certified OPAWZ artist. Every groom is a one-of-a-kind piece.</p>
+
+    <!-- Before / After Showcase -->
+    <div class="before-after">
+      <div class="ba-card">
+        <div class="ba-label ba-before">Before</div>
+        <div class="ba-image"><img src="images/painted_pooch_fb_image07-before.jpg" alt="Before grooming"></div>
+      </div>
+      <div class="ba-arrow">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </div>
+      <div class="ba-card">
+        <div class="ba-label ba-after">After</div>
+        <div class="ba-image"><img src="images/painted_pooch_fb_image07-after.jpg" alt="After grooming"></div>
+      </div>
+    </div>
+
+    <!-- Gallery Grid -->
+    <div class="gallery-grid">
+      <div class="gallery-card">
+        <div class="gallery-image"><img src="images/painted_pooch_fb_image01.jpg" alt="Holiday sparkle Pomeranian"></div>
+        <div class="gallery-caption">Holiday Sparkle<em>Pomeranian</em></div>
+      </div>
+      <div class="gallery-card">
+        <div class="gallery-image"><img src="images/painted_pooch_fb_image02.jpg" alt="Classic groom German Shepherd"></div>
+        <div class="gallery-caption">Classic Groom<em>German Shepherd</em></div>
+      </div>
+      <div class="gallery-card">
+        <div class="gallery-image"><img src="images/painted_pooch_fb_image05.jpg" alt="Cool pup in sunglasses"></div>
+        <div class="gallery-caption">Cool Customer<em>Shih Tzu</em></div>
+      </div>
+      <div class="gallery-card">
+        <div class="gallery-image"><img src="images/painted_pooch_fb_image06.jpg" alt="Dachshund on the grooming table"></div>
+        <div class="gallery-caption">Halloween Ready<em>Dachshund</em></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- SERVICES                                    -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="services section-padding" id="services">
+  <div class="container">
+    <div class="section-label">Services</div>
+    <h2 class="section-title">From Classic Cuts to<br>Creative Color</h2>
+    <div class="services-grid">
+      <div class="service-card">
+        <div class="service-icon groom">&#9986;</div>
+        <h3>Grooming</h3>
+        <p>Full-service grooming for dogs and cats of all breeds and sizes. Bath, haircut, nails, ears — the works.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon color">&#127912;</div>
+        <h3>Creative Color</h3>
+        <p>Safe, pet-friendly dyes for dogs who want to stand out. Published techniques, stunning results.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon daycare">&#127775;</div>
+        <h3>Doggy Daycare</h3>
+        <p>All-day socialization, walks, toys, treats, and 101 Dalmatians on the TV. Your pup's second home.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- BARKBURY (Pinned Scroll)                    -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="barkbury" id="barkbury">
+  <div class="barkbury-inner">
+    <div class="barkbury-phase phase-1">
+      <div class="phase-content">
+        <div class="section-label">Barkbury</div>
+        <h2 class="section-title">Giving Back to the City<br>That Gave Us Everything</h2>
+        <p>Our clients kept saying Sunbury needs a place for their dogs to run free. A real park. Not a parking lot, not a side street — somewhere safe.</p>
+      </div>
+    </div>
+    <div class="barkbury-phase phase-2">
+      <div class="phase-content">
+        <p>So we're building it. <strong style="color:var(--bark-green-light)">Barkbury</strong> — a dog park for Sunbury, by Sunbury. Because this community deserves a safe space for every wagging tail.</p>
+        <div class="park-placeholder"><span>Park Vision Rendering</span></div>
+      </div>
+    </div>
+    <div class="barkbury-phase phase-3">
+      <div class="phase-content">
+        <blockquote class="mayor-quote">
+          "A local business being recognized for its creativity... putting Sunbury on the map."
+          <cite>— Mayor Kurt Karlovich</cite>
+        </blockquote>
+        <a href="#" class="bark-cta">Follow the Journey</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- TESTIMONIALS                                -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="testimonials section-padding" id="testimonials">
+  <div class="container">
+    <div class="testimonials-header">
+      <div class="section-label">Tail Wags</div>
+      <h2 class="section-title">What Our Pack Says</h2>
+    </div>
+    <div class="testimonials-grid">
+      <div class="testimonial-card">
+        <p>Finally!! A grooming salon that offers daycare for dogs!! Great groomer and attentive daycare. She looked amazing when she was done!!!</p>
+        <cite>Happy Pet Parent</cite>
+        <div class="paw-divider">...</div>
+      </div>
+      <div class="testimonial-card">
+        <p>I'm handicapped and these wonderful people came out to my car and got my dog, called when she was ready and brought her out to me. She looked beautiful!!</p>
+        <cite>Loyal Customer</cite>
+        <div class="paw-divider">...</div>
+      </div>
+      <div class="testimonial-card">
+        <p>He looks like a brand new dog. It was more than I expected. He looked really good.</p>
+        <cite>Tessa W.</cite>
+        <div class="paw-divider">...</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- SCHEDULE CTA                                -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="cta-section section-padding">
+  <div class="container">
+    <h2>Ready to Make Your Pup<br>a Masterpiece?</h2>
+    <p class="cta-sub">Call, text, or stop by. We're right on Market Street.</p>
+    <div class="chat-tease">
+      <div class="chat-header">Hey! Ready to book?</div>
+      <div class="chat-body">Schedule your pup's next groom in seconds.</div>
+      <a href="tel:+15705415020" class="chat-btn">Schedule Now</a>
+    </div>
+    <a href="tel:+15705415020" class="cta-phone">(570) 541-5020</a>
+    <p class="cta-address">454 Market St, Sunbury, PA 17801</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- FOOTER                                      -->
+<!-- ═══════════════════════════════════════════ -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-col">
+      <h4>Hours</h4>
+      <p>Monday - Friday: 8am - 5pm</p>
+      <p>Saturday: 9am - 3pm</p>
+      <p>Sunday: Closed</p>
+    </div>
+    <div class="footer-col">
+      <h4>Location</h4>
+      <p>454 Market Street</p>
+      <p>Sunbury, PA 17801</p>
+      <p><a href="https://maps.google.com/?q=454+Market+St+Sunbury+PA" target="_blank">Get Directions</a></p>
+    </div>
+    <div class="footer-col">
+      <h4>Contact</h4>
+      <p><a href="tel:+15705415020">(570) 541-5020</a></p>
+      <p><a href="#">Facebook</a></p>
+      <p><a href="#">Instagram</a></p>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>&copy; 2026 The Painted Pooch. All rights reserved.</span>
+    <a href="https://guardiacontent.com" class="guardia-badge">Powered by Guardia</a>
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- STICKY MOBILE CTA                           -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="sticky-cta" id="stickyCta">
+  <div class="sticky-cta-inner">
+    <a href="tel:+15705415020">(570) 541-5020</a>
+    <a href="tel:+15705415020" class="book-btn">Book Now</a>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- SCRIPTS                                     -->
+<!-- ═══════════════════════════════════════════ -->
+<script src="https://unpkg.com/lenis@1.1.20/dist/lenis.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+
+// ═══ LENIS SMOOTH SCROLL ═══
+const lenis = new Lenis({ duration: 1.2, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
+lenis.on('scroll', ScrollTrigger.update);
+gsap.ticker.add((time) => lenis.raf(time * 1000));
+gsap.ticker.lagSmoothing(0);
+
+// ═══ NAV SCROLL BEHAVIOR ═══
+const nav = document.querySelector('nav');
+ScrollTrigger.create({
+  start: 80,
+  onUpdate: (self) => nav.classList.toggle('scrolled', self.progress > 0 || window.scrollY > 80)
+});
+// Immediate check
+if (window.scrollY > 80) nav.classList.add('scrolled');
+
+// Smooth scroll for anchor links
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', (e) => {
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) { e.preventDefault(); lenis.scrollTo(target, { offset: -70 }); }
+  });
+});
+
+// ═══ HERO ENTRANCE ═══
+const heroTL = gsap.timeline({ defaults: { ease: 'power3.out' } });
+heroTL
+  .from('.hero-badge', { opacity: 0, y: 20, duration: 0.7 })
+  .from('.hero h1', { opacity: 0, y: 40, duration: 0.9 }, '-=0.3')
+  .from('.hero-subtitle', { opacity: 0, y: 20, duration: 0.6 }, '-=0.4')
+  .from('.hero-cta', { opacity: 0, y: 20, duration: 0.6 }, '-=0.3')
+  .from('.hero-image', { opacity: 0, scale: 1.1, duration: 1 }, '-=0.6')
+  .from('.scroll-indicator', { opacity: 0, duration: 0.5 }, '-=0.3');
+
+// Hero parallax
+gsap.to('.hero-image', {
+  y: -80,
+  ease: 'none',
+  scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true }
+});
+
+// ═══ ARTIST SECTION ═══
+gsap.from('.artist-portrait', {
+  scrollTrigger: { trigger: '.artist', start: 'top 70%' },
+  opacity: 0, x: -50, duration: 0.9, ease: 'power2.out'
+});
+gsap.from('.artist-text .section-label, .artist-text .section-title', {
+  scrollTrigger: { trigger: '.artist', start: 'top 70%' },
+  opacity: 0, y: 30, stagger: 0.1, duration: 0.7, ease: 'power2.out'
+});
+gsap.from('.artist-text p, .artist-text .pull-quote', {
+  scrollTrigger: { trigger: '.artist-text', start: 'top 65%' },
+  opacity: 0, y: 20, stagger: 0.12, duration: 0.6, ease: 'power2.out'
+});
+gsap.from('.credential', {
+  scrollTrigger: { trigger: '.artist-credentials', start: 'top 85%' },
+  opacity: 0, scale: 0.8, stagger: 0.1, duration: 0.5, ease: 'back.out(1.7)'
+});
+// Artist portrait parallax
+gsap.to('.artist-portrait', {
+  y: -30,
+  ease: 'none',
+  scrollTrigger: { trigger: '.artist', start: 'top bottom', end: 'bottom top', scrub: true }
+});
+
+// ═══ GALLERY ═══
+gsap.from('.gallery .section-label, .gallery .section-title, .gallery-subtitle', {
+  scrollTrigger: { trigger: '.gallery', start: 'top 75%' },
+  opacity: 0, y: 30, stagger: 0.1, duration: 0.7, ease: 'power2.out'
+});
+// Before/After showcase
+gsap.from('.ba-card', {
+  scrollTrigger: { trigger: '.before-after', start: 'top 75%' },
+  opacity: 0, y: 40, stagger: 0.2, duration: 0.8, ease: 'power2.out'
+});
+gsap.from('.ba-arrow', {
+  scrollTrigger: { trigger: '.before-after', start: 'top 75%' },
+  opacity: 0, scale: 0, duration: 0.5, delay: 0.4, ease: 'back.out(1.7)'
+});
+// Gallery cards
+gsap.from('.gallery-card', {
+  scrollTrigger: { trigger: '.gallery-grid', start: 'top 75%' },
+  opacity: 0, y: 60, scale: 0.95, stagger: 0.1, duration: 0.8, ease: 'power2.out'
+});
+
+// ═══ SERVICES ═══
+gsap.from('.services .section-label, .services .section-title', {
+  scrollTrigger: { trigger: '.services', start: 'top 75%' },
+  opacity: 0, y: 30, stagger: 0.1, duration: 0.7, ease: 'power2.out'
+});
+gsap.from('.service-card', {
+  scrollTrigger: { trigger: '.services-grid', start: 'top 75%' },
+  opacity: 0, y: 50, stagger: 0.15, duration: 0.7, ease: 'power2.out'
+});
+
+// ═══ BARKBURY: Pinned Scroll ═══
+ScrollTrigger.matchMedia({
+  // Desktop: pinned with phase crossfade
+  '(min-width: 769px)': function() {
+    const phases = gsap.utils.toArray('.barkbury-phase');
+
+    // Set first phase visible
+    gsap.set(phases[0], { opacity: 1 });
+
+    const barkTL = gsap.timeline({
+      scrollTrigger: {
+        trigger: '.barkbury',
+        pin: true,
+        scrub: 1,
+        start: 'top top',
+        end: '+=300%',
+        anticipatePin: 1
+      }
+    });
+
+    // Phase 1 visible, then fade out
+    barkTL
+      .to(phases[0], { opacity: 1, duration: 1 })
+      .to(phases[0], { opacity: 0, duration: 0.5 })
+      // Phase 2 fade in, hold, fade out
+      .to(phases[1], { opacity: 1, duration: 0.5 })
+      .to(phases[1], { opacity: 1, duration: 1 })
+      .to(phases[1], { opacity: 0, duration: 0.5 })
+      // Phase 3 fade in and hold
+      .to(phases[2], { opacity: 1, duration: 0.5 })
+      .to(phases[2], { opacity: 1, duration: 1 });
+  },
+  // Mobile: stacked, no pin
+  '(max-width: 768px)': function() {
+    const phases = gsap.utils.toArray('.barkbury-phase');
+    phases.forEach(p => {
+      p.style.position = 'relative';
+      p.style.opacity = '1';
+      p.style.marginBottom = '3rem';
+    });
+    // Simple fade-in on mobile
+    phases.forEach(phase => {
+      gsap.from(phase, {
+        scrollTrigger: { trigger: phase, start: 'top 80%' },
+        opacity: 0, y: 40, duration: 0.8, ease: 'power2.out'
+      });
+    });
+  }
+});
+
+// ═══ TESTIMONIALS ═══
+gsap.from('.testimonials-header', {
+  scrollTrigger: { trigger: '.testimonials', start: 'top 75%' },
+  opacity: 0, y: 30, duration: 0.7, ease: 'power2.out'
+});
+gsap.from('.testimonial-card', {
+  scrollTrigger: { trigger: '.testimonials-grid', start: 'top 75%' },
+  opacity: 0, y: 40, stagger: 0.15, duration: 0.7, ease: 'power2.out'
+});
+
+// ═══ CTA SECTION ═══
+gsap.from('.cta-section h2', {
+  scrollTrigger: { trigger: '.cta-section', start: 'top 75%' },
+  opacity: 0, y: 40, duration: 0.8, ease: 'power2.out'
+});
+gsap.from('.cta-section .cta-sub', {
+  scrollTrigger: { trigger: '.cta-section', start: 'top 70%' },
+  opacity: 0, y: 20, duration: 0.6, delay: 0.15, ease: 'power2.out'
+});
+gsap.from('.chat-tease', {
+  scrollTrigger: { trigger: '.cta-section', start: 'top 65%' },
+  opacity: 0, y: 30, scale: 0.95, duration: 0.7, delay: 0.3, ease: 'power2.out'
+});
+gsap.from('.cta-phone', {
+  scrollTrigger: { trigger: '.cta-phone', start: 'top 90%' },
+  opacity: 0, scale: 0.9, duration: 0.6, ease: 'power2.out'
+});
+
+// ═══ FOOTER ═══
+gsap.from('.footer-col', {
+  scrollTrigger: { trigger: 'footer', start: 'top 85%' },
+  opacity: 0, y: 30, stagger: 0.15, duration: 0.6, ease: 'power2.out'
+});
+
+// ═══ STICKY MOBILE CTA ═══
+const stickyCta = document.getElementById('stickyCta');
+let lastScrollY = 0;
+ScrollTrigger.create({
+  start: () => document.querySelector('.hero').offsetHeight,
+  onUpdate: (self) => {
+    const currentY = window.scrollY;
+    if (currentY > document.querySelector('.hero').offsetHeight) {
+      stickyCta.classList.add('visible');
+    } else {
+      stickyCta.classList.remove('visible');
+    }
+    lastScrollY = currentY;
+  }
+});
+
+</script>
+</body>
+</html>

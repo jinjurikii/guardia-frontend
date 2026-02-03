@@ -22,18 +22,33 @@ function Dropbox() {
     e.preventDefault();
     setDragging(false);
 
-    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("image/"));
+    const files = Array.from(e.dataTransfer.files).filter(f =>
+      f.type.startsWith("image/") || f.type === "application/pdf"
+    );
     if (files.length === 0) {
-      setMessage("No images found");
+      setMessage("No supported files found");
       return;
     }
 
     setUploading(true);
-    setMessage(`Uploading ${files.length} image${files.length > 1 ? "s" : ""}...`);
+    let uploaded = 0;
 
-    // TODO: Implement actual upload to /lab/upload endpoint
-    await new Promise(r => setTimeout(r, 1500));
-    setMessage("Upload complete - processing will begin shortly");
+    for (const file of files) {
+      setMessage(`Uploading ${uploaded + 1}/${files.length}: ${file.name}`);
+      const form = new FormData();
+      form.append("file", file);
+      try {
+        const res = await fetch(`${API_BASE}/lab/upload`, { method: "POST", body: form });
+        if (res.ok) uploaded++;
+      } catch {
+        // continue with next file
+      }
+    }
+
+    setMessage(uploaded === files.length
+      ? `${uploaded} file${uploaded > 1 ? "s" : ""} uploaded to inbox`
+      : `${uploaded}/${files.length} files uploaded`
+    );
     setUploading(false);
   }, []);
 
