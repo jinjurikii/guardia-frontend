@@ -17,28 +17,28 @@ const getClientId = () => {
   return null;
 };
 
-// 2B Calm Design System
+// Desert Mirage Design System — references CSS custom properties
 const tokens = {
   bg: {
-    base: '#0c0c0d',
-    surface: '#111113',
-    elevated: '#1a1a1c',
-    overlay: '#222224',
+    base: 'var(--bg-base)',
+    surface: 'var(--bg-surface)',
+    elevated: 'var(--bg-elevated)',
+    overlay: 'var(--bg-surface)',
   },
   text: {
-    primary: '#e8e8e8',
-    secondary: '#888888',
-    tertiary: '#555555',
+    primary: 'var(--text-primary)',
+    secondary: 'var(--text-secondary)',
+    tertiary: 'var(--text-muted)',
   },
   accent: {
-    primary: '#f59e0b',
-    glow: 'rgba(245, 158, 11, 0.15)',
+    primary: 'var(--accent)',
+    glow: 'var(--accent-muted)',
   },
   status: {
     connected: '#22c55e',
     needs_refresh: '#f59e0b',
     limited: '#f59e0b',
-    disconnected: '#444444',
+    disconnected: 'var(--text-muted)',
   },
   tier: {
     spark: '#f59e0b',
@@ -46,9 +46,9 @@ const tokens = {
     unleashed: '#8b5cf6',
   },
   shadow: {
-    inset: 'inset 0 2px 4px rgba(0,0,0,0.3), inset 0 -1px 2px rgba(255,255,255,0.02)',
-    raised: '0 4px 12px rgba(0,0,0,0.3)',
-    button: 'inset 0 1px 1px rgba(255,255,255,0.03), 2px 2px 6px rgba(0,0,0,0.3)',
+    inset: '0 1px 3px rgba(0,0,0,0.08)',
+    raised: 'var(--shadow-soft)',
+    button: '0 1px 3px rgba(0,0,0,0.08)',
   }
 };
 
@@ -243,22 +243,22 @@ function ProfilePanel({ isOpen, onClose, profile, onSave }: ProfilePanelProps) {
       <div 
         className={`fixed top-0 right-0 h-full w-full max-w-md z-50 transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
         style={{
-          background: 'linear-gradient(180deg, #111113, #0c0c0d)',
+          background: 'var(--bg-surface)',
           boxShadow: '-4px 0 24px rgba(0,0,0,0.5)'
         }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-white/5">
-          <h2 className="text-lg font-semibold text-[#e8e8e8]">Edit Profile</h2>
+        <div className="flex items-center justify-between p-4 border-b border-[var(--border-subtle)]">
+          <h2 className="text-lg font-semibold text-[var(--text-primary)]">Edit Profile</h2>
           <button 
             onClick={onClose}
             className="w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-95"
             style={{
-              background: 'linear-gradient(145deg, #1a1a1c, #0f0f10)',
+              background: 'var(--bg-elevated)',
               boxShadow: tokens.shadow.button
             }}
           >
-            <Icons.X size={18} color="#888" />
+            <Icons.X size={18} color="var(--text-muted)" />
           </button>
         </div>
 
@@ -293,9 +293,9 @@ function ProfilePanel({ isOpen, onClose, profile, onSave }: ProfilePanelProps) {
                 }}
               >
                 {uploading ? (
-                  <div className="w-4 h-4 border-2 border-[#0c0c0d]/30 border-t-[#0c0c0d] rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
-                  <Icons.Camera size={14} color="#0c0c0d" />
+                  <Icons.Camera size={14} color="white" />
                 )}
               </button>
               <input
@@ -306,20 +306,20 @@ function ProfilePanel({ isOpen, onClose, profile, onSave }: ProfilePanelProps) {
                 className="hidden"
               />
             </div>
-            <p className="text-xs text-[#555] mt-2">Tap to change photo</p>
+            <p className="text-xs text-[var(--text-muted)] mt-2">Tap to change photo</p>
           </div>
 
           {/* Form Fields */}
           <div className="space-y-4">
             <div>
-              <label className="block text-xs text-[#555] uppercase tracking-wider mb-2">Business Name</label>
+              <label className="block text-xs text-[var(--text-muted)] uppercase tracking-wider mb-2">Business Name</label>
               <input
                 type="text"
                 value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl text-sm text-[#e8e8e8] placeholder-[#444] focus:outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none transition-all"
                 style={{
-                  background: '#0a0a0a',
+                  background: 'var(--bg-base)',
                   boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(255,255,255,0.03)',
                   border: 'none'
                 }}
@@ -328,14 +328,14 @@ function ProfilePanel({ isOpen, onClose, profile, onSave }: ProfilePanelProps) {
             </div>
 
             <div>
-              <label className="block text-xs text-[#555] uppercase tracking-wider mb-2">Contact Name</label>
+              <label className="block text-xs text-[var(--text-muted)] uppercase tracking-wider mb-2">Contact Name</label>
               <input
                 type="text"
                 value={contactName}
                 onChange={(e) => setContactName(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl text-sm text-[#e8e8e8] placeholder-[#444] focus:outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none transition-all"
                 style={{
-                  background: '#0a0a0a',
+                  background: 'var(--bg-base)',
                   boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(255,255,255,0.03)',
                   border: 'none'
                 }}
@@ -344,14 +344,14 @@ function ProfilePanel({ isOpen, onClose, profile, onSave }: ProfilePanelProps) {
             </div>
 
             <div>
-              <label className="block text-xs text-[#555] uppercase tracking-wider mb-2">Email</label>
+              <label className="block text-xs text-[var(--text-muted)] uppercase tracking-wider mb-2">Email</label>
               <input
                 type="email"
                 value={contactEmail}
                 onChange={(e) => setContactEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl text-sm text-[#e8e8e8] placeholder-[#444] focus:outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none transition-all"
                 style={{
-                  background: '#0a0a0a',
+                  background: 'var(--bg-base)',
                   boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(255,255,255,0.03)',
                   border: 'none'
                 }}
@@ -360,14 +360,14 @@ function ProfilePanel({ isOpen, onClose, profile, onSave }: ProfilePanelProps) {
             </div>
 
             <div>
-              <label className="block text-xs text-[#555] uppercase tracking-wider mb-2">Username</label>
+              <label className="block text-xs text-[var(--text-muted)] uppercase tracking-wider mb-2">Username</label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl text-sm text-[#e8e8e8] placeholder-[#444] focus:outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none transition-all"
                 style={{
-                  background: '#0a0a0a',
+                  background: 'var(--bg-base)',
                   boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(255,255,255,0.03)',
                   border: 'none'
                 }}
@@ -381,12 +381,12 @@ function ProfilePanel({ isOpen, onClose, profile, onSave }: ProfilePanelProps) {
             <div 
               className="p-4 rounded-xl"
               style={{
-                background: 'linear-gradient(145deg, #111113, #0a0a0b)',
+                background: 'var(--bg-surface)',
                 boxShadow: tokens.shadow.inset
               }}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs text-[#555]">Current Plan</span>
+                <span className="text-xs text-[var(--text-muted)]">Current Plan</span>
                 <div 
                   className="px-3 py-1 rounded-full text-xs font-medium capitalize"
                   style={{
@@ -402,7 +402,7 @@ function ProfilePanel({ isOpen, onClose, profile, onSave }: ProfilePanelProps) {
         </div>
 
         {/* Save Button */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/5" style={{ background: '#0c0c0d' }}>
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[var(--border-subtle)]" style={{ background: 'var(--bg-base)' }}>
           <button
             onClick={handleSave}
             disabled={!hasChanges || saving}
@@ -410,11 +410,11 @@ function ProfilePanel({ isOpen, onClose, profile, onSave }: ProfilePanelProps) {
             style={{
               background: hasChanges 
                 ? 'linear-gradient(145deg, #f59e0b, #d97706)' 
-                : 'linear-gradient(145deg, #1a1a1c, #0f0f10)',
+                : 'var(--bg-elevated)',
               boxShadow: hasChanges
                 ? '0 2px 8px rgba(245,158,11,0.3), inset 0 1px 1px rgba(255,255,255,0.2)'
                 : 'inset 0 1px 2px rgba(0,0,0,0.3)',
-              color: hasChanges ? '#0c0c0d' : '#444'
+              color: hasChanges ? 'white' : 'var(--text-muted)'
             }}
           >
             {saving ? 'Saving...' : hasChanges ? 'Save Changes' : 'No Changes'}
@@ -442,7 +442,7 @@ const ProfileHeader = ({ name, email, tier, imageUrl, onClick }: ProfileHeaderPr
       onClick={onClick}
       className="w-full p-5 rounded-2xl flex items-center gap-4 text-left transition-all active:scale-[0.99]"
       style={{ 
-        background: 'linear-gradient(145deg, #111113, #0a0a0b)',
+        background: 'var(--bg-surface)',
         boxShadow: `${tokens.shadow.inset}, ${tokens.shadow.raised}`
       }}
     >
@@ -503,7 +503,7 @@ const UsageStats = ({ used, total, period }: UsageStatsProps) => {
     <div 
       className="p-4 rounded-2xl"
       style={{ 
-        background: 'linear-gradient(145deg, #111113, #0a0a0b)',
+        background: 'var(--bg-surface)',
         boxShadow: `${tokens.shadow.inset}, ${tokens.shadow.raised}`
       }}
     >
@@ -516,7 +516,7 @@ const UsageStats = ({ used, total, period }: UsageStatsProps) => {
       <div 
         className="h-2 rounded-full overflow-hidden mb-2"
         style={{ 
-          background: '#0a0a0a',
+          background: 'var(--bg-base)',
           boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.5)'
         }}
       >
@@ -577,8 +577,8 @@ const ConnectedAccount = ({ platform, icon: Icon, connection, onConnect }: Conne
     <div
       className="p-4 rounded-xl"
       style={{ 
-        background: 'rgba(255,255,255,0.02)',
-        border: '1px solid rgba(255,255,255,0.03)'
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--border-subtle)'
       }}
     >
       <div className="flex items-center justify-between">
@@ -586,7 +586,7 @@ const ConnectedAccount = ({ platform, icon: Icon, connection, onConnect }: Conne
           <div
             className="w-10 h-10 rounded-full flex items-center justify-center"
             style={{ 
-              background: 'linear-gradient(145deg, #1a1a1c, #0f0f10)',
+              background: 'var(--bg-elevated)',
               boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.3)'
             }}
           >
@@ -614,7 +614,7 @@ const ConnectedAccount = ({ platform, icon: Icon, connection, onConnect }: Conne
               className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all active:scale-95"
               style={{
                 background: 'linear-gradient(145deg, #f59e0b, #d97706)',
-                color: '#0c0c0d',
+                color: 'white',
                 boxShadow: '0 2px 6px rgba(245,158,11,0.3)'
               }}
             >
@@ -640,7 +640,7 @@ const Section = ({ title, children }: { title?: string; children: React.ReactNod
     <div 
       className="rounded-2xl overflow-hidden"
       style={{ 
-        background: 'linear-gradient(145deg, #111113, #0a0a0b)',
+        background: 'var(--bg-surface)',
         boxShadow: `${tokens.shadow.inset}, ${tokens.shadow.raised}`
       }}
     >
@@ -661,7 +661,7 @@ interface MenuItemProps {
 const MenuItem = ({ icon: Icon, label, onClick, danger, toggle, toggled }: MenuItemProps) => (
   <button
     onClick={onClick}
-    className="w-full flex items-center justify-between p-4 border-b border-white/5 last:border-0 transition-colors hover:bg-white/[0.02]"
+    className="w-full flex items-center justify-between p-4 border-b border-[var(--border-subtle)] last:border-0 transition-colors hover:bg-[var(--bg-surface)]"
   >
     <div className="flex items-center gap-3">
       <Icon size={20} color={danger ? '#ef4444' : tokens.text.tertiary} />
@@ -724,7 +724,7 @@ const ConnectedAccountsSection = () => {
       <div className="p-4 space-y-3">
         {loading ? (
           <div className="flex justify-center py-4">
-            <div className="w-5 h-5 border-2 border-[#333] border-t-[#f59e0b] rounded-full animate-spin" />
+            <div className="w-5 h-5 border-2 border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin" />
           </div>
         ) : (
           <>
@@ -811,8 +811,8 @@ export default function GuardiaAccount() {
         {/* Profile */}
         <div className="mb-6">
           {profileLoading ? (
-            <div className="p-5 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(145deg, #111113, #0a0a0b)' }}>
-              <div className="w-5 h-5 border-2 border-[#333] border-t-[#f59e0b] rounded-full animate-spin" />
+            <div className="p-5 rounded-2xl flex items-center justify-center" style={{ background: 'var(--bg-surface)' }}>
+              <div className="w-5 h-5 border-2 border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin" />
             </div>
           ) : (
             <ProfileHeader

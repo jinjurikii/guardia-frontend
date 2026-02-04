@@ -25,25 +25,25 @@ describe('MessageBubble', () => {
 
   it('should show avatar for assistant messages', () => {
     const { container } = render(<MessageBubble message={assistantMessage} isUser={false} />);
-    const avatar = container.querySelector('.text-\\[\\#e8a060\\]');
+    const avatar = container.querySelector('.text-\\[var\\(--accent\\)\\]');
     expect(avatar).toBeInTheDocument();
   });
 
   it('should not show avatar for user messages', () => {
     const { container } = render(<MessageBubble message={userMessage} isUser={true} />);
-    const avatar = container.querySelector('.text-\\[\\#e8a060\\]');
+    const avatar = container.querySelector('.text-\\[var\\(--accent\\)\\]');
     expect(avatar).not.toBeInTheDocument();
   });
 
   it('should apply correct styling for user messages', () => {
     const { container } = render(<MessageBubble message={userMessage} isUser={true} />);
-    const bubble = container.querySelector('.bg-\\[\\#e8a060\\]');
+    const bubble = container.querySelector('.bg-\\[\\#4338CA\\]');
     expect(bubble).toBeInTheDocument();
   });
 
   it('should apply correct styling for assistant messages', () => {
     const { container } = render(<MessageBubble message={assistantMessage} isUser={false} />);
-    const bubble = container.querySelector('.bg-\\[\\#1c1c1e\\]');
+    const bubble = container.querySelector('.bg-\\[var\\(--bg-elevated\\)\\]');
     expect(bubble).toBeInTheDocument();
   });
 });

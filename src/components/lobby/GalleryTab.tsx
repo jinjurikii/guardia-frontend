@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { ClientContext } from "./LobbyShell";
 import PublishPreviewModal from "./PublishPreviewModal";
 
@@ -13,11 +13,22 @@ import PublishPreviewModal from "./PublishPreviewModal";
 
 const API_BASE = "https://api.guardiacontent.com";
 
+// Deep compare gallery items to prevent unnecessary re-renders
+function arraysEqual(a: GalleryImage[], b: GalleryImage[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i].id !== b[i].id || a[i].status !== b[i].status || a[i].styled_url !== b[i].styled_url) {
+      return false;
+    }
+  }
+  return true;
+}
+
 interface GalleryImage {
   url?: string;
   id: number;
   original_filename: string;
-  status: "pending" | "styled" | "approved" | "rejected" | "processing" | "ready" | "failed" | "queued" | "raw" | "styling" | "pending_review";
+  status: "pending" | "styled" | "approved" | "rejected" | "processing" | "ready" | "failed" | "queued" | "raw" | "styling" | "pending_review" | "received";
   styled_url?: string;
   original_url?: string;
   thumbnail_url?: string;
@@ -141,13 +152,13 @@ function ImageCard({
       <div 
         className="rounded-xl p-6 text-center"
         style={{
-          background: 'linear-gradient(145deg, #0f0f10, #0a0a0b)',
+          background: 'var(--bg-surface)',
           boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.4), inset 0 -1px 1px rgba(255,255,255,0.02)'
         }}
       >
         {emptyIcon}
-        <p className="text-sm font-medium text-[#888] mt-3">{emptyTitle}</p>
-        <p className="text-xs text-[#555] mt-1">{emptySubtitle}</p>
+        <p className="text-sm font-medium text-[var(--text-secondary)] mt-3">{emptyTitle}</p>
+        <p className="text-xs text-[var(--text-muted)] mt-1">{emptySubtitle}</p>
       </div>
     );
   }
@@ -164,24 +175,24 @@ function ImageCard({
         >
           <div 
             className="rounded-lg overflow-hidden"
-            style={{ background: '#0a0a0a' }}
+            style={{ background: 'var(--bg-base)' }}
           >
             <div className="aspect-square">
               {imageUrl ? (
                 <img src={imageUrl} alt={image.original_filename || "image"} className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-[#111]">
-                  <div className="w-6 h-6 border-2 border-[#333] border-t-[#f59e0b] rounded-full animate-spin" />
+                <div className="w-full h-full flex items-center justify-center bg-[var(--bg-surface)]">
+                  <div className="w-6 h-6 border-2 border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin" />
                 </div>
               )}
             </div>
-            <div className="p-2.5 border-t border-white/5">
+            <div className="p-2.5 border-t border-[var(--border-subtle)]">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-medium text-[#888] truncate flex-1">{image.original_filename || "Image"}</p>
-                <span className="text-xs text-[#555] ml-2">{index + 1}/{total}</span>
+                <p className="text-xs font-medium text-[var(--text-secondary)] truncate flex-1">{image.original_filename || "Image"}</p>
+                <span className="text-xs text-[var(--text-muted)] ml-2">{index + 1}/{total}</span>
               </div>
               {image.caption && (
-                <p className="text-xs text-[#aaa] mt-1.5 line-clamp-2">{image.caption}</p>
+                <p className="text-xs text-[var(--text-secondary)] mt-1.5 line-clamp-2">{image.caption}</p>
               )}
             </div>
           </div>
@@ -192,10 +203,10 @@ function ImageCard({
       {isProcessing ? (
         <div className="flex flex-col items-center gap-2 mt-4 py-3">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 border-2 border-[#333] border-t-[#f59e0b] rounded-full animate-spin" />
-            <span className="text-sm font-medium text-[#f59e0b]">Styling in progress...</span>
+            <div className="w-4 h-4 border-2 border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin" />
+            <span className="text-sm font-medium text-[var(--accent)]">Styling in progress...</span>
           </div>
-          <p className="text-xs text-[#666]">This may take a minute</p>
+          <p className="text-xs text-[var(--text-muted)]">This may take a minute</p>
         </div>
       ) : (
         <div className="flex justify-center gap-3 mt-4">
@@ -203,7 +214,7 @@ function ImageCard({
             onClick={onRed} 
             className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all active:scale-95"
             style={{
-              background: 'linear-gradient(145deg, #1a1a1c, #0f0f10)',
+              background: 'var(--bg-elevated)',
               boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.03), 2px 2px 6px rgba(0,0,0,0.3)',
               color: '#ef4444'
             }}
@@ -237,60 +248,71 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
   const [inFactory, setInFactory] = useState<GalleryImage[]>([]);
   const [fromFactory, setFromFactory] = useState<GalleryImage[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [recentUpload, setRecentUpload] = useState(false);
+  const isInitialLoad = useRef(true);
   const [loading, setLoading] = useState(true);
-  const [generating, setGenerating] = useState(false);
   const [topPosts, setTopPosts] = useState<TopPostsData | null>(null);
   const [topPostsLoading, setTopPostsLoading] = useState(true);
   const [inFactoryIndex, setInFactoryIndex] = useState(0);
   const [fromFactoryIndex, setFromFactoryIndex] = useState(0);
   const [publishingAssetId, setPublishingAssetId] = useState<number | null>(null);
-  const [contentCount, setContentCount] = useState(0);
-  const [styleName, setStyleName] = useState("");
-  const [cooldownSeconds, setCooldownSeconds] = useState(0);
 
   const loadGallery = useCallback(async () => {
     if (!jwt) return;
-    setLoading(true);
+    // Only show loading spinner on initial load, not during polls
+    if (isInitialLoad.current) {
+      setLoading(true);
+    }
     try {
       const res = await fetch(`${API_BASE}/lobby/gallery`, { headers: { Authorization: `Bearer ${jwt}` } });
       if (res.ok) {
         const data = await res.json();
         const items = data.items || [];
-        setInFactory(items.filter((img: GalleryImage) => 
-          img.status === "pending" || img.status === "processing" || img.status === "queued" || img.status === "raw" || img.status === "pending_review"
-        ));
-        setFromFactory(items.filter((img: GalleryImage) => 
+        const newInFactory = items.filter((img: GalleryImage) => 
+          img.status === "pending" || img.status === "processing" || img.status === "queued" || img.status === "raw" || img.status === "pending_review" || img.status === "received" || img.status === "styling"
+        );
+        const newFromFactory = items.filter((img: GalleryImage) => 
           img.status === "ready" || img.status === "styled"
-        ));
+        );
+        // Only update state if data actually changed (prevents flicker)
+        setInFactory(prev => arraysEqual(prev, newInFactory) ? prev : newInFactory);
+        setFromFactory(prev => arraysEqual(prev, newFromFactory) ? prev : newFromFactory);
       }
       
-      // Also load planner data for generate button
-      const plannerRes = await fetch(`${API_BASE}/lobby/planner`, { headers: { Authorization: `Bearer ${jwt}` } });
-      if (plannerRes.ok) {
-        const plannerData = await plannerRes.json();
-        setContentCount(plannerData.content_library_count || 0);
-        setStyleName(plannerData.style || "");
-        // Load cooldown
-        if (plannerData.cooldown?.active) {
-          setCooldownSeconds(plannerData.cooldown.remaining_seconds || 0);
-        }
-      }
+
     } catch (err) {
       console.error("Failed to load gallery:", err);
     }
-    setLoading(false);
+    if (isInitialLoad.current) {
+      setLoading(false);
+      isInitialLoad.current = false;
+    }
   }, [jwt]);
 
   useEffect(() => { loadGallery(); }, [loadGallery]);
 
-  // Cooldown countdown timer
+  // Poll gallery when items are processing OR after recent upload (every 3 seconds)
+  // Skip polling when tab is hidden to save resources
   useEffect(() => {
-    if (cooldownSeconds <= 0) return;
-    const timer = setInterval(() => {
-      setCooldownSeconds(s => s > 0 ? s - 1 : 0);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [cooldownSeconds > 0]);
+    if (inFactory.length === 0 && !recentUpload) return;
+    
+    const pollTimer = setInterval(() => {
+      if (!document.hidden) {
+        loadGallery();
+      }
+    }, 3000);
+    
+    return () => clearInterval(pollTimer);
+  }, [inFactory.length > 0, recentUpload, loadGallery]);
+  
+  // Clear recentUpload flag after 30 seconds
+  useEffect(() => {
+    if (!recentUpload) return;
+    const timeout = setTimeout(() => setRecentUpload(false), 30000);
+    return () => clearTimeout(timeout);
+  }, [recentUpload]);
+
+
 
   useEffect(() => {
     const fetchTopPosts = async () => {
@@ -303,45 +325,6 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
     };
     fetchTopPosts();
   }, [jwt]);
-
-  // Generate post handler
-  const handleGenerate = async () => {
-    if (!jwt || generating || cooldownSeconds > 0) return;
-    if (contentCount === 0) {
-      onMessage("Add some quotes to your content library first!");
-      return;
-    }
-    setGenerating(true);
-    try {
-      const res = await fetch(`${API_BASE}/lobby/planner/generate`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${jwt}` }
-      });
-      const data = await res.json();
-      if (data.success) {
-        // Silent - just start cooldown and refresh gallery
-        setCooldownSeconds(data.cooldown_seconds || 3 * 60 * 60);
-        setTimeout(loadGallery, 5000);
-      } else {
-        // On failure, set cooldown if provided (already on cooldown)
-        if (data.cooldown_remaining) {
-          setCooldownSeconds(data.cooldown_remaining);
-        }
-      }
-    } catch {
-      // Silent failure
-    }
-    setGenerating(false);
-  };
-
-  // Format cooldown for display
-  const formatCooldown = (seconds: number) => {
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    if (hrs > 0) return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
 
   // Factory actions
   const handleDiscardRaw = async () => {
@@ -360,54 +343,23 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
     }
   };
 
-  const handleRushStyle = async () => {
-    if (inFactory.length === 0 || !jwt) return;
-    const img = inFactory[inFactoryIndex];
-    try {
-      const res = await fetch(`${API_BASE}/lobby/gallery/${img.id}/rush`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${jwt}` },
-      });
-      const data = await res.json();
-      if (data.success) {
-        setInFactory(items => items.filter((_, i) => i !== inFactoryIndex));
-        setInFactoryIndex(i => Math.min(i, Math.max(0, inFactory.length - 2)));
-        onMessage(data.message || "Giovanni's on it! ⚡");
-      } else {
-        onMessage(data.message || "Couldn't start rush styling. Try again?");
-      }
-    } catch (err) {
-      console.error("Rush error:", err);
-      onMessage("Something went wrong. Let's try that again.");
-    }
-  };
+  // Rush flow removed - all uploads now go through simple polish pipeline
 
 
   const handleSendToFactory = async () => {
     if (inFactory.length === 0 || !jwt) return;
     const img = inFactory[inFactoryIndex];
     try {
-      // Step 1: Send to factory (changes status from pending_review to raw)
+      // Send to factory - style_dispatcher will pick up and polish
       const res = await fetch(`${API_BASE}/lobby/gallery/${img.id}/send-to-factory`, {
         method: "POST",
         headers: { Authorization: `Bearer ${jwt}` },
       });
       const data = await res.json();
-      if (!data.success) {
-        onMessage(data.message || "Couldn't send to factory. Try again?");
-        return;
-      }
-      
-      // Step 2: Immediately rush it (starts styling)
-      const rushRes = await fetch(`${API_BASE}/lobby/gallery/${img.id}/rush`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${jwt}` },
-      });
-      const rushData = await rushRes.json();
-      if (rushData.success !== false) {
-        onMessage(rushData.message || "Styling started! ⚡");
+      if (data.success) {
+        onMessage(data.message || "Sent to polish! Your image will be ready soon.");
       } else {
-        onMessage(rushData.message || "Sent to factory!");
+        onMessage(data.message || "Couldn't send to factory. Try again?");
       }
       loadGallery();
     } catch (err) {
@@ -475,7 +427,7 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
         body: formData,
       });
       const data = await res.json();
-      if (data.success) { onMessage(`Uploaded "${file.name}"! Sending to the factory.`); loadGallery(); }
+      if (data.success) { onMessage(`Uploaded "${file.name}"! Sending to the factory.`); setRecentUpload(true); loadGallery(); }
       else { onMessage(data.message || "Upload failed."); }
     } catch { onMessage("Upload failed."); }
     setUploading(false);
@@ -488,26 +440,26 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
 
   if (loading) {
     return (
-      <div className="h-full flex items-center justify-center bg-[#0c0c0d]">
-        <div className="w-8 h-8 border-2 border-[#2a2a2c] border-t-[#f59e0b] rounded-full animate-spin" />
+      <div className="h-full flex items-center justify-center bg-[var(--bg-base)]">
+        <div className="w-8 h-8 border-2 border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col bg-[#0c0c0d] overflow-hidden">
+    <div className="h-full flex flex-col bg-[var(--bg-base)] overflow-hidden">
       <GlowFilters />
       
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-3">
-        <h2 className="text-lg font-semibold text-[#e8e8e8]">Gallery</h2>
+        <h2 className="text-lg font-semibold text-[var(--text-primary)]">Gallery</h2>
         <div className="flex items-center gap-2">
           <label 
             className="flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-sm cursor-pointer transition-all active:scale-95"
             style={{
               background: 'linear-gradient(145deg, #f59e0b, #d97706)',
               boxShadow: '0 2px 8px rgba(245,158,11,0.3), inset 0 1px 1px rgba(255,255,255,0.2)',
-              color: '#0c0c0d'
+              color: 'white'
             }}
           >
             <input type="file" accept=".jpg,.jpeg,.png,.webp,.heic" onChange={handleUpload} className="hidden" disabled={uploading} />
@@ -519,8 +471,8 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
           <div 
             className="px-2.5 py-1.5 rounded-lg text-xs font-medium"
             style={{
-              background: 'linear-gradient(145deg, #1a1a1c, #0f0f10)',
-              color: '#666'
+              background: 'var(--bg-elevated)',
+              color: 'var(--text-muted)'
             }}
           >
             {totalQueue}/{QUEUE_MAX}
@@ -531,101 +483,22 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
       <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-4">
         
         {/* ═══════════════════════════════════════════════════════════════════
-            GENERATE POST - The Stamp Press
-        ═══════════════════════════════════════════════════════════════════ */}
-        <div 
-          className="rounded-2xl p-4"
-          style={{
-            background: 'linear-gradient(145deg, #111113, #0a0a0b)',
-            boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3), inset 0 -1px 2px rgba(255,255,255,0.02), 0 4px 12px rgba(0,0,0,0.3)'
-          }}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div 
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{
-                  background: 'linear-gradient(145deg, #1a1a1c, #0f0f10)',
-                  boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.3)'
-                }}
-              >
-                <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2">
-                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                  <path d="M2 17l10 5 10-5"/>
-                  <path d="M2 12l10 5 10-5"/>
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-[#e8e8e8]">Create Content</h3>
-                <p className="text-xs text-[#555] mt-0.5">
-                  {contentCount > 0 
-                    ? `${contentCount} quotes • ${styleName || "default"} style`
-                    : "Add quotes first"
-                  }
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={handleGenerate}
-              disabled={generating || contentCount === 0 || cooldownSeconds > 0}
-              className="px-5 py-2.5 rounded-xl font-semibold text-sm transition-all active:scale-95 flex items-center gap-2"
-              style={{
-                background: cooldownSeconds > 0
-                  ? 'linear-gradient(145deg, #1a1a1c, #0f0f10)'
-                  : contentCount > 0 
-                    ? 'linear-gradient(145deg, #f59e0b, #d97706)' 
-                    : 'linear-gradient(145deg, #1a1a1c, #0f0f10)',
-                boxShadow: cooldownSeconds > 0
-                  ? 'inset 0 1px 2px rgba(0,0,0,0.3)'
-                  : contentCount > 0
-                    ? '0 2px 8px rgba(245,158,11,0.3), inset 0 1px 1px rgba(255,255,255,0.2)'
-                    : 'inset 0 1px 2px rgba(0,0,0,0.3)',
-                color: cooldownSeconds > 0 ? '#666' : contentCount > 0 ? '#0c0c0d' : '#444',
-                opacity: generating ? 0.7 : 1
-              }}
-            >
-              {generating ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" />
-                  Creating...
-                </>
-              ) : cooldownSeconds > 0 ? (
-                <>
-                  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <polyline points="12 6 12 12 16 14"/>
-                  </svg>
-                  {formatCooldown(cooldownSeconds)}
-                </>
-              ) : (
-                <>
-                  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-                  </svg>
-                  Generate
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* ═══════════════════════════════════════════════════════════════════
             IN THE FACTORY
         ═══════════════════════════════════════════════════════════════════ */}
         <div 
           className="rounded-2xl overflow-hidden"
           style={{
-            background: 'linear-gradient(145deg, #111113, #0a0a0b)',
+            background: 'var(--bg-surface)',
             boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3), inset 0 -1px 2px rgba(255,255,255,0.02), 0 4px 12px rgba(0,0,0,0.3)'
           }}
         >
-          <div className="flex items-center justify-between p-4 border-b border-white/5">
+          <div className="flex items-center justify-between p-4 border-b border-[var(--border-subtle)]">
             <div className="flex items-center gap-2">
               <StatusLight active={inFactory.length > 0} color="amber" size={18} />
-              <h3 className="text-sm font-medium text-[#e8e8e8]">In the Factory</h3>
+              <h3 className="text-sm font-medium text-[var(--text-primary)]">In the Factory</h3>
             </div>
             {inFactory.length > 0 && (
-              <span className="text-xs font-medium text-[#f59e0b]">{inFactory.length}</span>
+              <span className="text-xs font-medium text-[var(--accent)]">{inFactory.length}</span>
             )}
           </div>
 
@@ -636,10 +509,10 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
               index={inFactoryIndex}
               total={inFactory.length}
               onRed={handleDiscardRaw}
-              onGreen={currentInFactory?.status === "pending_review" ? handleSendToFactory : handleRushStyle}
+              onGreen={handleSendToFactory}
               redLabel="Discard"
-              greenLabel={currentInFactory?.status === "pending_review" ? "Style It" : "Rush"}
-              isProcessing={currentInFactory?.status === "styling"}
+              greenLabel={currentInFactory?.status === "raw" || currentInFactory?.status === "queued" ? "Queued" : "Polish It"}
+              isProcessing={currentInFactory?.status === "styling" || currentInFactory?.status === "raw" || currentInFactory?.status === "queued"}
               emptyIcon={
                 <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke="#444" strokeWidth="1.5" className="mx-auto">
                   <rect x="3" y="3" width="18" height="18" rx="2"/>
@@ -674,14 +547,14 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
         <div 
           className="rounded-2xl overflow-hidden"
           style={{
-            background: 'linear-gradient(145deg, #111113, #0a0a0b)',
+            background: 'var(--bg-surface)',
             boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3), inset 0 -1px 2px rgba(255,255,255,0.02), 0 4px 12px rgba(0,0,0,0.3)'
           }}
         >
-          <div className="flex items-center justify-between p-4 border-b border-white/5">
+          <div className="flex items-center justify-between p-4 border-b border-[var(--border-subtle)]">
             <div className="flex items-center gap-2">
               <StatusLight active={fromFactory.length > 0} color="green" size={18} />
-              <h3 className="text-sm font-medium text-[#e8e8e8]">Fresh from Factory</h3>
+              <h3 className="text-sm font-medium text-[var(--text-primary)]">Fresh from Factory</h3>
             </div>
             {fromFactory.length > 0 && (
               <div className="flex items-center gap-2">
@@ -747,41 +620,41 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
         <div 
           className="rounded-2xl overflow-hidden"
           style={{
-            background: 'linear-gradient(145deg, #111113, #0a0a0b)',
+            background: 'var(--bg-surface)',
             boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3), inset 0 -1px 2px rgba(255,255,255,0.02), 0 4px 12px rgba(0,0,0,0.3)'
           }}
         >
-          <div className="flex items-center gap-2 p-4 border-b border-white/5">
+          <div className="flex items-center gap-2 p-4 border-b border-[var(--border-subtle)]">
             <svg width={14} height={14} viewBox="0 0 24 24" fill="#f59e0b">
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
             </svg>
-            <h3 className="text-sm font-medium text-[#888]">Top Content</h3>
+            <h3 className="text-sm font-medium text-[var(--text-secondary)]">Top Content</h3>
           </div>
           
           <div className="p-4">
             {topPostsLoading ? (
               <div className="flex justify-center py-6">
-                <div className="w-6 h-6 border-2 border-[#333] border-t-[#f59e0b] rounded-full animate-spin" />
+                <div className="w-6 h-6 border-2 border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin" />
               </div>
             ) : !topPosts?.has_insights ? (
               <div className="text-center py-4">
                 <svg width={28} height={28} viewBox="0 0 24 24" fill="none" stroke="#444" strokeWidth="1.5" className="mx-auto mb-2">
                   <path d="M12 15l-2 5 9-9H4l9 9-2-5M12 2v4"/>
                 </svg>
-                <p className="text-xs text-[#555]">Top performers appear once you start posting</p>
+                <p className="text-xs text-[var(--text-muted)]">Top performers appear once you start posting</p>
               </div>
             ) : (
               <div className="space-y-4">
                 {topPosts.best_ever && (
                   <div 
                     className="rounded-xl p-3"
-                    style={{ background: 'rgba(255,255,255,0.02)' }}
+                    style={{ background: 'var(--bg-surface)' }}
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <svg width={12} height={12} viewBox="0 0 24 24" fill="#f59e0b">
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                       </svg>
-                      <span className="text-xs font-medium text-[#f59e0b]">All-Time Best</span>
+                      <span className="text-xs font-medium text-[var(--accent)]">All-Time Best</span>
                     </div>
                     <div className="flex gap-3">
                       <div 
@@ -791,13 +664,13 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
                           padding: '2px'
                         }}
                       >
-                        <div className="w-full h-full rounded-md overflow-hidden bg-[#0a0a0a]">
+                        <div className="w-full h-full rounded-md overflow-hidden bg-[var(--bg-base)]">
                           {topPosts.best_ever.image_url && <img src={topPosts.best_ever.image_url} alt="" className="w-full h-full object-cover" />}
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs text-[#888] line-clamp-2">{topPosts.best_ever.caption || "No caption"}</p>
-                        <div className="flex items-center gap-3 mt-2 text-xs text-[#666]">
+                        <p className="text-xs text-[var(--text-secondary)] line-clamp-2">{topPosts.best_ever.caption || "No caption"}</p>
+                        <div className="flex items-center gap-3 mt-2 text-xs text-[var(--text-muted)]">
                           <span className="flex items-center gap-1">
                             <svg width={10} height={10} viewBox="0 0 24 24" fill="currentColor">
                               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
@@ -818,7 +691,7 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
                 
                 {topPosts?.monthly_top?.length > 0 && (
                   <div>
-                    <span className="text-xs text-[#555] mb-2 block">This Month</span>
+                    <span className="text-xs text-[var(--text-muted)] mb-2 block">This Month</span>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                       {topPosts?.monthly_top?.slice(0, 3).map((post, i) => (
                         <div 
@@ -829,7 +702,7 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
                             padding: '2px'
                           }}
                         >
-                          <div className="w-full h-full rounded-md overflow-hidden bg-[#0a0a0a] relative">
+                          <div className="w-full h-full rounded-md overflow-hidden bg-[var(--bg-base)] relative">
                             {post.image_url && <img src={post.image_url} alt="" className="w-full h-full object-cover" />}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                             <div className="absolute bottom-1.5 left-1.5 flex items-center gap-1 text-xs text-white/80">
@@ -842,7 +715,7 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
                               className="absolute top-1.5 left-1.5 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
                               style={{
                                 background: 'linear-gradient(145deg, #f59e0b, #d97706)',
-                                color: '#0c0c0d'
+                                color: 'white'
                               }}
                             >
                               {i + 1}

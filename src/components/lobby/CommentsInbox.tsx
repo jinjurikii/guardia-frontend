@@ -97,26 +97,26 @@ export default function CommentsInbox({ clientId, jwt, onReply, onClose }: Comme
   };
 
   return (
-    <div className="bg-[#1a1a1c] rounded-2xl border border-white/5 overflow-hidden">
+    <div className="bg-[var(--bg-elevated)] rounded-2xl border border-[var(--border-subtle)] overflow-hidden">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
+      <div className="px-5 py-4 border-b border-[var(--border-subtle)] flex items-center justify-between">
         <div>
-          <h3 className="text-[#e8e8e8] font-medium">Comments Inbox</h3>
-          <p className="text-sm text-[#6a6a6a] mt-0.5">
+          <h3 className="text-[var(--text-primary)] font-medium">Comments Inbox</h3>
+          <p className="text-sm text-[var(--text-muted)] mt-0.5">
             {comments.length} {filter === "pending" ? "need replies" : "comments"}
           </p>
         </div>
         <div className="flex items-center gap-2">
           {/* Filter tabs */}
-          <div className="flex bg-[#121214] rounded-lg p-0.5">
+          <div className="flex bg-[var(--bg-surface)] rounded-lg p-0.5">
             {(["pending", "replied", "all"] as const).map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
                 className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
                   filter === f
-                    ? "bg-white/10 text-[#e8e8e8]"
-                    : "text-[#6a6a6a] hover:text-[#a0a0a0]"
+                    ? "bg-[var(--accent-muted)] text-[var(--text-primary)]"
+                    : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
                 }`}
               >
                 {f.charAt(0).toUpperCase() + f.slice(1)}
@@ -125,8 +125,8 @@ export default function CommentsInbox({ clientId, jwt, onReply, onClose }: Comme
           </div>
           
           {onClose && (
-            <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-lg">
-              <svg className="w-5 h-5 text-[#6a6a6a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button onClick={onClose} className="p-2 hover:bg-[var(--bg-surface)] rounded-lg">
+              <svg className="w-5 h-5 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -142,28 +142,28 @@ export default function CommentsInbox({ clientId, jwt, onReply, onClose }: Comme
           </div>
         ) : comments.length === 0 ? (
           <div className="p-8 text-center">
-            <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-white/5 flex items-center justify-center">
-              <svg className="w-6 h-6 text-[#4a4a4a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[var(--bg-surface)] flex items-center justify-center">
+              <svg className="w-6 h-6 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
             </div>
-            <p className="text-[#6a6a6a] text-sm">
+            <p className="text-[var(--text-muted)] text-sm">
               {filter === "pending" ? "No comments waiting for replies" : "No comments yet"}
             </p>
           </div>
         ) : (
           <div className="divide-y divide-white/5">
             {comments.map((comment) => (
-              <div key={comment.id} className="p-4 hover:bg-white/[0.02] transition-colors">
+              <div key={comment.id} className="p-4 hover:bg-[var(--bg-surface)] transition-colors">
                 {/* Comment header */}
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500/30 to-purple-500/30 flex items-center justify-center text-sm text-white/80">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500/30 to-purple-500/30 flex items-center justify-center text-sm text-[var(--text-primary)]">
                       {comment.author_name.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <span className="text-sm text-[#e8e8e8] font-medium">{comment.author_name}</span>
-                      <span className="text-xs text-[#5a5a5a] ml-2">{formatTime(comment.created_time)}</span>
+                      <span className="text-sm text-[var(--text-primary)] font-medium">{comment.author_name}</span>
+                      <span className="text-xs text-[var(--text-muted)] ml-2">{formatTime(comment.created_time)}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
@@ -177,7 +177,7 @@ export default function CommentsInbox({ clientId, jwt, onReply, onClose }: Comme
                 </div>
 
                 {/* Comment message */}
-                <p className="text-[#c8c8c8] text-sm mb-3">{comment.message}</p>
+                <p className="text-[var(--text-primary)] text-sm mb-3">{comment.message}</p>
 
                 {/* Reply section */}
                 {!comment.replied && (
@@ -188,7 +188,7 @@ export default function CommentsInbox({ clientId, jwt, onReply, onClose }: Comme
                           value={replyText}
                           onChange={(e) => setReplyText(e.target.value)}
                           placeholder="Write your reply..."
-                          className="w-full px-3 py-2 bg-[#121214] border border-white/10 rounded-lg text-sm text-[#e8e8e8] placeholder:text-[#4a4a4a] focus:outline-none focus:border-amber-500/50 resize-none"
+                          className="w-full px-3 py-2 bg-[var(--bg-surface)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-amber-500/50 resize-none"
                           rows={2}
                         />
                         {comment.reply_suggestion && (
@@ -212,7 +212,7 @@ export default function CommentsInbox({ clientId, jwt, onReply, onClose }: Comme
                           </button>
                           <button
                             onClick={() => { setReplyingTo(null); setReplyText(""); }}
-                            className="px-3 py-1.5 text-[#6a6a6a] hover:text-[#a0a0a0] text-sm"
+                            className="px-3 py-1.5 text-[var(--text-muted)] hover:text-[var(--text-secondary)] text-sm"
                           >
                             Cancel
                           </button>

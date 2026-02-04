@@ -93,24 +93,24 @@ export default function AnalyticsTab({ client, jwt }: AnalyticsTabProps) {
     <div className="h-full overflow-auto p-6">
       {/* Header */}
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-white mb-1">Analytics</h2>
-        <p className="text-sm text-[#666]">
+        <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-1">Analytics</h2>
+        <p className="text-sm text-[var(--text-muted)]">
           Track how your content is performing
         </p>
       </div>
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <div className="w-8 h-8 border-2 border-[#333] border-t-blue-500 rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-[var(--border)] border-t-blue-500 rounded-full animate-spin" />
         </div>
       ) : error ? (
         <div className="text-center py-12">
-          <p className="text-[#666]">{error}</p>
+          <p className="text-[var(--text-muted)]">{error}</p>
         </div>
       ) : posts.length === 0 ? (
         <div className="text-center py-12">
           <svg
-            className="w-12 h-12 mx-auto mb-4 text-[#333]"
+            className="w-12 h-12 mx-auto mb-4 text-[var(--border)]"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -122,8 +122,8 @@ export default function AnalyticsTab({ client, jwt }: AnalyticsTabProps) {
               d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
             />
           </svg>
-          <p className="text-[#666] mb-2">No published posts yet</p>
-          <p className="text-xs text-[#555]">
+          <p className="text-[var(--text-muted)] mb-2">No published posts yet</p>
+          <p className="text-xs text-[var(--text-muted)]">
             Analytics will appear once you start posting
           </p>
         </div>
@@ -176,7 +176,7 @@ export default function AnalyticsTab({ client, jwt }: AnalyticsTabProps) {
 
           {/* Posts List */}
           <div className="space-y-3">
-            <h3 className="text-sm font-medium text-[#888] mb-3">Recent Posts</h3>
+            <h3 className="text-sm font-medium text-[var(--text-muted)] mb-3">Recent Posts</h3>
             {posts.map((post) => (
               <PostInsightCard key={post.id} post={post} formatDate={formatDate} />
             ))}
@@ -224,12 +224,12 @@ function SummaryCard({
   };
 
   return (
-    <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4">
+    <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl p-4">
       <div className={`w-10 h-10 rounded-lg ${colorClasses[color]} flex items-center justify-center mb-3`}>
         {icon}
       </div>
-      <p className="text-2xl font-semibold text-white">{value}</p>
-      <p className="text-xs text-[#666] mt-1">{label}</p>
+      <p className="text-2xl font-semibold text-[var(--text-primary)]">{value}</p>
+      <p className="text-xs text-[var(--text-muted)] mt-1">{label}</p>
     </div>
   );
 }
@@ -243,13 +243,13 @@ function PostInsightCard({
   formatDate: (d: string) => string;
 }) {
   return (
-    <div className="flex items-center gap-4 p-3 bg-white/[0.02] border border-white/5 rounded-xl hover:border-white/10 transition-colors">
+    <div className="flex items-center gap-4 p-3 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl hover:border-[var(--border)] transition-colors">
       {/* Thumbnail */}
-      <div className="w-14 h-14 rounded-lg overflow-hidden bg-[#1a1a1a] flex-shrink-0">
+      <div className="w-14 h-14 rounded-lg overflow-hidden bg-[var(--bg-elevated)] flex-shrink-0">
         {post.image_url ? (
           <img src={post.image_url} alt="" className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-[#333]">
+          <div className="w-full h-full flex items-center justify-center text-[var(--border)]">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
@@ -259,10 +259,10 @@ function PostInsightCard({
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-[#ccc] line-clamp-1">
+        <p className="text-sm text-[var(--text-primary)] line-clamp-1">
           {post.caption || "No caption"}
         </p>
-        <div className="flex items-center gap-3 mt-1 text-xs text-[#666]">
+        <div className="flex items-center gap-3 mt-1 text-xs text-[var(--text-muted)]">
           <span className="capitalize">{post.platform}</span>
           <span>•</span>
           <span>{formatDate(post.posted_at)}</span>
@@ -282,7 +282,7 @@ function PostInsightCard({
           href={post.post_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="p-2 text-[#666] hover:text-white transition-colors"
+          className="p-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -314,7 +314,7 @@ function MetricBadge({ icon, value }: { icon: "heart" | "comment" | "share"; val
   };
 
   return (
-    <div className="flex items-center gap-1 text-[#666]">
+    <div className="flex items-center gap-1 text-[var(--text-muted)]">
       {icons[icon]}
       <span>{value}</span>
     </div>

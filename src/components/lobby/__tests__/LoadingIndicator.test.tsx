@@ -10,13 +10,13 @@ describe('LoadingIndicator', () => {
 
   it('should show Giovanni avatar', () => {
     const { container } = render(<LoadingIndicator />);
-    const avatar = container.querySelector('.text-\\[\\#e8a060\\]');
+    const avatar = container.querySelector('.text-\\[var\\(--accent\\)\\]');
     expect(avatar).toBeInTheDocument();
   });
 
   it('should have proper styling', () => {
     const { container } = render(<LoadingIndicator />);
-    const wrapper = container.querySelector('.bg-\\[\\#1c1c1e\\]');
+    const wrapper = container.querySelector('.bg-\\[var\\(--bg-elevated\\)\\]');
     expect(wrapper).toBeInTheDocument();
   });
 });

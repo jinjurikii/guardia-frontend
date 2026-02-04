@@ -316,8 +316,8 @@ function OptionButton({
       onClick={onClick}
       className={`flex items-center gap-2 px-4 py-3 rounded-xl text-left text-sm font-medium transition-all active:scale-[0.98] ${
         selected
-          ? "bg-[#f59e0b]/20 border-[#f59e0b]/50 text-[#e8e8e8]"
-          : "bg-[#0a0a0a] border-white/5 text-[#888] hover:border-white/10 hover:text-[#aaa]"
+          ? "bg-[#f59e0b]/20 border-[#f59e0b]/50 text-[var(--text-primary)]"
+          : "bg-[var(--bg-base)] border-[var(--border-subtle)] text-[var(--text-muted)] hover:border-[var(--border)] hover:text-[var(--text-secondary)]"
       }`}
       style={{
         border: "1px solid",
@@ -328,10 +328,10 @@ function OptionButton({
     >
       {multi && (
         <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${
-          selected ? "bg-[#f59e0b] border-[#f59e0b]" : "border-[#555]"
+          selected ? "bg-[#f59e0b] border-[#f59e0b]" : "border-[var(--border)]"
         }`}>
           {selected && (
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" strokeWidth="3">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
               <polyline points="20 6 9 17 4 12" />
             </svg>
           )}
@@ -371,7 +371,7 @@ function QuestionBlock({
 
   return (
     <div className="space-y-3">
-      <label className="block text-sm font-medium text-[#e8e8e8]">
+      <label className="block text-sm font-medium text-[var(--text-primary)]">
         {question.label}
       </label>
       
@@ -381,9 +381,9 @@ function QuestionBlock({
           value={(value as string) || ""}
           onChange={(e) => onChange(e.target.value)}
           placeholder={question.placeholder}
-          className="w-full px-4 py-3 rounded-xl text-sm text-[#e8e8e8] placeholder-[#555] focus:outline-none transition-all"
+          className="w-full px-4 py-3 rounded-xl text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none transition-all"
           style={{
-            background: "#0a0a0a",
+            background: "var(--bg-base)",
             boxShadow: "inset 0 2px 4px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(255,255,255,0.03)",
             border: "none",
           }}
@@ -516,7 +516,7 @@ export default function ContentDirectionPanel({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="w-6 h-6 border-2 border-[#2a2a2c] border-t-[#f59e0b] rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-[var(--border)] border-t-[#f59e0b] rounded-full animate-spin" />
       </div>
     );
   }
@@ -526,8 +526,8 @@ export default function ContentDirectionPanel({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-base font-semibold text-[#e8e8e8]">Content Direction</h3>
-          <p className="text-xs text-[#666] mt-0.5">Tell us what works — we'll handle the rest</p>
+          <h3 className="text-base font-semibold text-[var(--text-primary)]">Content Direction</h3>
+          <p className="text-xs text-[var(--text-muted)] mt-0.5">Tell us what works — we'll handle the rest</p>
         </div>
         <button
           onClick={handleSave}
@@ -536,11 +536,11 @@ export default function ContentDirectionPanel({
           style={{
             background: hasChanges
               ? "linear-gradient(145deg, #f59e0b, #d97706)"
-              : "linear-gradient(145deg, #1a1a1c, #0f0f10)",
+              : "var(--bg-elevated)",
             boxShadow: hasChanges
               ? "0 2px 8px rgba(245,158,11,0.3)"
               : "inset 0 1px 2px rgba(0,0,0,0.3)",
-            color: hasChanges ? "#0c0c0d" : "#555",
+            color: hasChanges ? "white" : "var(--text-muted)",
           }}
         >
           {saving ? "Saving..." : hasChanges ? "Save" : "Saved"}
@@ -551,16 +551,16 @@ export default function ContentDirectionPanel({
       <div 
         className="rounded-2xl p-5 space-y-5"
         style={{
-          background: "linear-gradient(145deg, #111113, #0a0a0b)",
+          background: "var(--bg-surface)",
           boxShadow: "inset 0 2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.3)",
         }}
       >
-        <div className="flex items-center gap-2 pb-2 border-b border-white/5">
+        <div className="flex items-center gap-2 pb-2 border-b border-[var(--border-subtle)]">
           <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2">
             <circle cx="12" cy="12" r="10" />
             <path d="M12 16v-4M12 8h.01" />
           </svg>
-          <span className="text-xs text-[#666] uppercase tracking-wider">The Basics</span>
+          <span className="text-xs text-[var(--text-muted)] uppercase tracking-wider">The Basics</span>
         </div>
         
         {universalToShow.map((q) => (
@@ -578,17 +578,17 @@ export default function ContentDirectionPanel({
         <div 
           className="rounded-2xl p-5 space-y-5"
           style={{
-            background: "linear-gradient(145deg, #111113, #0a0a0b)",
+            background: "var(--bg-surface)",
             boxShadow: "inset 0 2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.3)",
           }}
         >
-          <div className="flex items-center gap-2 pb-2 border-b border-white/5">
+          <div className="flex items-center gap-2 pb-2 border-b border-[var(--border-subtle)]">
             <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2">
               <path d="M12 2L2 7l10 5 10-5-10-5z" />
               <path d="M2 17l10 5 10-5" />
               <path d="M2 12l10 5 10-5" />
             </svg>
-            <span className="text-xs text-[#666] uppercase tracking-wider">
+            <span className="text-xs text-[var(--text-muted)] uppercase tracking-wider">
               For Your {industry?.charAt(0).toUpperCase()}{industry?.slice(1) || "Business"}
             </span>
           </div>
@@ -611,8 +611,8 @@ export default function ContentDirectionPanel({
           style={{ background: "rgba(245, 158, 11, 0.05)" }}
         >
           <div className="flex items-start gap-3">
-            <div className="text-sm text-[#888]">
-              <span className="text-[#e8e8e8] font-medium">Your content will: </span>
+            <div className="text-sm text-[var(--text-muted)]">
+              <span className="text-[var(--text-primary)] font-medium">Your content will: </span>
               {strategy.text_overlay === "never" && "focus on clean, striking images"}
               {strategy.text_overlay === "always" && `include ${strategy.font_style || "styled"} text overlays`}
               {strategy.text_overlay === "sometimes" && "mix clean images with occasional text"}

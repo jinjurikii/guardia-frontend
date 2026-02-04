@@ -53,7 +53,7 @@ interface ToggleRowProps {
 function ToggleRow({ label, checked, onChange }: ToggleRowProps) {
   return (
     <label className="flex items-center justify-between py-2.5 cursor-pointer group">
-      <span className="text-sm text-[#aaa] group-hover:text-[#ccc] transition-colors">
+      <span className="text-sm text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors">
         {label}
       </span>
       <button
@@ -65,7 +65,7 @@ function ToggleRow({ label, checked, onChange }: ToggleRowProps) {
         style={{
           background: checked 
             ? "linear-gradient(145deg, #f59e0b, #d97706)" 
-            : "#1a1a1c",
+            : "var(--bg-elevated)",
           boxShadow: checked
             ? "0 0 8px rgba(245, 158, 11, 0.3)"
             : "inset 0 2px 4px rgba(0,0,0,0.4)",
@@ -75,7 +75,7 @@ function ToggleRow({ label, checked, onChange }: ToggleRowProps) {
           className="absolute top-1 w-4 h-4 rounded-full transition-all"
           style={{
             left: checked ? "22px" : "4px",
-            background: checked ? "#0c0c0d" : "#555",
+            background: checked ? "white" : "var(--text-muted)",
           }}
         />
       </button>
@@ -91,7 +91,7 @@ interface ToggleGroupProps {
 function ToggleGroup({ title, children }: ToggleGroupProps) {
   return (
     <div className="space-y-1">
-      <h4 className="text-xs text-[#666] uppercase tracking-wider pb-2 border-b border-white/5">
+      <h4 className="text-xs text-[var(--text-muted)] uppercase tracking-wider pb-2 border-b border-[var(--border-subtle)]">
         {title}
       </h4>
       <div className="divide-y divide-white/5">
@@ -187,7 +187,7 @@ export default function PlanningPreferencesPanel({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="w-6 h-6 border-2 border-[#2a2a2c] border-t-[#f59e0b] rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-[var(--border)] border-t-[#f59e0b] rounded-full animate-spin" />
       </div>
     );
   }
@@ -197,8 +197,8 @@ export default function PlanningPreferencesPanel({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-base font-semibold text-[#e8e8e8]">Planning Preferences</h3>
-          <p className="text-xs text-[#666] mt-0.5">Shape how your content sounds and what it covers</p>
+          <h3 className="text-base font-semibold text-[var(--text-primary)]">Planning Preferences</h3>
+          <p className="text-xs text-[var(--text-muted)] mt-0.5">Shape how your content sounds and what it covers</p>
         </div>
         <button
           onClick={handleSave}
@@ -207,11 +207,11 @@ export default function PlanningPreferencesPanel({
           style={{
             background: hasChanges
               ? "linear-gradient(145deg, #f59e0b, #d97706)"
-              : "linear-gradient(145deg, #1a1a1c, #0f0f10)",
+              : "var(--bg-elevated)",
             boxShadow: hasChanges
               ? "0 2px 8px rgba(245,158,11,0.3)"
               : "inset 0 1px 2px rgba(0,0,0,0.3)",
-            color: hasChanges ? "#0c0c0d" : "#555",
+            color: hasChanges ? "white" : "var(--text-muted)",
           }}
         >
           {saving ? "Saving..." : hasChanges ? "Save" : "Saved"}
@@ -222,7 +222,7 @@ export default function PlanningPreferencesPanel({
       <div 
         className="rounded-2xl p-5 space-y-6"
         style={{
-          background: "linear-gradient(145deg, #111113, #0a0a0b)",
+          background: "var(--bg-surface)",
           boxShadow: "inset 0 2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.3)",
         }}
       >

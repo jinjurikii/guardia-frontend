@@ -63,9 +63,6 @@ export default function WelcomeBubble({ jwt, onEngage, onOpenTablet }: WelcomeBu
       case "open_calendar":
         if (onOpenTablet) onOpenTablet("calendar");
         break;
-      case "open_planner":
-        if (onOpenTablet) onOpenTablet("planner");
-        break;
       default:
         // Default: send to Gio chat
         if (message) onEngage(message);
@@ -80,7 +77,6 @@ export default function WelcomeBubble({ jwt, onEngage, onOpenTablet }: WelcomeBu
       case "connect_facebook": return "Let's connect";
       case "open_gallery": return "Show me";
       case "open_calendar": return "Open Calendar";
-      case "open_planner": return "Open Planner";
       default: return "Chat with Gio";
     }
   };
@@ -95,34 +91,34 @@ export default function WelcomeBubble({ jwt, onEngage, onOpenTablet }: WelcomeBu
     >
       {/* Bubble container */}
       <div 
-        className="border border-white/10 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden"
+        className="border border-[var(--border)] rounded-2xl shadow-2xl shadow-black/20 overflow-hidden"
         style={{
-          background: 'linear-gradient(145deg, #1a1a1c, #111113)',
+          background: 'var(--bg-elevated)',
         }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-subtle)]">
           <div className="flex items-center gap-2">
             <div 
               className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-semibold"
               style={{
-                background: 'linear-gradient(145deg, #e8a060, #d4914f)',
-                color: '#0c0c0d'
+                background: 'var(--accent)',
+                color: 'white'
               }}
             >
               G
             </div>
             <div>
-              <span className="text-[#e8e8e8] text-sm font-medium">Giovanni</span>
+              <span className="text-[var(--text-primary)] text-sm font-medium">Giovanni</span>
               <div className="flex items-center gap-1">
                 <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
-                <span className="text-[#555] text-xs">Online</span>
+                <span className="text-[var(--text-muted)] text-xs">Online</span>
               </div>
             </div>
           </div>
           <button
             onClick={handleDismiss}
-            className="text-[#555] hover:text-[#888] transition-colors p-1"
+            className="text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors p-1"
             aria-label="Dismiss"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,7 +129,7 @@ export default function WelcomeBubble({ jwt, onEngage, onOpenTablet }: WelcomeBu
 
         {/* Message */}
         <div className="px-4 py-3">
-          <p className="text-[#c8c8c8] text-sm leading-relaxed">{message}</p>
+          <p className="text-[var(--text-primary)] text-sm leading-relaxed">{message}</p>
         </div>
 
         {/* Actions */}
@@ -142,17 +138,17 @@ export default function WelcomeBubble({ jwt, onEngage, onOpenTablet }: WelcomeBu
             onClick={handleAction}
             className="flex-1 py-2.5 px-4 rounded-xl text-sm font-medium transition-all active:scale-98"
             style={{
-              background: 'linear-gradient(145deg, #e8a060, #d4914f)',
-              color: '#0c0c0d',
-              boxShadow: '0 2px 8px rgba(232,160,96,0.3)'
+              background: 'var(--accent)',
+              color: 'white',
+              boxShadow: '0 2px 8px var(--accent-muted)'
             }}
           >
             {getButtonText()}
           </button>
           <button
             onClick={handleDismiss}
-            className="py-2.5 px-4 rounded-xl text-sm text-[#666] hover:text-[#888] transition-colors"
-            style={{ background: 'rgba(255,255,255,0.03)' }}
+            className="py-2.5 px-4 rounded-xl text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+            style={{ background: 'var(--bg-surface)' }}
           >
             Later
           </button>
@@ -160,9 +156,9 @@ export default function WelcomeBubble({ jwt, onEngage, onOpenTablet }: WelcomeBu
       </div>
 
       {/* Decorative tail */}
-      <div 
-        className="absolute -bottom-2 right-8 w-4 h-4 border-r border-b border-white/10 transform rotate-45"
-        style={{ background: '#111113' }}
+      <div
+        className="absolute -bottom-2 right-8 w-4 h-4 border-r border-b border-[var(--border)] transform rotate-45"
+        style={{ background: 'var(--bg-surface)' }}
       />
     </div>
   );

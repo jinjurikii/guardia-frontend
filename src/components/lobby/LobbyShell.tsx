@@ -34,7 +34,7 @@ export interface Message {
 
 type AuthState = "loading" | "setup" | "login" | "authenticated";
 export type LobbyMode = "gio" | "tablet";
-export type TabletTab = "planner" | "calendar" | "gallery" | "styles" | "analytics" | "account";
+export type TabletTab = "calendar" | "gallery" | "styles" | "analytics" | "account";
 
 const API_BASE = "https://api.guardiacontent.com";
 
@@ -60,7 +60,7 @@ export default function LobbyShell() {
 
   // Mode state
   const [mode, setMode] = useState<LobbyMode>("gio");
-  const [activeTab, setActiveTab] = useState<TabletTab>("planner");
+  const [activeTab, setActiveTab] = useState<TabletTab>("calendar");
 
   // Chat state (shared so it persists across mode switches)
   const [messages, setMessages] = useState<Message[]>([]);
@@ -196,10 +196,10 @@ export default function LobbyShell() {
   // ============================================
   if (authState === "loading") {
     return (
-      <main className="min-h-screen bg-[#121214] flex items-center justify-center">
+      <main className="min-h-screen bg-[var(--bg-surface)] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-2 border-[#e8a060]/30 border-t-[#e8a060] rounded-full animate-spin" />
-          <p className="text-[#a0a0a0] text-sm">Loading...</p>
+          <div className="w-12 h-12 border-2 border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin" />
+          <p className="text-[var(--text-secondary)] text-sm">Loading...</p>
         </div>
   
       {/* Welcome Bubble - appears 60s after auth */}
@@ -236,7 +236,7 @@ export default function LobbyShell() {
   // RENDER: AUTHENTICATED — GIO + TABLET MODES
   // ============================================
   return (
-    <main className="min-h-screen bg-[#121214] relative overflow-hidden">
+    <main className="min-h-screen bg-[var(--bg-surface)] relative overflow-hidden">
 
       
 
@@ -325,7 +325,7 @@ function AuthScreen({ mode, setupToken, setupData, onSuccess }: AuthScreenProps)
   };
 
   return (
-    <main className="min-h-screen bg-[#121214] relative overflow-hidden">
+    <main className="min-h-screen bg-[var(--bg-surface)] relative overflow-hidden">
 
       
 
@@ -334,58 +334,58 @@ function AuthScreen({ mode, setupToken, setupData, onSuccess }: AuthScreenProps)
           {/* Logo */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 bg-[#e8a060] rounded-lg" />
-              <span className="text-xl font-semibold text-white">Guardia</span>
+              <div className="w-8 h-8 bg-[var(--accent)] rounded-lg" />
+              <span className="text-xl font-semibold text-[var(--text-primary)]">Guardia</span>
             </div>
           </div>
 
           {/* Card */}
-          <div className="bg-[#1c1c1e] border border-[#2a2a2c] rounded-2xl p-8">
+          <div className="bg-[var(--bg-elevated)] border border-[var(--border)] rounded-2xl p-8">
             {/* Giovanni avatar */}
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-[#e8a060] rounded-xl flex items-center justify-center text-white text-xl">
+              <div className="w-12 h-12 bg-[var(--accent)] rounded-xl flex items-center justify-center text-white text-xl">
                 G
               </div>
               <div>
-                <div className="text-white font-medium">Giovanni</div>
-                <div className="text-[#a0a0a0] text-sm">Your Concierge</div>
+                <div className="text-[var(--text-primary)] font-medium">Giovanni</div>
+                <div className="text-[var(--text-secondary)] text-sm">Your Concierge</div>
               </div>
             </div>
 
             {/* Message */}
-            <div className="bg-[#1c1c1e] rounded-xl p-4 mb-6">
+            <div className="bg-[var(--bg-elevated)] rounded-xl p-4 mb-6">
               {mode === "setup" ? (
                 <>
-                  <p className="text-[#e8e8e8]">
+                  <p className="text-[var(--text-primary)]">
                     Welcome to Guardia, {setupData?.contact_name || "there"}! I'm Giovanni, your dedicated concierge for{" "}
-                    <span className="text-[#e8a060] font-medium">{setupData?.business_name}</span>.
+                    <span className="text-[var(--accent)] font-medium">{setupData?.business_name}</span>.
                   </p>
-                  <p className="text-[#a0a0a0] text-sm mt-2">
+                  <p className="text-[var(--text-secondary)] text-sm mt-2">
                     Let's set up your login credentials. Choose a username and 4-digit PIN.
                   </p>
                 </>
               ) : (
-                <p className="text-[#e8e8e8]">Welcome back! Enter your username and PIN to continue.</p>
+                <p className="text-[var(--text-primary)]">Welcome back! Enter your username and PIN to continue.</p>
               )}
             </div>
 
             {/* Form */}
             <div className="space-y-4">
               <div>
-                <label className="block text-[#a0a0a0] text-sm mb-2">Username</label>
+                <label className="block text-[var(--text-secondary)] text-sm mb-2">Username</label>
                 <input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ""))}
                   placeholder={mode === "setup" ? "e.g. sunnybakery" : "Your username"}
-                  className="w-full px-4 py-3 bg-[#2a2a2c] border border-[#2a2a2c] rounded-xl text-white placeholder-[#6a6a6a] focus:outline-none focus:border-[#e8a060]/50 focus:ring-2 focus:ring-[#e8a060]/20 transition-all"
+                  className="w-full px-4 py-3 bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-muted)] transition-all"
                   onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
                   disabled={loading}
                 />
               </div>
 
               <div>
-                <label className="block text-[#a0a0a0] text-sm mb-2">{mode === "setup" ? "4-Digit PIN" : "PIN"}</label>
+                <label className="block text-[var(--text-secondary)] text-sm mb-2">{mode === "setup" ? "4-Digit PIN" : "PIN"}</label>
                 <input
                   type="password"
                   inputMode="numeric"
@@ -394,7 +394,7 @@ function AuthScreen({ mode, setupToken, setupData, onSuccess }: AuthScreenProps)
                   value={pin}
                   onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
                   placeholder="••••"
-                  className="w-full px-4 py-3 bg-[#2a2a2c] border border-[#2a2a2c] rounded-xl text-white placeholder-[#6a6a6a] focus:outline-none focus:border-[#e8a060]/50 focus:ring-2 focus:ring-[#e8a060]/20 transition-all text-center tracking-[0.5em] text-xl"
+                  className="w-full px-4 py-3 bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-muted)] transition-all text-center tracking-[0.5em] text-xl"
                   onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
                   disabled={loading}
                 />
@@ -409,7 +409,7 @@ function AuthScreen({ mode, setupToken, setupData, onSuccess }: AuthScreenProps)
               <button
                 onClick={handleSubmit}
                 disabled={loading || !username.trim() || pin.length !== 4}
-                className="w-full py-3 bg-[#e8a060] text-white font-semibold rounded-xl hover:bg-[#d4914f] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                className="w-full py-3 bg-[var(--accent)] text-white font-semibold rounded-xl hover:bg-[var(--accent-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
@@ -423,9 +423,9 @@ function AuthScreen({ mode, setupToken, setupData, onSuccess }: AuthScreenProps)
             </div>
           </div>
 
-          <p className="text-center text-[#6a6a6a] text-sm mt-6">
+          <p className="text-center text-[var(--text-muted)] text-sm mt-6">
             Need help? Contact{" "}
-            <a href="mailto:support@guardiacontent.com" className="text-[#e8a060] hover:underline">
+            <a href="mailto:support@guardiacontent.com" className="text-[var(--accent)] hover:underline">
               support@guardiacontent.com
             </a>
           </p>

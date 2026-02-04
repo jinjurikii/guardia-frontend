@@ -160,15 +160,15 @@ export default function NotificationBubble({ jwt }: NotificationBubbleProps) {
         dismissing ? "opacity-0 translate-y-4" : "opacity-100 translate-y-0"
       }`}
     >
-      <div className="bg-[#1c1c1e] border border-white/10 rounded-2xl shadow-xl overflow-hidden max-w-md mx-auto">
+      <div className="bg-[var(--bg-elevated)] border border-[var(--border)] rounded-2xl shadow-xl overflow-hidden max-w-md mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--border-subtle)]">
           {isOutcome && (
             <>
               <span className="text-lg">
                 {current.status === "approved" ? "✓" : current.status === "denied" ? "✗" : "○"}
               </span>
-              <span className="text-xs text-white/50">
+              <span className="text-xs text-[var(--text-muted)]">
                 {current.status === "approved" ? "Request approved" : 
                  current.status === "denied" ? "Request update" : "Update"}
               </span>
@@ -177,13 +177,13 @@ export default function NotificationBubble({ jwt }: NotificationBubbleProps) {
           {isQuestion && (
             <>
               <span className="text-lg">✨</span>
-              <span className="text-xs text-[#e8a060]">Quick question from Giovanni</span>
+              <span className="text-xs text-[var(--accent)]">Quick question from Giovanni</span>
             </>
           )}
           
           <button 
             onClick={handleDismiss}
-            className="ml-auto text-white/30 hover:text-white/60 transition-colors"
+            className="ml-auto text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
           >
             <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M18 6L6 18M6 6l12 12"/>
@@ -193,7 +193,7 @@ export default function NotificationBubble({ jwt }: NotificationBubbleProps) {
 
         {/* Body */}
         <div className="px-4 py-4">
-          <p className="text-sm text-[#e8e8e8] leading-relaxed">
+          <p className="text-sm text-[var(--text-primary)] leading-relaxed">
             {current.message}
           </p>
         </div>
@@ -205,7 +205,7 @@ export default function NotificationBubble({ jwt }: NotificationBubbleProps) {
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
               placeholder="Type your answer..."
-              className="w-full bg-[#2a2a2c] border border-white/10 rounded-xl px-3 py-2 text-sm text-[#e8e8e8] placeholder-white/30 resize-none focus:outline-none focus:border-[#e8a060]/50"
+              className="w-full bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl px-3 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] resize-none focus:outline-none focus:border-[var(--accent)]"
               rows={2}
               autoFocus
             />
@@ -217,7 +217,7 @@ export default function NotificationBubble({ jwt }: NotificationBubbleProps) {
           {isOutcome && (
             <button
               onClick={handleDismiss}
-              className="w-full py-2 text-sm text-white/50 hover:text-white/80 transition-colors"
+              className="w-full py-2 text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
             >
               Got it
             </button>
@@ -227,19 +227,19 @@ export default function NotificationBubble({ jwt }: NotificationBubbleProps) {
             <div className="flex gap-2">
               <button
                 onClick={() => setShowReply(true)}
-                className="flex-1 py-2.5 bg-[#e8a060] text-[#121214] rounded-xl text-sm font-medium transition-transform active:scale-98"
+                className="flex-1 py-2.5 bg-[var(--accent)] text-white rounded-xl text-sm font-medium transition-transform active:scale-98"
               >
                 Reply
               </button>
               <button
                 onClick={() => handleQuestionAction("later")}
-                className="px-4 py-2.5 bg-white/5 text-white/60 rounded-xl text-sm hover:bg-white/10 transition-colors"
+                className="px-4 py-2.5 bg-[var(--bg-surface)] text-[var(--text-secondary)] rounded-xl text-sm hover:bg-[var(--bg-surface)] transition-colors"
               >
                 Later
               </button>
               <button
                 onClick={() => handleQuestionAction("skip")}
-                className="px-4 py-2.5 text-white/30 text-sm hover:text-white/50 transition-colors"
+                className="px-4 py-2.5 text-[var(--text-muted)] text-sm hover:text-[var(--text-muted)] transition-colors"
               >
                 Skip
               </button>
@@ -251,13 +251,13 @@ export default function NotificationBubble({ jwt }: NotificationBubbleProps) {
               <button
                 onClick={() => handleQuestionAction("answer")}
                 disabled={!replyText.trim()}
-                className="flex-1 py-2.5 bg-[#e8a060] text-[#121214] rounded-xl text-sm font-medium transition-transform active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 py-2.5 bg-[var(--accent)] text-white rounded-xl text-sm font-medium transition-transform active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Send
               </button>
               <button
                 onClick={() => setShowReply(false)}
-                className="px-4 py-2.5 bg-white/5 text-white/60 rounded-xl text-sm hover:bg-white/10 transition-colors"
+                className="px-4 py-2.5 bg-[var(--bg-surface)] text-[var(--text-secondary)] rounded-xl text-sm hover:bg-[var(--bg-surface)] transition-colors"
               >
                 Cancel
               </button>
@@ -267,9 +267,9 @@ export default function NotificationBubble({ jwt }: NotificationBubbleProps) {
 
         {/* Auto-dismiss indicator for outcomes */}
         {isOutcome && !dismissing && (
-          <div className="h-1 bg-white/5">
+          <div className="h-1 bg-[var(--bg-surface)]">
             <div 
-              className="h-full bg-[#e8a060]/30 animate-shrink"
+              className="h-full bg-[var(--accent)]/30 animate-shrink"
               style={{ 
                 animation: "shrink 10s linear forwards"
               }}

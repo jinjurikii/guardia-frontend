@@ -89,17 +89,17 @@ export default function GioMode({
   const colors = tierColors[tier];
 
   return (
-    <div className={`min-h-screen bg-[#121214] flex flex-col transition-all duration-300 ${isBackground ? "opacity-30 scale-[0.98]" : ""}`}>
+    <div className={`min-h-screen bg-[var(--bg-surface)] flex flex-col transition-all duration-300 ${isBackground ? "opacity-30 scale-[0.98]" : ""}`}>
       {/* Header */}
-      <header className="border-b border-white/5 bg-[#121214]">
+      <header className="border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#1c1c1e] rounded-xl flex items-center justify-center text-[#e8a060] font-semibold border border-white/5">
+            <div className="w-10 h-10 bg-[var(--bg-elevated)] rounded-xl flex items-center justify-center text-[var(--accent)] font-semibold border border-[var(--border-subtle)]">
               G
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-[#e8e8e8] font-medium">Giovanni</h1>
+                <h1 className="text-[var(--text-primary)] font-medium">Giovanni</h1>
                 <span className={`text-xs px-2 py-0.5 rounded-full ${colors.bg} ${colors.text}`}>
                   {(tier || "pro").charAt(0).toUpperCase() + (tier || "pro").slice(1)}
                 </span>
@@ -113,7 +113,7 @@ export default function GioMode({
           <div className="flex items-center gap-2">
             <button
               onClick={onOpenTablet}
-              className="relative flex items-center gap-2 px-3 py-2 bg-[#1c1c1e] hover:bg-[#2a2a2c] border border-white/5 rounded-xl text-[#a0a0a0] hover:text-[#e8e8e8] transition-all"
+              className="relative flex items-center gap-2 px-3 py-2 bg-[var(--bg-elevated)] hover:bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all"
               title="Open Dashboard"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -128,11 +128,11 @@ export default function GioMode({
               )}
             </button>
 
-            <div className="w-px h-6 bg-white/10" />
+            <div className="w-px h-6 bg-[var(--border)]" />
 
             <button
               onClick={onLogout}
-              className="text-[#6a6a6a] hover:text-[#e8e8e8] text-sm px-3 py-1.5 hover:bg-[#1c1c1e] rounded-lg transition-all"
+              className="text-[var(--text-muted)] hover:text-[var(--text-primary)] text-sm px-3 py-1.5 hover:bg-[var(--bg-elevated)] rounded-lg transition-all"
             >
               Sign out
             </button>
@@ -171,7 +171,7 @@ export default function GioMode({
           </div>
 
           {/* Input area */}
-          <div className="p-4 border-t border-white/5 bg-[#121214]">
+          <div className="p-4 border-t border-[var(--border-subtle)] bg-[var(--bg-surface)]">
             <div className="max-w-2xl mx-auto">
               <ChatInput
                 value={input}

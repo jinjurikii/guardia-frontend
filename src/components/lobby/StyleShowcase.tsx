@@ -74,19 +74,19 @@ export default function StyleShowcase({ onSelect, onClose }: StyleShowcaseProps)
   }
 
   return (
-    <div className="bg-[#1a1a1c] rounded-2xl border border-white/5 overflow-hidden">
+    <div className="bg-[var(--bg-elevated)] rounded-2xl border border-[var(--border-subtle)] overflow-hidden">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
+      <div className="px-5 py-4 border-b border-[var(--border-subtle)] flex items-center justify-between">
         <div>
-          <h3 className="text-[#e8e8e8] font-medium">Style Showcase</h3>
-          <p className="text-sm text-[#6a6a6a] mt-0.5">Curated visual identities for your brand</p>
+          <h3 className="text-[var(--text-primary)] font-medium">Style Showcase</h3>
+          <p className="text-sm text-[var(--text-muted)] mt-0.5">Curated visual identities for your brand</p>
         </div>
         {onClose && (
           <button
             onClick={onClose}
-            className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+            className="p-2 hover:bg-[var(--bg-surface)] rounded-lg transition-colors"
           >
-            <svg className="w-5 h-5 text-[#6a6a6a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -106,7 +106,7 @@ export default function StyleShowcase({ onSelect, onClose }: StyleShowcaseProps)
               className={`group relative p-4 rounded-xl border transition-all duration-200 text-left
                 ${isSelected 
                   ? "border-amber-500/50 bg-amber-500/10" 
-                  : "border-white/5 hover:border-white/10 bg-gradient-to-br " + colors.gradient
+                  : "border-[var(--border-subtle)] hover:border-[var(--border)] bg-gradient-to-br " + colors.gradient
                 }
               `}
             >
@@ -126,14 +126,14 @@ export default function StyleShowcase({ onSelect, onClose }: StyleShowcaseProps)
 
               {/* Description */}
               {style.description && (
-                <p className="text-sm text-[#8a8a8a] line-clamp-2 mb-2">
+                <p className="text-sm text-[var(--text-secondary)] line-clamp-2 mb-2">
                   {style.description}
                 </p>
               )}
 
               {/* Mood */}
               {style.mood && (
-                <p className="text-xs text-[#5a5a5a] line-clamp-1 italic">
+                <p className="text-xs text-[var(--text-muted)] line-clamp-1 italic">
                   {style.mood.split('.')[0]}
                 </p>
               )}
@@ -143,8 +143,8 @@ export default function StyleShowcase({ onSelect, onClose }: StyleShowcaseProps)
       </div>
 
       {/* Footer */}
-      <div className="px-5 py-3 border-t border-white/5 bg-white/[0.02]">
-        <p className="text-xs text-[#5a5a5a] text-center">
+      <div className="px-5 py-3 border-t border-[var(--border-subtle)] bg-[var(--bg-surface)]">
+        <p className="text-xs text-[var(--text-muted)] text-center">
           Or describe your vision and we&apos;ll create something custom
         </p>
       </div>

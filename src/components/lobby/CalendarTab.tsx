@@ -4,14 +4,13 @@ import { useState, useEffect, useCallback } from "react";
 import { ClientContext } from "./LobbyShell";
 
 /**
- * GUARDIA CALENDAR — Factory Floor Edition v2
+ * GUARDIA CALENDAR — Factory Floor Edition v3
  * 
- * Improvements:
- * - Today gets green checkmark ONLY if all posts succeeded
- * - Failed posts = red indicator remains as proof (no checkmark)
- * - Gold seal for past posted days
- * - Today's status banner at top
- * - 2B Calm aesthetic
+ * New in v3:
+ * - Manual slot creation (click empty day → create slot)
+ * - Ghost slots display (unfilled slots with dashed border)
+ * - Slot management (edit/delete unfilled slots)
+ * - Desert Mirage design tokens
  */
 
 const API_BASE = "https://api.guardiacontent.com";
@@ -24,6 +23,16 @@ interface CalendarPost {
   status: "draft" | "pending_approval" | "scheduled" | "posted" | "failed";
   platform: string;
   thumbnail_url?: string;
+  preview_url?: string;
+  asset_id?: number | null;
+}
+
+interface Slot {
+  id: number;
+  platform: string;
+  scheduled_for: string;
+  caption: string | null;
+  is_filled: boolean;
 }
 
 interface CalendarTabProps {
@@ -34,15 +43,19 @@ interface CalendarTabProps {
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const DAYS = ["S", "M", "T", "W", "T", "F", "S"];
+const HOURS = Array.from({ length: 12 }, (_, i) => i + 1);
 
-// SVG Filters for glow effects
+// ─────────────────────────────────────────────────────────────
+// SVG Components
+// ─────────────────────────────────────────────────────────────
+
 function GlowFilters() {
   return (
     <svg width="0" height="0" style={{ position: 'absolute' }}>
       <defs>
         <filter id="amberGlow" x="-100%" y="-100%" width="300%" height="300%">
           <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
-          <feFlood floodColor="#f59e0b" floodOpacity="0.8" result="color" />
+          <feFlood floodColor="#e8a060" floodOpacity="0.8" result="color" />
           <feComposite in="color" in2="blur" operator="in" result="glow" />
           <feMerge>
             <feMergeNode in="glow" />
@@ -77,17 +90,27 @@ function GlowFilters() {
   );
 }
 
-// Simple glowing dot
-function StatusLight({ state, size = 12 }: { state: "off" | "waiting" | "ready" | "failed"; size?: number }) {
+function StatusLight({ state, size = 12 }: { state: "off" | "waiting" | "ready" | "failed" | "slot"; size?: number }) {
   if (state === 'off') return null;
   
   const configs = {
     waiting: { filter: 'url(#amberGlow)', color: '#fbbf24' },
     ready: { filter: 'url(#greenGlow)', color: '#22c55e' },
     failed: { filter: 'url(#redGlow)', color: '#ef4444' },
+    slot: { filter: 'url(#amberGlow)', color: '#e8a060' },
   };
   
   const c = configs[state];
+  
+  // Slot gets a clock icon instead of dot
+  if (state === 'slot') {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" style={{ filter: c.filter }}>
+        <circle cx="12" cy="12" r="9" fill="none" stroke={c.color} strokeWidth="2" strokeDasharray="4 2" />
+        <path d="M12 7v5l3 3" fill="none" stroke={c.color} strokeWidth="2" strokeLinecap="round" />
+      </svg>
+    );
+  }
   
   return (
     <svg width={size} height={size} viewBox="0 0 24 24">
@@ -99,7 +122,6 @@ function StatusLight({ state, size = 12 }: { state: "off" | "waiting" | "ready" 
   );
 }
 
-// Gold Guardia Seal - for past posted days
 function GuardiaSeal({ size = 32 }: { size?: number }) {
   return (
     <img 
@@ -113,7 +135,6 @@ function GuardiaSeal({ size = 32 }: { size?: number }) {
   );
 }
 
-// Today's Success Checkmark - clean green check
 function TodayCheckmark({ size = 28 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" style={{ filter: 'url(#greenGlow)' }}>
@@ -131,13 +152,33 @@ function TodayCheckmark({ size = 28 }: { size?: number }) {
   );
 }
 
-// Today's Status Banner
+function ClockIcon({ size = 16, className = "" }: { size?: number; className?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+      <path d="M12 7v5l3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function PlusIcon({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Sub-components
+// ─────────────────────────────────────────────────────────────
+
 function TodayStatusBanner({ posts }: { posts: CalendarPost[] }) {
   if (posts.length === 0) {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#1a1a1c] border border-[#2a2a2c]">
-        <span className="text-xs text-[#666]">Today</span>
-        <span className="text-xs text-[#888]">No posts scheduled</span>
+      <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border)]">
+        <span className="text-xs text-[var(--text-muted)]">Today</span>
+        <span className="text-xs text-[var(--text-secondary)]">No posts scheduled</span>
       </div>
     );
   }
@@ -146,6 +187,7 @@ function TodayStatusBanner({ posts }: { posts: CalendarPost[] }) {
   const posted = posts.filter(p => p.status === "posted").length;
   const scheduled = posts.filter(p => p.status === "scheduled").length;
   const pending = posts.filter(p => p.status === "draft" || p.status === "pending_approval").length;
+  const slots = posts.filter(p => p.status === "draft" && !p.asset_id).length;
   
   const allGood = failed === 0 && pending === 0 && scheduled === 0 && posted > 0;
   const hasFailed = failed > 0;
@@ -158,15 +200,15 @@ function TodayStatusBanner({ posts }: { posts: CalendarPost[] }) {
           ? 'linear-gradient(145deg, rgba(239,68,68,0.1), transparent)'
           : allGood 
             ? 'linear-gradient(145deg, rgba(34,197,94,0.1), transparent)'
-            : 'linear-gradient(145deg, #1a1a1c, #141416)',
+            : 'var(--bg-elevated)',
         borderColor: hasFailed 
           ? 'rgba(239,68,68,0.3)' 
           : allGood 
             ? 'rgba(34,197,94,0.3)' 
-            : 'rgba(255,255,255,0.05)'
+            : 'var(--border)'
       }}
     >
-      <span className="text-xs font-medium text-[#888]">Today</span>
+      <span className="text-xs font-medium text-[var(--text-secondary)]">Today</span>
       
       {allGood ? (
         <div className="flex items-center gap-1.5">
@@ -175,25 +217,17 @@ function TodayStatusBanner({ posts }: { posts: CalendarPost[] }) {
         </div>
       ) : (
         <div className="flex items-center gap-3 text-xs">
-          {posted > 0 && (
-            <span className="text-emerald-400">{posted} posted</span>
-          )}
-          {scheduled > 0 && (
-            <span className="text-green-400">{scheduled} scheduled</span>
-          )}
-          {pending > 0 && (
-            <span className="text-amber-400">{pending} pending</span>
-          )}
-          {failed > 0 && (
-            <span className="text-red-400 font-medium">{failed} failed</span>
-          )}
+          {posted > 0 && <span className="text-emerald-400">{posted} posted</span>}
+          {scheduled > 0 && <span className="text-green-400">{scheduled} scheduled</span>}
+          {pending > 0 && <span className="text-amber-400">{pending} pending</span>}
+          {slots > 0 && <span className="text-[var(--accent)]">{slots} slot{slots > 1 ? 's' : ''}</span>}
+          {failed > 0 && <span className="text-red-400 font-medium">{failed} failed</span>}
         </div>
       )}
     </div>
   );
 }
 
-// Auto-Schedule Toggle - Gold border, grey off / gold on
 function AutoScheduleToggle({ 
   enabled, 
   loading, 
@@ -209,55 +243,250 @@ function AutoScheduleToggle({
       disabled={loading}
       className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-200 active:scale-98"
       style={{
-        background: 'linear-gradient(145deg, #141416, #0f0f10)',
-        border: '1px solid rgba(212, 175, 55, 0.4)',
-        boxShadow: enabled 
-          ? 'inset 0 0 12px rgba(212, 175, 55, 0.15), 0 0 8px rgba(212, 175, 55, 0.1)' 
-          : 'none',
+        background: 'var(--bg-elevated)',
+        border: '1px solid var(--accent)',
+        boxShadow: enabled ? 'inset 0 0 12px var(--accent-muted)' : 'none',
         opacity: loading ? 0.6 : 1,
       }}
     >
-      {/* Toggle indicator */}
       <div 
         className="w-8 h-4 rounded-full relative transition-all duration-200"
         style={{
           background: enabled 
-            ? 'linear-gradient(90deg, #d4af37, #c9a227)' 
-            : 'linear-gradient(90deg, #3a3a3c, #2a2a2c)',
-          boxShadow: enabled 
-            ? 'inset 0 1px 2px rgba(255,255,255,0.2)' 
-            : 'inset 0 1px 2px rgba(0,0,0,0.3)',
+            ? 'linear-gradient(90deg, var(--accent), var(--accent-hover))' 
+            : 'var(--bg-surface)',
         }}
       >
         <div 
           className="absolute top-0.5 w-3 h-3 rounded-full transition-all duration-200"
           style={{
             left: enabled ? '18px' : '2px',
-            background: enabled 
-              ? '#fff' 
-              : '#666',
+            background: enabled ? '#fff' : 'var(--text-muted)',
             boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
           }}
         />
       </div>
       
-      {/* Label */}
       <span 
         className="text-xs font-medium transition-colors"
-        style={{ color: enabled ? '#d4af37' : '#666' }}
+        style={{ color: enabled ? 'var(--accent)' : 'var(--text-muted)' }}
       >
         Auto
       </span>
       
-      {/* Loading spinner */}
       {loading && (
         <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="10" stroke="#d4af37" strokeWidth="2" strokeDasharray="30 70" />
+          <circle cx="12" cy="12" r="10" stroke="var(--accent)" strokeWidth="2" strokeDasharray="30 70" />
         </svg>
       )}
     </button>
   );
 }
+
+// ─────────────────────────────────────────────────────────────
+// Slot Creation Modal
+// ─────────────────────────────────────────────────────────────
+
+interface SlotModalProps {
+  day: number;
+  month: number;
+  year: number;
+  jwt: string | null;
+  onClose: () => void;
+  onCreated: () => void;
+  onMessage: (msg: string) => void;
+}
+
+function SlotCreationModal({ day, month, year, jwt, onClose, onCreated, onMessage }: SlotModalProps) {
+  const [hour, setHour] = useState(10);
+  const [ampm, setAmpm] = useState<"AM" | "PM">("AM");
+  const [platform, setPlatform] = useState("facebook");
+  const [caption, setCaption] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleCreate = async () => {
+    if (!jwt) return;
+    setLoading(true);
+
+    // Build datetime
+    let hour24 = hour;
+    if (ampm === "PM" && hour !== 12) hour24 += 12;
+    if (ampm === "AM" && hour === 12) hour24 = 0;
+    
+    const scheduled = new Date(year, month, day, hour24, 0, 0);
+
+    try {
+      const res = await fetch(`${API_BASE}/lobby/slots`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          platform,
+          scheduled_for: scheduled.toISOString(),
+          caption: caption.trim() || null,
+        }),
+      });
+
+      if (res.ok) {
+        onMessage("Slot created! Fill it from Gallery after approving content.");
+        onCreated();
+        onClose();
+      } else {
+        const err = await res.json();
+        onMessage(err.detail || "Failed to create slot");
+      }
+    } catch (e) {
+      onMessage("Failed to create slot");
+    }
+    setLoading(false);
+  };
+
+  const dateStr = `${MONTHS[month]} ${day}, ${year}`;
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div 
+        className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 animate-in fade-in duration-200"
+        onClick={onClose}
+      />
+      
+      {/* Modal */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+        <div 
+          className="relative w-full max-w-sm pointer-events-auto rounded-2xl overflow-hidden animate-slide-up"
+          style={{
+            background: 'var(--bg-surface)',
+            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255,255,255,0.05)',
+            border: '1px solid var(--border)'
+          }}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
+            <div>
+              <h3 className="text-base font-semibold text-[var(--text-primary)]">Create Slot</h3>
+              <p className="text-xs text-[var(--text-muted)] mt-0.5">{dateStr}</p>
+            </div>
+            <button 
+              onClick={onClose}
+              className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/10 transition-all"
+            >
+              <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+
+          {/* Form */}
+          <div className="p-5 space-y-4">
+            {/* Time Picker */}
+            <div>
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-2">
+                <ClockIcon size={14} className="inline mr-1.5 opacity-60" />
+                Post Time
+              </label>
+              <div className="flex gap-2">
+                <select
+                  value={hour}
+                  onChange={(e) => setHour(Number(e.target.value))}
+                  className="flex-1 px-3 py-2.5 rounded-xl text-sm bg-[var(--bg-base)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none transition-colors"
+                >
+                  {HOURS.map((h) => (
+                    <option key={h} value={h}>{h}:00</option>
+                  ))}
+                </select>
+                <div className="flex rounded-xl overflow-hidden border border-[var(--border)]">
+                  <button
+                    type="button"
+                    onClick={() => setAmpm("AM")}
+                    className="px-3 py-2 text-sm font-medium transition-all"
+                    style={{
+                      background: ampm === "AM" ? 'var(--accent)' : 'var(--bg-base)',
+                      color: ampm === "AM" ? 'var(--bg-base)' : 'var(--text-muted)',
+                    }}
+                  >
+                    AM
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAmpm("PM")}
+                    className="px-3 py-2 text-sm font-medium transition-all"
+                    style={{
+                      background: ampm === "PM" ? 'var(--accent)' : 'var(--bg-base)',
+                      color: ampm === "PM" ? 'var(--bg-base)' : 'var(--text-muted)',
+                    }}
+                  >
+                    PM
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Platform */}
+            <div>
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-2">
+                Platform
+              </label>
+              <select
+                value={platform}
+                onChange={(e) => setPlatform(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl text-sm bg-[var(--bg-base)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none transition-colors"
+              >
+                <option value="facebook">Facebook</option>
+                <option value="instagram">Instagram</option>
+              </select>
+            </div>
+
+            {/* Caption */}
+            <div>
+              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-2">
+                Caption <span className="text-[var(--text-muted)]">(optional)</span>
+              </label>
+              <textarea
+                value={caption}
+                onChange={(e) => setCaption(e.target.value)}
+                placeholder="Pre-write your caption or leave blank..."
+                rows={3}
+                className="w-full px-3 py-2.5 rounded-xl text-sm bg-[var(--bg-base)] border border-[var(--border)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none transition-colors resize-none"
+              />
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="px-5 pb-5">
+            <button
+              onClick={handleCreate}
+              disabled={loading}
+              className="w-full py-3 rounded-xl text-sm font-semibold transition-all duration-200 active:scale-98 disabled:opacity-50"
+              style={{
+                background: 'linear-gradient(145deg, var(--accent), var(--accent-hover))',
+                color: 'var(--bg-base)',
+                boxShadow: '0 4px 12px var(--accent-muted)'
+              }}
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeDasharray="30 70" />
+                  </svg>
+                  Creating...
+                </span>
+              ) : (
+                "Create Slot"
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Main Component
+// ─────────────────────────────────────────────────────────────
 
 export default function CalendarTab({ client, jwt, onMessage }: CalendarTabProps) {
   const today = new Date();
@@ -269,9 +498,26 @@ export default function CalendarTab({ client, jwt, onMessage }: CalendarTabProps
   const [selectedPosts, setSelectedPosts] = useState<CalendarPost[]>([]);
   const [selectedPostIndex, setSelectedPostIndex] = useState(0);
   
+  // Slot creation
+  const [showSlotModal, setShowSlotModal] = useState(false);
+  const [slotDay, setSlotDay] = useState<number | null>(null);
+  
   // Auto-schedule state
   const [autoSchedule, setAutoSchedule] = useState(false);
   const [autoScheduleLoading, setAutoScheduleLoading] = useState(false);
+  
+  // Edit modal state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingPost, setEditingPost] = useState<CalendarPost | null>(null);
+  const [editCaption, setEditCaption] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
+  
+  // Pending changes (local until Save)
+  const [pendingDeletes, setPendingDeletes] = useState<Set<number>>(new Set());
+  const [pendingCaptions, setPendingCaptions] = useState<Map<number, string>>(new Map());
+  const [saving, setSaving] = useState(false);
+  
+  const hasChanges = pendingDeletes.size > 0 || pendingCaptions.size > 0;
 
   const loadCalendar = useCallback(async () => {
     if (!jwt) return;
@@ -290,7 +536,6 @@ export default function CalendarTab({ client, jwt, onMessage }: CalendarTabProps
     setLoading(false);
   }, [jwt]);
 
-  // Load auto-schedule status
   const loadAutoSchedule = useCallback(async () => {
     if (!jwt) return;
     try {
@@ -306,7 +551,6 @@ export default function CalendarTab({ client, jwt, onMessage }: CalendarTabProps
     }
   }, [jwt]);
 
-  // Toggle auto-schedule
   const toggleAutoSchedule = async () => {
     if (!jwt || autoScheduleLoading) return;
     setAutoScheduleLoading(true);
@@ -325,6 +569,95 @@ export default function CalendarTab({ client, jwt, onMessage }: CalendarTabProps
       onMessage("Failed to update auto-schedule setting");
     }
     setAutoScheduleLoading(false);
+  };
+
+  // Mark post for deletion (local only until Save)
+  const handleDeletePost = (postId: number) => {
+    if (!postId) return;
+    setPendingDeletes(prev => new Set([...prev, postId]));
+    // Update local view
+    const newPosts = selectedPosts.filter(p => p.id !== postId);
+    setSelectedPosts(newPosts);
+    if (newPosts.length === 0) {
+      setSelectedDay(null);
+    } else if (selectedPostIndex >= newPosts.length) {
+      setSelectedPostIndex(newPosts.length - 1);
+    }
+    onMessage("Marked for deletion — click Save Changes");
+  };
+  
+  // Open edit modal
+  const openEditModal = (post: CalendarPost) => {
+    setEditingPost(post);
+    // Check if we have a pending caption change
+    const pendingCaption = pendingCaptions.get(post.id);
+    setEditCaption(pendingCaption !== undefined ? pendingCaption : (post.caption || ""));
+    setShowEditModal(true);
+  };
+  
+  // Save caption locally (not to server yet)
+  const handleSaveCaption = () => {
+    if (!editingPost) return;
+    setPendingCaptions(prev => new Map(prev).set(editingPost.id, editCaption));
+    // Update local view
+    setSelectedPosts(prev => prev.map(p => 
+      p.id === editingPost.id ? { ...p, caption: editCaption } : p
+    ));
+    setShowEditModal(false);
+    setEditingPost(null);
+    onMessage("Caption updated — click Save Changes");
+  };
+  
+  // Commit all pending changes to server
+  const saveAllChanges = async () => {
+    if (!jwt || !hasChanges) return;
+    setSaving(true);
+    
+    let errors = 0;
+    
+    // Process deletes
+    for (const postId of pendingDeletes) {
+      try {
+        const res = await fetch(`${API_BASE}/lobby/calendar/${postId}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${jwt}` },
+        });
+        if (!res.ok) errors++;
+      } catch (e) {
+        console.error("Delete failed:", e);
+        errors++;
+      }
+    }
+    
+    // Process caption updates
+    for (const [postId, caption] of pendingCaptions) {
+      // Skip if also deleted
+      if (pendingDeletes.has(postId)) continue;
+      try {
+        const res = await fetch(`${API_BASE}/lobby/calendar/${postId}/caption`, {
+          method: 'PATCH',
+          headers: { 
+            Authorization: `Bearer ${jwt}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ caption })
+        });
+        if (!res.ok) errors++;
+      } catch (e) {
+        console.error("Caption update failed:", e);
+        errors++;
+      }
+    }
+    
+    // Clear pending changes
+    setPendingDeletes(new Set());
+    setPendingCaptions(new Map());
+    
+    // Reload calendar
+    await loadCalendar();
+    
+    setSaving(false);
+    onMessage(errors > 0 ? `Saved with ${errors} error(s)` : "Changes saved!");
   };
 
   useEffect(() => {
@@ -355,9 +688,9 @@ export default function CalendarTab({ client, jwt, onMessage }: CalendarTabProps
 
   const getPostsForDay = (day: number) => {
     const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    return posts.filter(p => 
-      p.scheduled_for?.startsWith(dateStr) || p.posted_at?.startsWith(dateStr)
-    );
+    return posts
+      .filter(p => p.scheduled_for?.startsWith(dateStr) || p.posted_at?.startsWith(dateStr))
+      .filter(p => !pendingDeletes.has(p.id)); // Exclude pending deletes
   };
 
   const isToday = (day: number) => 
@@ -369,10 +702,19 @@ export default function CalendarTab({ client, jwt, onMessage }: CalendarTabProps
     return checkDate < todayStart;
   };
 
-  // Determine what to show for each day
+  const isFuture = (day: number) => {
+    const checkDate = new Date(currentYear, currentMonth, day);
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    return checkDate > todayStart;
+  };
+
+  // Check if a post is an unfilled slot
+  const isUnfilledSlot = (p: CalendarPost) => p.status === "draft" && !p.asset_id;
+
   const getDayDisplay = (day: number): { 
-    type: "off" | "checkmark" | "seal" | "light";
-    lightState?: "waiting" | "ready" | "failed";
+    type: "off" | "checkmark" | "seal" | "light" | "slot";
+    lightState?: "waiting" | "ready" | "failed" | "slot";
+    hasSlot?: boolean;
   } => {
     const dayPosts = getPostsForDay(day);
     if (dayPosts.length === 0) return { type: "off" };
@@ -380,29 +722,32 @@ export default function CalendarTab({ client, jwt, onMessage }: CalendarTabProps
     const hasFailed = dayPosts.some(p => p.status === "failed");
     const hasPosted = dayPosts.some(p => p.status === "posted");
     const hasScheduled = dayPosts.some(p => p.status === "scheduled");
-    const hasPending = dayPosts.some(p => p.status === "draft" || p.status === "pending_approval");
-    const allPostedSuccessfully = hasPosted && !hasFailed && !hasScheduled && !hasPending;
+    const hasPending = dayPosts.some(p => (p.status === "draft" || p.status === "pending_approval") && p.asset_id);
+    const hasUnfilledSlot = dayPosts.some(isUnfilledSlot);
+    const allPostedSuccessfully = hasPosted && !hasFailed && !hasScheduled && !hasPending && !hasUnfilledSlot;
 
-    // TODAY: Show checkmark if all good, otherwise show appropriate light
+    // TODAY
     if (isToday(day)) {
       if (hasFailed) return { type: "light", lightState: "failed" };
       if (allPostedSuccessfully) return { type: "checkmark" };
-      if (hasScheduled) return { type: "light", lightState: "ready" };
-      if (hasPending) return { type: "light", lightState: "waiting" };
+      if (hasScheduled) return { type: "light", lightState: "ready", hasSlot: hasUnfilledSlot };
+      if (hasPending) return { type: "light", lightState: "waiting", hasSlot: hasUnfilledSlot };
+      if (hasUnfilledSlot) return { type: "slot", lightState: "slot" };
       return { type: "off" };
     }
 
-    // PAST: Show seal if posted, otherwise show failure indicator
+    // PAST
     if (isPast(day)) {
       if (hasFailed) return { type: "light", lightState: "failed" };
       if (hasPosted) return { type: "seal" };
       return { type: "off" };
     }
 
-    // FUTURE: Show status lights
+    // FUTURE
     if (hasFailed) return { type: "light", lightState: "failed" };
-    if (hasScheduled) return { type: "light", lightState: "ready" };
-    if (hasPending) return { type: "light", lightState: "waiting" };
+    if (hasScheduled) return { type: "light", lightState: "ready", hasSlot: hasUnfilledSlot };
+    if (hasPending) return { type: "light", lightState: "waiting", hasSlot: hasUnfilledSlot };
+    if (hasUnfilledSlot) return { type: "slot", lightState: "slot" };
     return { type: "off" };
   };
 
@@ -413,16 +758,20 @@ export default function CalendarTab({ client, jwt, onMessage }: CalendarTabProps
     setSelectedPostIndex(0);
   };
 
-  // Get today's posts for the banner
+  const openSlotModal = (day: number) => {
+    setSlotDay(day);
+    setShowSlotModal(true);
+  };
+
   const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-  const todayPosts = posts.filter(p => 
-    p.scheduled_for?.startsWith(todayStr) || p.posted_at?.startsWith(todayStr)
-  );
+  const todayPosts = posts
+    .filter(p => p.scheduled_for?.startsWith(todayStr) || p.posted_at?.startsWith(todayStr))
+    .filter(p => !pendingDeletes.has(p.id));
 
   if (loading) {
     return (
-      <div className="h-full flex items-center justify-center bg-[#0c0c0d]">
-        <div className="w-8 h-8 rounded-full border-2 border-[#2a2a2c] border-t-[#f59e0b] animate-spin" />
+      <div className="h-full flex items-center justify-center bg-[var(--bg-base)]">
+        <div className="w-8 h-8 rounded-full border-2 border-[var(--border)] border-t-[var(--accent)] animate-spin" />
       </div>
     );
   }
@@ -430,17 +779,33 @@ export default function CalendarTab({ client, jwt, onMessage }: CalendarTabProps
   const numRows = Math.ceil(calendarDays.length / 7);
 
   return (
-    <div className="h-full flex flex-col bg-[#0c0c0d] overflow-hidden">
+    <div className="h-full flex flex-col bg-[var(--bg-base)] overflow-hidden">
       <GlowFilters />
       
-      {/* Today's Status Banner + Auto-Schedule Toggle */}
+      {/* Today's Status Banner + Save Changes + Auto-Schedule Toggle */}
       <div className="px-4 pt-4 pb-2 flex items-center justify-between gap-3">
         <TodayStatusBanner posts={todayPosts} />
-        <AutoScheduleToggle 
-          enabled={autoSchedule} 
-          loading={autoScheduleLoading}
-          onToggle={toggleAutoSchedule}
-        />
+        <div className="flex items-center gap-2">
+          {hasChanges && (
+            <button
+              onClick={saveAllChanges}
+              disabled={saving}
+              className="px-4 py-2 rounded-xl text-sm font-medium transition-all disabled:opacity-50"
+              style={{
+                background: 'linear-gradient(145deg, #22c55e, #16a34a)',
+                color: '#fff',
+                boxShadow: '0 2px 8px rgba(34,197,94,0.3)'
+              }}
+            >
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
+          )}
+          <AutoScheduleToggle 
+            enabled={autoSchedule} 
+            loading={autoScheduleLoading}
+            onToggle={toggleAutoSchedule}
+          />
+        </div>
       </div>
       
       {/* Header */}
@@ -448,33 +813,25 @@ export default function CalendarTab({ client, jwt, onMessage }: CalendarTabProps
         <div className="flex items-center justify-between">
           <button 
             onClick={prevMonth}
-            className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-95"
-            style={{
-              background: 'linear-gradient(145deg, #141416, #0a0a0b)',
-              boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.03), 3px 3px 8px rgba(0,0,0,0.4), -2px -2px 6px rgba(40,40,45,0.15)'
-            }}
+            className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-95 bg-[var(--bg-elevated)] border border-[var(--border)]"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round">
               <path d="M15 18l-6-6 6-6"/>
             </svg>
           </button>
           
           <div className="text-center">
-            <span className="text-lg font-semibold text-[#e8e8e8] tracking-wide">
+            <span className="text-lg font-semibold text-[var(--text-primary)] tracking-wide">
               {MONTHS[currentMonth]}
             </span>
-            <span className="text-sm text-[#666] ml-2">{currentYear}</span>
+            <span className="text-sm text-[var(--text-muted)] ml-2">{currentYear}</span>
           </div>
           
           <button 
             onClick={nextMonth}
-            className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-95"
-            style={{
-              background: 'linear-gradient(145deg, #141416, #0a0a0b)',
-              boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.03), 3px 3px 8px rgba(0,0,0,0.4), -2px -2px 6px rgba(40,40,45,0.15)'
-            }}
+            className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-95 bg-[var(--bg-elevated)] border border-[var(--border)]"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round">
               <path d="M9 18l6-6-6-6"/>
             </svg>
           </button>
@@ -485,7 +842,7 @@ export default function CalendarTab({ client, jwt, onMessage }: CalendarTabProps
       <div className="overflow-x-auto px-3">
         <div className="grid grid-cols-7 min-w-[320px]">
           {DAYS.map((day, i) => (
-            <div key={i} className="text-center py-2 text-xs font-medium text-[#555] tracking-wider">
+            <div key={i} className="text-center py-2 text-xs font-medium text-[var(--text-muted)] tracking-wider">
               {day}
             </div>
           ))}
@@ -494,11 +851,8 @@ export default function CalendarTab({ client, jwt, onMessage }: CalendarTabProps
 
       {/* Calendar Grid */}
       <div
-        className="flex-1 mx-3 mb-2 rounded-2xl overflow-x-auto"
-        style={{
-          background: 'linear-gradient(145deg, #111113, #0a0a0b)',
-          boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3), inset 0 -1px 2px rgba(255,255,255,0.02), 0 4px 12px rgba(0,0,0,0.4)'
-        }}
+        className="flex-1 mx-3 mb-2 rounded-2xl overflow-x-auto border border-[var(--border)]"
+        style={{ background: 'var(--bg-surface)' }}
       >
         <div className="grid grid-cols-7 h-full min-w-[320px]">
           {calendarDays.map((day, i) => {
@@ -508,7 +862,7 @@ export default function CalendarTab({ client, jwt, onMessage }: CalendarTabProps
             const row = Math.floor(i / 7);
             const col = i % 7;
             const isTodayCell = day ? isToday(day) : false;
-            const hasContent = display.type !== "off";
+            const isFutureCell = day ? isFuture(day) : false;
             
             return (
               <button
@@ -518,27 +872,24 @@ export default function CalendarTab({ client, jwt, onMessage }: CalendarTabProps
                 className="relative p-1 transition-all duration-150"
                 style={{ 
                   background: isSelected 
-                    ? 'linear-gradient(145deg, #1a1a1c, #0f0f10)' 
+                    ? 'var(--bg-elevated)' 
                     : isTodayCell
-                      ? 'linear-gradient(145deg, rgba(245,158,11,0.05), transparent)'
+                      ? 'rgba(232, 160, 96, 0.05)'
                       : 'transparent',
-                  borderRight: col < 6 ? '1px solid rgba(255,255,255,0.03)' : 'none',
-                  borderBottom: row < numRows - 1 ? '1px solid rgba(255,255,255,0.03)' : 'none',
+                  borderRight: col < 6 ? '1px solid var(--border-subtle)' : 'none',
+                  borderBottom: row < numRows - 1 ? '1px solid var(--border-subtle)' : 'none',
                   boxShadow: isSelected 
-                    ? 'inset 0 0 12px rgba(245,158,11,0.08)' 
-                    : isTodayCell 
-                      ? 'inset 0 0 20px rgba(245,158,11,0.03)'
-                      : 'none'
+                    ? 'inset 0 0 12px var(--accent-muted)' 
+                    : 'none'
                 }}
               >
                 {day && (
                   <>
-                    {/* Day number - top right */}
+                    {/* Day number */}
                     <span 
                       className="absolute top-1.5 right-2 text-xs font-medium transition-colors"
                       style={{ 
-                        color: isTodayCell ? '#f59e0b' : isSelected ? '#e8e8e8' : '#666',
-                        textShadow: isTodayCell ? '0 0 8px rgba(245,158,11,0.5)' : 'none'
+                        color: isTodayCell ? 'var(--accent)' : isSelected ? 'var(--text-primary)' : 'var(--text-muted)',
                       }}
                     >
                       {day}
@@ -548,35 +899,50 @@ export default function CalendarTab({ client, jwt, onMessage }: CalendarTabProps
                     {isTodayCell && (
                       <div 
                         className="absolute top-0.5 right-0.5 w-6 h-6 rounded-full pointer-events-none"
-                        style={{
-                          border: '1px solid rgba(245,158,11,0.3)',
-                          background: 'transparent'
-                        }}
+                        style={{ border: '1px solid var(--accent-muted)' }}
                       />
                     )}
                     
-                    {/* Checkmark - TODAY only, if all good */}
+                    {/* Checkmark */}
                     {display.type === "checkmark" && (
                       <div className="absolute inset-0 flex items-center justify-center">
                         <TodayCheckmark size={32} />
                       </div>
                     )}
                     
-                    {/* Gold seal - PAST posted days only */}
+                    {/* Seal */}
                     {display.type === "seal" && (
                       <div className="absolute inset-0 flex items-center justify-center">
                         <GuardiaSeal size={32} />
                       </div>
                     )}
                     
-                    {/* Status light - for pending/scheduled/failed */}
+                    {/* Slot indicator (unfilled) */}
+                    {display.type === "slot" && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div 
+                          className="w-8 h-8 rounded-lg flex items-center justify-center"
+                          style={{
+                            border: '2px dashed var(--accent)',
+                            background: 'var(--accent-muted)',
+                          }}
+                        >
+                          <ClockIcon size={16} className="text-[var(--accent)]" />
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Status light */}
                     {display.type === "light" && display.lightState && (
                       <div className="absolute bottom-1.5 left-1.5 flex items-center gap-0.5">
                         <StatusLight state={display.lightState} size={14} />
                         {dayPosts.length > 1 && (
-                          <span className="text-[9px] font-medium text-[#555]">
+                          <span className="text-[9px] font-medium text-[var(--text-muted)]">
                             {dayPosts.length}
                           </span>
+                        )}
+                        {display.hasSlot && (
+                          <ClockIcon size={10} className="text-[var(--accent)] ml-0.5" />
                         )}
                       </div>
                     )}
@@ -594,146 +960,313 @@ export default function CalendarTab({ client, jwt, onMessage }: CalendarTabProps
           { element: <StatusLight state="waiting" size={12} />, label: "Pending" },
           { element: <StatusLight state="ready" size={12} />, label: "Scheduled" },
           { element: <StatusLight state="failed" size={12} />, label: "Failed" },
+          { element: <div className="w-3 h-3 rounded border border-dashed border-[var(--accent)] flex items-center justify-center"><ClockIcon size={8} className="text-[var(--accent)]" /></div>, label: "Slot" },
           { element: <TodayCheckmark size={14} />, label: "Today ✓" },
           { element: <GuardiaSeal size={14} />, label: "Posted" },
         ].map(({ element, label }) => (
           <div key={label} className="flex items-center gap-1.5">
             {element}
-            <span className="text-xs text-[#555] tracking-wide">{label}</span>
+            <span className="text-xs text-[var(--text-muted)] tracking-wide">{label}</span>
           </div>
         ))}
       </div>
 
-      {/* Selected Day Panel — Image-First Design */}
+      {/* Day Modal */}
       {selectedDay !== null && (
-        <div 
-          className="mx-3 mb-3 rounded-2xl p-4"
-          style={{
-            background: 'linear-gradient(145deg, #151517, #0d0d0e)',
-            boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.03), 0 4px 16px rgba(0,0,0,0.4)'
-          }}
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-[#e8e8e8]">
-                {MONTHS[currentMonth]} {selectedDay}
-              </span>
-              {selectedDay && isToday(selectedDay) && (
-                <span className="text-xs px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400">
-                  Today
-                </span>
-              )}
-            </div>
-            <button 
-              onClick={() => setSelectedDay(null)}
-              className="w-6 h-6 rounded-full flex items-center justify-center text-[#666] hover:text-[#888] transition-colors"
-              style={{ background: 'rgba(255,255,255,0.03)' }}
-            >
-              ✕
-            </button>
-          </div>
+        <>
+          <div 
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 animate-in fade-in duration-200"
+            onClick={() => setSelectedDay(null)}
+          />
           
-          {selectedPosts.length === 0 ? (
-            <p className="text-xs text-[#555]">No content scheduled for this day</p>
-          ) : (
-            <div className="space-y-3">
-              {/* Image Gallery with Arrows */}
-              <div className="flex items-center gap-2">
-                {/* Left Arrow */}
-                <button
-                  onClick={() => setSelectedPostIndex(i => Math.max(0, i - 1))}
-                  disabled={selectedPostIndex === 0 || selectedPosts.length <= 1}
-                  className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 active:scale-95 disabled:opacity-20 disabled:cursor-default"
-                  style={{ 
-                    background: selectedPosts.length > 1 ? 'rgba(255,255,255,0.05)' : 'transparent',
-                    visibility: selectedPosts.length > 1 ? 'visible' : 'hidden'
-                  }}
-                >
-                  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2.5" strokeLinecap="round">
-                    <path d="M15 18l-6-6 6-6"/>
-                  </svg>
-                </button>
-                
-                {/* Image Container */}
-                <div 
-                  className="flex-1 aspect-square max-h-48 rounded-xl overflow-hidden relative"
-                  style={{ 
-                    background: 'linear-gradient(145deg, #1a1a1c, #0f0f10)',
-                    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)'
-                  }}
-                >
-                  {selectedPosts[selectedPostIndex]?.thumbnail_url ? (
-                    <img 
-                      src={selectedPosts[selectedPostIndex].thumbnail_url} 
-                      alt="" 
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <span className="text-3xl opacity-30">📝</span>
-                    </div>
-                  )}
-                  
-                  {/* Post counter badge */}
-                  {selectedPosts.length > 1 && (
-                    <div 
-                      className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs font-medium"
-                      style={{ 
-                        background: 'rgba(0,0,0,0.6)', 
-                        backdropFilter: 'blur(4px)',
-                        color: '#ccc'
-                      }}
-                    >
-                      {selectedPostIndex + 1} / {selectedPosts.length}
-                    </div>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+            <div 
+              className="relative w-full max-w-md pointer-events-auto rounded-2xl overflow-hidden animate-slide-up"
+              style={{
+                background: 'var(--bg-surface)',
+                boxShadow: '0 25px 50px -12px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255,255,255,0.05)',
+                border: '1px solid var(--border)'
+              }}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
+                <div className="flex items-center gap-3">
+                  <span className="text-base font-semibold text-[var(--text-primary)]">
+                    {MONTHS[currentMonth]} {selectedDay}
+                  </span>
+                  {isToday(selectedDay) && (
+                    <span className="text-xs px-2 py-1 rounded-full bg-[var(--accent-muted)] text-[var(--accent)] font-medium">
+                      Today
+                    </span>
                   )}
                 </div>
-                
-                {/* Right Arrow */}
-                <button
-                  onClick={() => setSelectedPostIndex(i => Math.min(selectedPosts.length - 1, i + 1))}
-                  disabled={selectedPostIndex === selectedPosts.length - 1 || selectedPosts.length <= 1}
-                  className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 active:scale-95 disabled:opacity-20 disabled:cursor-default"
-                  style={{ 
-                    background: selectedPosts.length > 1 ? 'rgba(255,255,255,0.05)' : 'transparent',
-                    visibility: selectedPosts.length > 1 ? 'visible' : 'hidden'
-                  }}
+                <div className="flex items-center gap-2">
+                  {/* Add Slot button - future days only (no same-day), max 3 per day */}
+                  {isFuture(selectedDay) && !autoSchedule && selectedPosts.length < 3 && (
+                    <button
+                      onClick={() => {
+                        setSelectedDay(null);
+                        openSlotModal(selectedDay);
+                      }}
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--accent)] hover:bg-[var(--accent-muted)] transition-all"
+                      title="Add slot"
+                    >
+                      <PlusIcon size={18} />
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => setSelectedDay(null)}
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/10 transition-all"
+                  >
+                    <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              
+              {selectedPosts.length === 0 ? (
+                /* Empty Day */
+                <div className="px-5 py-12 text-center">
+                  <div 
+                    className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center"
+                    style={{
+                      border: '2px dashed var(--border)',
+                      background: 'var(--bg-base)'
+                    }}
+                  >
+                    <ClockIcon size={28} className="text-[var(--text-muted)]" />
+                  </div>
+                  <p className="text-sm text-[var(--text-muted)]">No content scheduled</p>
+                  {isFuture(selectedDay) && !autoSchedule && (
+                    <p className="text-xs text-[var(--text-muted)] mt-2">Tap + to add a slot</p>
+                  )}
+                  {autoSchedule && (
+                    <p className="text-xs text-[var(--text-muted)] mt-2">Auto-schedule is on</p>
+                  )}
+                </div>
+              ) : (
+                <>
+                  {/* Image Area */}
+                  <div className="relative">
+                    <div 
+                      className="aspect-square w-full overflow-hidden"
+                      style={{ background: 'var(--bg-base)' }}
+                    >
+                      {/* Check if current post is unfilled slot */}
+                      {isUnfilledSlot(selectedPosts[selectedPostIndex]) ? (
+                        <div className="w-full h-full flex flex-col items-center justify-center">
+                          <div 
+                            className="w-20 h-20 rounded-2xl flex items-center justify-center mb-4"
+                            style={{
+                              border: '2px dashed var(--accent)',
+                              background: 'var(--accent-muted)'
+                            }}
+                          >
+                            <ClockIcon size={36} className="text-[var(--accent)]" />
+                          </div>
+                          <p className="text-sm text-[var(--text-secondary)]">Empty Slot</p>
+                          <p className="text-xs text-[var(--text-muted)] mt-1">Fill from Gallery</p>
+                        </div>
+                      ) : (selectedPosts[selectedPostIndex]?.preview_url || selectedPosts[selectedPostIndex]?.thumbnail_url) ? (
+                        <img
+                          src={selectedPosts[selectedPostIndex].preview_url || selectedPosts[selectedPostIndex].thumbnail_url}
+                          alt=""
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <span className="text-6xl opacity-30">📝</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Navigation */}
+                    {selectedPosts.length > 1 && (
+                      <>
+                        <button
+                          onClick={() => setSelectedPostIndex(i => Math.max(0, i - 1))}
+                          disabled={selectedPostIndex === 0}
+                          className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 active:scale-95 disabled:opacity-30 glass"
+                        >
+                          <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round">
+                            <path d="M15 18l-6-6 6-6"/>
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => setSelectedPostIndex(i => Math.min(selectedPosts.length - 1, i + 1))}
+                          disabled={selectedPostIndex === selectedPosts.length - 1}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 active:scale-95 disabled:opacity-30 glass"
+                        >
+                          <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round">
+                            <path d="M9 18l6-6-6-6"/>
+                          </svg>
+                        </button>
+                      </>
+                    )}
+                    
+                    {selectedPosts.length > 1 && (
+                      <div className="absolute top-3 right-3 px-3 py-1 rounded-full text-sm font-medium glass text-white">
+                        {selectedPostIndex + 1} / {selectedPosts.length}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Caption & Meta */}
+                  <div className="px-5 py-4 space-y-3">
+                    <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+                      {selectedPosts[selectedPostIndex]?.caption || "No caption"}
+                    </p>
+                    
+                    <div className="flex items-center justify-between pt-1">
+                      <div className="flex items-center gap-3">
+                        <span 
+                          className="text-xs px-2.5 py-1 rounded-full font-medium uppercase tracking-wide bg-[var(--bg-base)] text-[var(--text-muted)]"
+                        >
+                          {selectedPosts[selectedPostIndex]?.platform}
+                        </span>
+                        <span 
+                          className="text-xs px-2.5 py-1 rounded-full font-medium capitalize"
+                          style={{ 
+                            background: isUnfilledSlot(selectedPosts[selectedPostIndex])
+                              ? 'var(--accent-muted)'
+                              : {
+                                  draft: 'rgba(245,158,11,0.15)',
+                                  pending_approval: 'rgba(245,158,11,0.15)', 
+                                  scheduled: 'rgba(34,197,94,0.15)',
+                                  posted: 'rgba(217,119,6,0.15)',
+                                  failed: 'rgba(239,68,68,0.15)'
+                                }[selectedPosts[selectedPostIndex]?.status] || 'var(--bg-base)',
+                            color: isUnfilledSlot(selectedPosts[selectedPostIndex])
+                              ? 'var(--accent)'
+                              : {
+                                  draft: '#f59e0b',
+                                  pending_approval: '#f59e0b', 
+                                  scheduled: '#22c55e',
+                                  posted: '#d97706',
+                                  failed: '#ef4444'
+                                }[selectedPosts[selectedPostIndex]?.status] || 'var(--text-muted)' 
+                          }}
+                        >
+                          {isUnfilledSlot(selectedPosts[selectedPostIndex]) ? 'Empty Slot' : selectedPosts[selectedPostIndex]?.status?.replace('_', ' ')}
+                        </span>
+                      </div>
+                      
+                      {/* Edit & Delete buttons - only for non-posted content */}
+                      {selectedPosts[selectedPostIndex]?.status !== 'posted' && (
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => openEditModal(selectedPosts[selectedPostIndex])}
+                            className="text-xs px-3 py-1.5 rounded-full font-medium transition-all hover:bg-[var(--accent-muted)] text-[var(--accent)] border border-[var(--accent)]/30"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeletePost(selectedPosts[selectedPostIndex]?.id)}
+                            className="text-xs px-3 py-1.5 rounded-full font-medium transition-all hover:bg-red-500/20 text-red-400 border border-red-400/30"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+
+                </>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Slot Creation Modal */}
+      {showSlotModal && slotDay !== null && (
+        <SlotCreationModal
+          day={slotDay}
+          month={currentMonth}
+          year={currentYear}
+          jwt={jwt}
+          onClose={() => {
+            setShowSlotModal(false);
+            setSlotDay(null);
+          }}
+          onCreated={loadCalendar}
+          onMessage={onMessage}
+        />
+      )}
+      
+      {/* Edit Caption Modal */}
+      {showEditModal && editingPost && (
+        <>
+          <div 
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] animate-in fade-in duration-200"
+            onClick={() => setShowEditModal(false)}
+          />
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 pointer-events-none">
+            <div 
+              className="relative w-full max-w-md pointer-events-auto rounded-2xl overflow-hidden animate-slide-up"
+              style={{
+                background: 'var(--bg-surface)',
+                boxShadow: '0 25px 50px -12px rgba(0,0,0,0.8)',
+                border: '1px solid var(--border)'
+              }}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
+                <span className="text-base font-semibold text-[var(--text-primary)]">Edit Caption</span>
+                <button 
+                  onClick={() => setShowEditModal(false)}
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/10 transition-all"
                 >
-                  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2.5" strokeLinecap="round">
-                    <path d="M9 18l6-6-6-6"/>
+                  <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M18 6L6 18M6 6l12 12"/>
                   </svg>
                 </button>
               </div>
               
-              {/* Caption & Meta below image */}
-              <div className="px-1">
-                <p className="text-xs text-[#aaa] line-clamp-2 mb-2">
-                  {selectedPosts[selectedPostIndex]?.caption || "No caption"}
+              {/* Caption textarea */}
+              <div className="px-5 py-4">
+                <textarea
+                  value={editCaption}
+                  onChange={(e) => setEditCaption(e.target.value)}
+                  rows={6}
+                  className="w-full px-4 py-3 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50"
+                  style={{
+                    background: 'var(--bg-base)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--text-primary)'
+                  }}
+                  placeholder="Write your caption..."
+                />
+                <p className="text-xs text-[var(--text-muted)] mt-2">
+                  {editCaption.length} characters
                 </p>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-[#666] uppercase tracking-wide">
-                    {selectedPosts[selectedPostIndex]?.platform}
-                  </span>
-                  <span 
-                    className="text-xs font-medium capitalize"
-                    style={{ 
-                      color: {
-                        draft: '#f59e0b',
-                        pending_approval: '#f59e0b', 
-                        scheduled: '#22c55e',
-                        posted: '#d97706',
-                        failed: '#ef4444'
-                      }[selectedPosts[selectedPostIndex]?.status] || '#666' 
-                    }}
-                  >
-                    {selectedPosts[selectedPostIndex]?.status?.replace('_', ' ')}
-                  </span>
-                </div>
+              </div>
+              
+              {/* Actions */}
+              <div className="px-5 py-4 border-t border-[var(--border)] flex justify-end gap-3">
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="px-4 py-2 rounded-xl text-sm font-medium text-[var(--text-muted)] hover:bg-white/5 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveCaption}
+                  disabled={editSaving}
+                  className="px-5 py-2 rounded-xl text-sm font-medium transition-all disabled:opacity-50"
+                  style={{
+                    background: 'linear-gradient(145deg, var(--accent), var(--accent-hover))',
+                    color: 'var(--bg-base)'
+                  }}
+                >
+                  {editSaving ? 'Saving...' : 'Save'}
+                </button>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        </>
       )}
     </div>
   );

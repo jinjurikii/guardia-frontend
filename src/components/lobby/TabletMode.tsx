@@ -6,7 +6,6 @@ import CalendarTab from "./CalendarTab";
 import GalleryTab from "./GalleryTab";
 import GuardiaAccount from "./GuardiaAccount";
 import StyleTab from "./StyleTab";
-import PlannerTab from "./PlannerTab";
 import AnalyticsTab from "./AnalyticsTab";
 // VideoTab archived - see guardia-core/archive/video_pipeline_jan15/
 
@@ -41,9 +40,9 @@ export default function TabletMode({
       />
 
       {/* Tablet container */}
-      <div className="relative w-full h-full max-w-[95vw] max-h-[95vh] bg-[#0c0c0c] border border-white/10 rounded-2xl overflow-hidden flex flex-col animate-tablet-open">
+      <div className="relative w-full h-full max-w-[95vw] max-h-[95vh] bg-[var(--bg-base)] border border-[var(--border)] rounded-2xl overflow-hidden flex flex-col animate-tablet-open">
         {/* Top bar */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-white/[0.02]">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)] bg-[var(--bg-surface)]">
           {/* Left: Tabs */}
           <div className="flex items-center gap-1">
             <TabButton
@@ -57,16 +56,6 @@ export default function TabletMode({
                 </svg>
               }
               label="Gallery"
-            />
-            <TabButton
-              active={activeTab === "planner"}
-              onClick={() => setActiveTab("planner")}
-              icon={
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-              }
-              label="Planner"
             />
             <TabButton
               active={activeTab === "calendar"}
@@ -119,7 +108,7 @@ export default function TabletMode({
             {/* Gio chat bubble */}
             <button
               onClick={onClose}
-              className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-white/10 rounded-full text-white/80 hover:text-white hover:border-white/20 transition-all"
+              className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-[var(--border)] rounded-full text-[var(--text-primary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] transition-all"
               title="Back to Giovanni"
             >
               <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-purple-600 rounded-md flex items-center justify-center text-[10px] text-white font-semibold">
@@ -131,7 +120,7 @@ export default function TabletMode({
             {/* Close button */}
             <button
               onClick={onClose}
-              className="p-2 text-white/50 hover:text-white hover:bg-white/5 rounded-lg transition-all"
+              className="p-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] rounded-lg transition-all"
               title="Close"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,14 +132,6 @@ export default function TabletMode({
 
         {/* Tab content */}
         <div className="flex-1 overflow-hidden">
-          {activeTab === "planner" && (
-            <PlannerTab 
-              client={client} 
-              jwt={jwt} 
-              onMessage={onMessage} 
-              onSwitchTab={setActiveTab}
-            />
-          )}
           {activeTab === "calendar" && (
             <CalendarTab client={client} jwt={jwt} onMessage={onMessage} />
           )}
@@ -222,8 +203,8 @@ function TabButton({
       onClick={onClick}
       className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all min-h-[44px] ${
         active
-          ? "bg-white/10 text-white"
-          : "text-white/50 hover:text-white hover:bg-white/5"
+          ? "bg-[var(--accent-muted)] text-[var(--text-primary)]"
+          : "text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)]"
       }`}
     >
       {icon}

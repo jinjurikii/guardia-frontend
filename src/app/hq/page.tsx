@@ -60,6 +60,21 @@ interface AthernyxData {
   open_threads: number;
   current_chapter: { chapter: number; chapter_title: string; pages_written: number; status: string } | null;
 }
+interface FlockLead {
+  id: number;
+  address: string;
+  city: string;
+  county: string;
+  asking_price: number;
+  units: number;
+  dom: number;
+  image_url: string | null;
+  price_per_door: number;
+  estimated_dscr: number;
+  composite_score: number;
+  owl_reasoning: string;
+  status: string;
+}
 
 // ══════════════════════════════════════════════════════════════════════════════
 // AUTH
@@ -380,6 +395,75 @@ function AthernyxWidget() {
   );
 }
 
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// FLOCK (Lead Pipeline)
+// ══════════════════════════════════════════════════════════════════════════════
+
+function FlockSection() {
+  const [leads, setLeads] = useState<FlockLead[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/hq/flock/top`)
+      .then(res => res.ok ? res.json() : Promise.reject("Failed"))
+      .then(data => setLeads(Array.isArray(data) ? data : data.picks || data.leads || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (!loading && leads.length === 0) return null;
+
+  return (
+    <div className="mt-6">
+      <Link href="/hq/flock">
+        <div className="flex items-center gap-2 mb-4 group cursor-pointer">
+          <div className="w-2 h-2 rounded-full bg-blue-500" />
+          <h3 className="text-xs font-medium tracking-wider uppercase text-blue-500">Flock</h3>
+          <span className="text-[#444] text-xs ml-auto group-hover:text-[#666] transition-colors">View all \u2192</span>
+        </div>
+      </Link>
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[1,2,3].map(i => (
+            <div key={i} className="bg-[#0a0a0b] border border-[#1a1a1f] rounded-xl p-4 h-[160px] animate-pulse" />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {leads.map(lead => (
+            <div key={lead.id} className="bg-[#0a0a0b] border border-[#1a1a1f] rounded-xl p-4 hover:border-[#2a2a2f] transition-all">
+              <div className="flex items-start gap-3">
+                {lead.image_url ? (
+                  <img src={lead.image_url} alt="" className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
+                ) : (
+                  <div className="w-16 h-16 rounded-lg bg-[#1a1a1f] flex-shrink-0 flex items-center justify-center">
+                    <span className="text-[#333] text-[10px]">NO IMG</span>
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm text-[#ccc] truncate">{lead.address}</p>
+                  <p className="text-xs text-[#555]">{lead.city}, {lead.county}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 mt-3 text-xs">
+                <span className="text-blue-400 font-mono">${(lead.asking_price / 1000).toFixed(0)}K</span>
+                <span className="text-[#666]">{lead.units} units</span>
+                <span className="text-[#666]">{lead.dom}d</span>
+                <span className={`ml-auto font-mono ${lead.composite_score >= 70 ? "text-emerald-400" : lead.composite_score >= 40 ? "text-amber-400" : "text-[#555]"}`}>
+                  {lead.composite_score}
+                </span>
+              </div>
+              <p className="text-[10px] text-[#555] mt-2 line-clamp-2">{lead.owl_reasoning}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ══════════════════════════════════════════════════════════════════════════════
 // MAIN PAGE
 // ══════════════════════════════════════════════════════════════════════════════
@@ -438,6 +522,7 @@ function HQPageContent() {
           <LabWidget />
           <AthernyxWidget />
         </div>
+        <FlockSection />
       </main>
     </div>
   );
