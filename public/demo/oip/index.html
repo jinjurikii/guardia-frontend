@@ -85,18 +85,17 @@ nav {
   right: 0;
   z-index: 100;
   padding: 0 2rem;
-  transition: background 0.4s ease, backdrop-filter 0.4s ease, box-shadow 0.4s ease;
+  transition: background 0.4s ease, -webkit-backdrop-filter 0.4s ease, backdrop-filter 0.4s ease, box-shadow 0.4s ease;
   background: transparent;
 }
 
 nav.scrolled {
   background: rgba(255, 248, 240, 0.95);
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   box-shadow: 0 2px 20px rgba(44, 24, 16, 0.08);
 }
 
-nav.scrolled .logo-text { color: var(--espresso); }
-nav.scrolled .logo-text span { color: var(--rosso); }
 nav.scrolled .nav-links a { color: var(--espresso); }
 nav.scrolled .menu-toggle span { background: var(--espresso); }
 
@@ -109,18 +108,21 @@ nav .nav-inner {
   height: 70px;
 }
 
-nav .logo-text {
-  font-family: 'Playfair Display', serif;
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: var(--crema);
-  letter-spacing: 0.5px;
-  transition: color 0.4s;
+nav .logo-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  flex-shrink: 0;
 }
-nav .logo-text span { color: var(--oro); transition: color 0.4s; }
+nav .logo-img {
+  height: 50px;
+  width: auto;
+  transition: opacity 0.3s;
+}
+nav .logo-img:hover { opacity: 0.85; }
 
 nav .nav-links {
-  display: flex;
+  display: none;
   gap: 2rem;
   list-style: none;
   align-items: center;
@@ -132,29 +134,29 @@ nav .nav-links a {
   font-weight: 400;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--crema);
+  color: rgba(255, 248, 240, 0.9);
   text-decoration: none;
-  opacity: 0.85;
-  transition: opacity 0.3s, color 0.4s;
+  transition: color 0.3s;
 }
-nav .nav-links a:hover { opacity: 1; }
+nav .nav-links a:hover { color: var(--crema); }
 
 nav .nav-links .order-btn {
   background: var(--rosso);
-  color: var(--crema) !important;
-  padding: 0.55rem 1.4rem;
+  color: var(--crema);
+  padding: 0.7rem 1.5rem;
   border-radius: var(--radius);
-  opacity: 1;
   transition: background 0.3s;
 }
 nav .nav-links .order-btn:hover { background: var(--rosso-deep); }
 
 .menu-toggle {
-  display: none;
+  display: block;
   background: none;
   border: none;
   cursor: pointer;
-  padding: 0.5rem;
+  padding: 10px;
+  min-width: 44px;
+  min-height: 44px;
 }
 .menu-toggle span {
   display: block;
@@ -276,16 +278,14 @@ nav .nav-links .order-btn:hover { background: var(--rosso-deep); }
   font-size: 0.55rem;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: var(--parchment);
-  opacity: 0.5;
+  color: rgba(237, 224, 208, 0.6);
 }
 .scroll-indicator .arrow {
   width: 20px;
   height: 20px;
-  border-right: 1.5px solid var(--parchment);
-  border-bottom: 1.5px solid var(--parchment);
+  border-right: 1.5px solid rgba(237, 224, 208, 0.5);
+  border-bottom: 1.5px solid rgba(237, 224, 208, 0.5);
   transform: rotate(45deg);
-  opacity: 0.4;
   animation: scrollBounce 2s ease-in-out infinite;
 }
 
@@ -410,7 +410,7 @@ section { position: relative; z-index: 1; }
   font-size: 0.7rem;
   letter-spacing: 3px;
   text-transform: uppercase;
-  opacity: 0.6;
+  color: rgba(255, 248, 240, 0.75);
 }
 .story-frame .frame-border {
   position: absolute;
@@ -533,8 +533,7 @@ section { position: relative; z-index: 1; }
 .tradition-card p {
   font-size: 1rem;
   font-weight: 300;
-  color: var(--parchment);
-  opacity: 0.7;
+  color: rgba(237, 224, 208, 0.85);
   line-height: 1.7;
 }
 
@@ -669,8 +668,7 @@ section { position: relative; z-index: 1; }
 .order-section p {
   font-size: 1.15rem;
   font-weight: 300;
-  color: var(--crema);
-  opacity: 0.85;
+  color: rgba(255, 248, 240, 0.92);
   margin-bottom: 2.5rem;
   max-width: 500px;
   margin-left: auto;
@@ -715,8 +713,7 @@ section { position: relative; z-index: 1; }
 .info-item p {
   font-size: 1.05rem;
   font-weight: 300;
-  color: var(--parchment);
-  opacity: 0.8;
+  color: rgba(237, 224, 208, 0.9);
 }
 .info-item a {
   color: var(--parchment);
@@ -729,16 +726,140 @@ section { position: relative; z-index: 1; }
 footer {
   background: var(--espresso);
   border-top: 1px solid rgba(255,248,240,0.06);
-  padding: 2rem;
+  padding: 3rem 2rem 2rem;
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3rem;
+  max-width: 1100px;
+  margin: 0 auto 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid rgba(255,248,240,0.06);
   text-align: center;
 }
-footer p {
+
+.footer-col h4 {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--oro);
+  margin-bottom: 1rem;
+}
+
+.footer-col p {
+  font-size: 0.95rem;
+  color: rgba(237, 224, 208, 0.85);
+  margin-bottom: 0.4rem;
+}
+
+.footer-col a {
+  color: rgba(237, 224, 208, 0.85);
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.footer-col a:hover {
+  color: var(--oro);
+}
+
+.footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.footer-bottom span {
   font-family: 'Josefin Sans', sans-serif;
   font-size: 0.65rem;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--warmgray);
-  opacity: 0.5;
+  color: rgba(139, 126, 116, 0.7);
+}
+
+.guardia-badge {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--oro);
+  text-decoration: none;
+  opacity: 0.7;
+  transition: opacity 0.3s;
+}
+
+.guardia-badge:hover {
+  opacity: 1;
+}
+
+/* ═══ SKIP LINK ═══ */
+.skip-link {
+  position: absolute;
+  top: -50px;
+  left: 0;
+  background: var(--rosso);
+  color: var(--crema);
+  padding: 10px 18px;
+  z-index: 1000;
+  text-decoration: none;
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 1px;
+  transition: top 0.2s;
+}
+.skip-link:focus { top: 0; }
+
+/* ═══ FOCUS STATES ═══ */
+a:focus-visible,
+button:focus-visible,
+.btn:focus-visible,
+.btn-white:focus-visible {
+  outline: 2px solid var(--oro);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+.hero a:focus-visible,
+.traditions a:focus-visible,
+.traditions button:focus-visible,
+.order-section a:focus-visible,
+.info-bar a:focus-visible,
+footer a:focus-visible {
+  outline-color: var(--crema);
+}
+
+/* ═══ TRADITIONS HEADER (dark bg variant) ═══ */
+.section-header-centered { text-align: center; }
+.section-label-light { color: var(--oro); }
+.section-title-light { color: var(--crema); }
+.section-title-light em { color: var(--oro); }
+
+/* ═══ NAV DROPDOWN (all screen sizes) ═══ */
+.nav-links.open {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 70px;
+  left: 0;
+  right: 0;
+  background: rgba(44, 24, 16, 0.98);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  padding: 1.5rem 2rem 2rem;
+  gap: 0.8rem;
+  max-height: calc(100dvh - 70px);
+  overflow-y: auto;
+}
+nav.scrolled .nav-links.open {
+  background: rgba(255, 248, 240, 0.98);
+}
+.nav-links.open a {
+  padding: 12px 0;
+  display: block;
 }
 
 /* ═══ STICKY MOBILE CTA ═══ */
@@ -748,23 +869,6 @@ footer p {
 
 /* ═══ RESPONSIVE ═══ */
 @media (max-width: 768px) {
-  .nav-links { display: none; }
-  .menu-toggle { display: block; }
-
-  .nav-links.open {
-    display: flex;
-    flex-direction: column;
-    position: absolute;
-    top: 70px;
-    left: 0;
-    right: 0;
-    background: rgba(44, 24, 16, 0.98);
-    padding: 1.5rem 2rem 2rem;
-    gap: 1.2rem;
-  }
-  nav.scrolled .nav-links.open {
-    background: rgba(255, 248, 240, 0.98);
-  }
 
   .story-viewport {
     grid-template-columns: 1fr;
@@ -789,6 +893,17 @@ footer p {
   .section-pad { padding: 4rem 1.5rem; }
   .section-pad-lg { padding: 5rem 1.5rem; }
 
+  /* Footer grid stacks on mobile */
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .footer-bottom {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+
   /* Sticky CTA */
   .sticky-cta {
     display: block;
@@ -796,7 +911,7 @@ footer p {
     bottom: 0;
     left: 0;
     right: 0;
-    z-index: 100;
+    z-index: 99;
     transform: translateY(100%);
     transition: transform 0.4s ease;
   }
@@ -804,8 +919,11 @@ footer p {
     transform: translateY(0);
   }
   .sticky-cta a {
-    display: block;
-    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 16px 20px;
     background: var(--rosso);
     color: var(--crema);
     text-align: center;
@@ -816,25 +934,37 @@ footer p {
     text-transform: uppercase;
     text-decoration: none;
   }
+  .sticky-cta a:active {
+    background: var(--rosso-deep);
+  }
 
   /* Extra bottom padding for sticky CTA */
-  footer { padding-bottom: 5rem; }
+  footer { padding-bottom: 4rem; }
 }
 
 @media (max-width: 480px) {
   .hero h1 { font-size: 2.4rem; }
+  .hero-content { padding: 2rem 1.5rem; }
   .hero-badge { font-size: 0.6rem; padding: 0.4rem 1rem; }
-  .hero-actions { flex-direction: column; align-items: center; }
-  .btn { width: 100%; text-align: center; }
+  .hero-actions { flex-direction: column; align-items: center; gap: 0.75rem; }
+  .btn { width: 100%; max-width: 320px; text-align: center; }
+  .section-pad { padding: 3.5rem 1rem; }
+  .section-pad-lg { padding: 4.5rem 1rem; }
+  .menu-item { padding: 1.5rem 1rem; }
+  .testimonial-card { padding: 2rem 1.5rem; }
+  .scroll-indicator { bottom: 1.5rem; }
 }
 </style>
 </head>
 <body>
 
+<!-- ═══ SKIP LINK ═══ -->
+<a href="#story" class="skip-link">Skip to main content</a>
+
 <!-- ═══ NAVIGATION ═══ -->
 <nav id="navbar">
   <div class="nav-inner">
-    <div class="logo-text">O<span>I</span>P</div>
+    <a href="#" class="logo-link"><img src="/demo/oip/logo.png" alt="Original Italian Pizza" class="logo-img"></a>
     <button class="menu-toggle" aria-label="Menu">
       <span></span><span></span><span></span>
     </button>
@@ -865,7 +995,7 @@ footer p {
       <a href="#story" class="btn btn-outline">Our Story</a>
     </div>
   </div>
-  <div class="scroll-indicator" id="scrollIndicator">
+  <div class="scroll-indicator" id="scrollIndicator" aria-hidden="true">
     <span>Scroll</span>
     <div class="arrow"></div>
   </div>
@@ -877,17 +1007,17 @@ footer p {
     <div class="story-viewport">
       <div class="story-visual">
         <div class="story-frame active" data-phase="1">
-          <div class="frame-border"></div>
+          <div class="frame-border" aria-hidden="true"></div>
           <div class="year">2000</div>
           <div class="caption">Where It All Began</div>
         </div>
         <div class="story-frame" data-phase="2">
-          <div class="frame-border"></div>
+          <div class="frame-border" aria-hidden="true"></div>
           <div class="year">25</div>
           <div class="caption">Years of Tradition</div>
         </div>
         <div class="story-frame" data-phase="3">
-          <div class="frame-border"></div>
+          <div class="frame-border" aria-hidden="true"></div>
           <div class="year">OIP</div>
           <div class="caption">339 Market Street</div>
         </div>
@@ -922,23 +1052,23 @@ footer p {
 <!-- ═══ TRADITIONS ═══ -->
 <section class="traditions section-pad-lg">
   <div class="container">
-    <div style="text-align: center;">
-      <span class="section-label" style="color: var(--oro);">What Sets Us Apart</span>
-      <h2 class="section-title" style="color: var(--crema);">Traditions That <em style="color: var(--oro);">Matter</em></h2>
+    <div class="section-header-centered">
+      <span class="section-label section-label-light">What Sets Us Apart</span>
+      <h2 class="section-title section-title-light">Traditions That <em>Matter</em></h2>
     </div>
     <div class="traditions-grid">
       <div class="tradition-card">
-        <span class="tradition-icon">&#127838;</span>
+        <span class="tradition-icon" aria-hidden="true">&#127838;</span>
         <h3>Homemade Everything</h3>
         <p>Our bread, sauces, and dough are made fresh daily from scratch. No shortcuts. No frozen anything. The way Nonna intended.</p>
       </div>
       <div class="tradition-card">
-        <span class="tradition-icon">&#128104;&#8205;&#128105;&#8205;&#128102;</span>
+        <span class="tradition-icon" aria-hidden="true">&#128104;&#8205;&#128105;&#8205;&#128102;</span>
         <h3>Family-Owned</h3>
         <p>Three generations deep. Vito and Giovanna started it, Rosario carries it forward. When you walk in, you're family too.</p>
       </div>
       <div class="tradition-card">
-        <span class="tradition-icon">&#9201;&#65039;</span>
+        <span class="tradition-icon" aria-hidden="true">&#9201;&#65039;</span>
         <h3>Faster Than You'd Expect</h3>
         <p>Our regulars know &mdash; if we say 40 minutes, we're there in 25. We don't keep you waiting when you're hungry.</p>
       </div>
@@ -1061,7 +1191,28 @@ footer p {
 
 <!-- ═══ FOOTER ═══ -->
 <footer>
-  <p>&copy; 2025 Original Italian Pizza &mdash; Sunbury, PA</p>
+  <div class="footer-grid">
+    <div class="footer-col">
+      <h4>Hours</h4>
+      <p>Sun&ndash;Thu: 10:30am &ndash; 10pm</p>
+      <p>Fri&ndash;Sat: 10:30am &ndash; 11pm</p>
+    </div>
+    <div class="footer-col">
+      <h4>Location</h4>
+      <p>339 Market Street</p>
+      <p>Sunbury, PA 17801</p>
+      <p><a href="https://maps.google.com/?q=339+Market+St+Sunbury+PA+17801" target="_blank" rel="noopener">Get Directions</a></p>
+    </div>
+    <div class="footer-col">
+      <h4>Contact</h4>
+      <p><a href="tel:5702867990">(570) 286-7990</a></p>
+      <p><a href="https://originalitalianpizzasunbury.alohaorderonline.com/">Order Online</a></p>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>&copy; 2026 Original Italian Pizza. All rights reserved.</span>
+    <a href="https://guardiacontent.com" class="guardia-badge" target="_blank" rel="noopener">Powered by Guardia</a>
+  </div>
 </footer>
 
 <!-- ═══ GSAP + ScrollTrigger + Lenis ═══ -->
@@ -1090,29 +1241,55 @@ gsap.ticker.lagSmoothing(0);
 gsap.registerPlugin(ScrollTrigger);
 
 // ─── Mobile Menu Toggle ───
-document.querySelector('.menu-toggle').addEventListener('click', () => {
-  document.querySelector('.nav-links').classList.toggle('open');
-});
+const menuToggle = document.querySelector('.menu-toggle');
+const navLinks = document.querySelector('.nav-links');
+
+if (menuToggle && navLinks) {
+  menuToggle.addEventListener('click', () => {
+    navLinks.classList.toggle('open');
+  });
+
+  // Close on outside click
+  document.addEventListener('click', (e) => {
+    if (navLinks.classList.contains('open') &&
+        !navLinks.contains(e.target) &&
+        !menuToggle.contains(e.target)) {
+      navLinks.classList.remove('open');
+    }
+  });
+
+  // Close on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      navLinks.classList.remove('open');
+    }
+  });
+}
 
 // ─── Smooth scroll for anchor links ───
 document.querySelectorAll('a[href^="#"]').forEach(a => {
   a.addEventListener('click', e => {
+    const href = a.getAttribute('href');
+    if (!href || href === '#') return;
+
     e.preventDefault();
-    const target = document.querySelector(a.getAttribute('href'));
+    const target = document.querySelector(href);
     if (target) {
+      window.history.pushState({}, '', href);
       lenis.scrollTo(target, { offset: -70 });
-      document.querySelector('.nav-links')?.classList.remove('open');
+      navLinks?.classList.remove('open');
     }
   });
 });
 
 // ─── Nav: transparent → solid ───
+const navbar = document.querySelector('nav');
 ScrollTrigger.create({
   trigger: '.hero',
   start: 'top top',
   end: '80% top',
-  onLeave: () => document.querySelector('nav').classList.add('scrolled'),
-  onEnterBack: () => document.querySelector('nav').classList.remove('scrolled'),
+  onLeave: () => navbar?.classList.add('scrolled'),
+  onEnterBack: () => navbar?.classList.remove('scrolled'),
 });
 
 // ─── Hero: Entrance Timeline ───
@@ -1124,17 +1301,20 @@ heroTl
   .fromTo('.hero-actions .btn', { opacity: 0, y: 20 }, { opacity: 1, y: 0, stagger: 0.15, duration: 0.5, ease: 'power2.out' }, '-=0.2')
   .to('#scrollIndicator', { opacity: 1, duration: 0.6 }, '-=0.1');
 
-// ─── Hero: Parallax Background ───
-gsap.to('.hero-bg', {
-  y: '20%',
-  ease: 'none',
-  scrollTrigger: {
-    trigger: '.hero',
-    start: 'top top',
-    end: 'bottom top',
-    scrub: true,
-  }
-});
+// ─── Hero: Parallax Background (respect reduced motion) ───
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+if (!prefersReducedMotion) {
+  gsap.to('.hero-bg', {
+    y: '20%',
+    ease: 'none',
+    scrollTrigger: {
+      trigger: '.hero',
+      start: 'top top',
+      end: 'bottom top',
+      scrub: true,
+    }
+  });
+}
 
 // ─── Hero: Scroll indicator fade ───
 ScrollTrigger.create({

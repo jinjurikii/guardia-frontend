@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Quality Print Shop — A Vision for the Next 90 Years</title>
+<meta name="description" content="A partnership proposal for Quality Print Shop, Northumberland, PA.">
+<meta property="og:title" content="Quality Print Shop — The Next Chapter">
+<meta property="og:description" content="90 years of craft deserves to be seen.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Bitter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/lenis@1.1.20/dist/lenis.css">
+<style>
+/* ===================================================
+   QUALITY PRINT SHOP — Partnership Pitch
+   "90 Years of Craft Deserves to Be Seen"
+   GSAP + Lenis scroll storytelling
+   =================================================== */
+
+:root {
+  --ink: #1A1A2E;
+  --ink-soft: #2D2D44;
+  --ink-muted: #4A4A5E;
+  --paper: #F8F5F0;
+  --paper-warm: #F2EDE5;
+  --paper-aged: #E8DFD0;
+  --paper-dark: #D4C9B8;
+  --process-blue: #1C3D5A;
+  --process-blue-light: #2A5578;
+  --process-blue-muted: #3A6888;
+  --walnut: #5C4033;
+  --walnut-light: #7A5E4F;
+  --walnut-muted: #8B7668;
+  --brass: #B8922A;
+  --brass-light: #CCA73F;
+  --brass-muted: #A68325;
+  --seal-red: #8B2500;
+  --seal-red-light: #A63D1A;
+  --charcoal: #2A2A2A;
+  --warmgray: #7A7068;
+  --warmgray-light: #9A938B;
+  --shadow-soft: 0 4px 20px rgba(26, 26, 46, 0.08);
+  --shadow-medium: 0 8px 40px rgba(26, 26, 46, 0.12);
+  --shadow-press: 0 2px 0px rgba(26, 26, 46, 0.15);
+  --radius: 3px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: hidden; }
+
+html { font-size: 16px; }
+
+body {
+  font-family: 'Source Serif 4', Georgia, serif;
+  background: var(--paper);
+  color: var(--ink);
+  line-height: 1.8;
+  overflow-x: hidden;
+}
+
+/* === PAPER GRAIN OVERLAY === */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.04;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)'/%3E%3C/svg%3E");
+}
+
+/* === SKIP LINK === */
+.skip-link {
+  position: absolute;
+  top: -999px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: #fff;
+  padding: 0.5rem 1.5rem;
+  z-index: 200;
+  font-size: 0.85rem;
+  border-radius: var(--radius);
+  text-decoration: none;
+}
+.skip-link:focus { top: 10px; }
+
+/* === SHARED === */
+.section-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--brass);
+  margin-bottom: 1rem;
+}
+.section-title {
+  font-family: 'Libre Baskerville', serif;
+  font-weight: 700;
+  font-size: clamp(1.6rem, 3vw, 2.6rem);
+  line-height: 1.25;
+  color: var(--ink);
+  margin-bottom: 1.5rem;
+}
+.section-padding {
+  padding: 6rem 2rem;
+}
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* === HERO === */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: var(--ink);
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 30% 40%, rgba(184,146,42,0.08) 0%, transparent 50%),
+    radial-gradient(circle at 70% 60%, rgba(28,61,90,0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+.hero-content {
+  position: relative;
+  text-align: center;
+  padding: 2rem;
+  max-width: 700px;
+}
+.hero-badge {
+  display: inline-block;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--brass-light);
+  border: 1px solid rgba(184,146,42,0.3);
+  padding: 0.4rem 1.2rem;
+  border-radius: 50px;
+  margin-bottom: 2.5rem;
+}
+.hero h1 {
+  font-family: 'Libre Baskerville', serif;
+  font-size: clamp(2rem, 4.5vw, 3.2rem);
+  font-weight: 700;
+  color: var(--paper);
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
+}
+.hero h1 em {
+  font-style: italic;
+  color: var(--brass-light);
+}
+.hero-subtitle {
+  font-family: 'Source Serif 4', serif;
+  font-size: clamp(1rem, 1.8vw, 1.2rem);
+  color: rgba(248, 245, 240, 0.7);
+  line-height: 1.7;
+  max-width: 550px;
+  margin: 0 auto;
+}
+.scroll-indicator {
+  position: absolute;
+  bottom: 2.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+.scroll-indicator span {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(248, 245, 240, 0.4);
+}
+.scroll-indicator .scroll-line {
+  width: 1px;
+  height: 40px;
+  background: rgba(248, 245, 240, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+.scroll-indicator .scroll-line::after {
+  content: '';
+  position: absolute;
+  top: -100%;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--brass-light);
+  animation: scrollPulse 2s ease-in-out infinite;
+}
+@keyframes scrollPulse {
+  0% { top: -100%; }
+  50% { top: 100%; }
+  100% { top: 100%; }
+}
+
+/* === DIVIDER === */
+.press-divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  max-width: 200px;
+  margin: 2.5rem auto;
+}
+.press-divider .line {
+  flex: 1;
+  height: 1px;
+  background: var(--paper-dark);
+}
+.press-divider .ornament {
+  width: 6px;
+  height: 6px;
+  background: var(--brass);
+  transform: rotate(45deg);
+}
+
+/* === LEGACY SECTION === */
+.legacy {
+  background: var(--paper);
+}
+.legacy-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+.legacy-visual {
+  position: relative;
+}
+.legacy-frame {
+  aspect-ratio: 4/3;
+  background: var(--paper-warm);
+  border: 1px solid var(--paper-dark);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.legacy-frame .frame-text {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--warmgray);
+  text-align: center;
+  padding: 1rem;
+  line-height: 1.5;
+}
+.legacy-year {
+  position: absolute;
+  bottom: -1rem;
+  right: -1rem;
+  font-family: 'Libre Baskerville', serif;
+  font-size: 5rem;
+  font-weight: 700;
+  color: var(--paper-aged);
+  line-height: 1;
+  z-index: 0;
+  user-select: none;
+}
+.legacy-text p {
+  font-size: 1.05rem;
+  color: var(--ink-soft);
+  margin-bottom: 1.25rem;
+}
+.legacy-text p:last-child { margin-bottom: 0; }
+.legacy-text strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+.legacy-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-top: 2.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--paper-dark);
+}
+.stat-item {
+  text-align: center;
+}
+.stat-number {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--process-blue);
+  line-height: 1;
+  margin-bottom: 0.3rem;
+}
+.stat-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--warmgray);
+}
+
+/* === PROBLEM SECTION === */
+.problem {
+  background: var(--paper-warm);
+}
+.problem .section-title { margin-bottom: 1rem; }
+.problem-lead {
+  font-size: 1.1rem;
+  color: var(--ink-muted);
+  max-width: 650px;
+  margin-bottom: 3rem;
+}
+.problem-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+.problem-card {
+  background: var(--paper);
+  border: 1px solid var(--paper-dark);
+  border-radius: var(--radius);
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+.problem-card .card-icon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+.problem-card h3 {
+  font-family: 'Bitter', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 0.75rem;
+}
+.problem-card p {
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+  line-height: 1.6;
+}
+
+/* === LANDSCAPE SECTION === */
+.landscape {
+  background: var(--paper);
+}
+.landscape-lead {
+  font-size: 1.1rem;
+  color: var(--ink-muted);
+  max-width: 700px;
+  margin-bottom: 3rem;
+}
+.competitor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-bottom: 3rem;
+}
+.competitor-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 1.25rem;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  background: var(--paper-warm);
+  border: 1px solid var(--paper-dark);
+  border-radius: var(--radius);
+}
+.competitor-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--paper-dark);
+}
+.competitor-dot.weak { background: #C4A265; }
+.competitor-dot.mirror { background: var(--process-blue-muted); }
+.competitor-dot.different { background: var(--warmgray); }
+.competitor-info h4 {
+  font-family: 'Bitter', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+.competitor-info p {
+  font-size: 0.8rem;
+  color: var(--warmgray);
+  margin-top: 0.2rem;
+}
+.competitor-dist {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--warmgray-light);
+  white-space: nowrap;
+}
+.landscape-verdict {
+  background: var(--ink);
+  border-radius: var(--radius);
+  padding: 2.5rem;
+  text-align: center;
+}
+.landscape-verdict p {
+  font-family: 'Libre Baskerville', serif;
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  color: rgba(248, 245, 240, 0.9);
+  line-height: 1.6;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.landscape-verdict strong {
+  color: var(--brass-light);
+}
+
+/* === VISION (Pinned Scroll) === */
+.vision {
+  background: var(--ink);
+  position: relative;
+  overflow: hidden;
+}
+.vision::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 50%, rgba(28,61,90,0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 50%, rgba(184,146,42,0.08) 0%, transparent 50%);
+  pointer-events: none;
+}
+.vision-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.vision-phase {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  min-height: 60vh;
+  padding: 3rem 0;
+}
+@media (min-width: 769px) {
+  .vision-inner {
+    min-height: 100vh;
+    flex-direction: row;
+  }
+  .vision-phase {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    min-height: 0;
+    padding: 0;
+  }
+}
+.vision-phase .phase-content {
+  max-width: 700px;
+  text-align: center;
+  padding: 2rem;
+}
+.vision-phase .section-label {
+  color: var(--brass-light);
+}
+.vision-phase .section-title {
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  color: var(--paper);
+  margin-bottom: 1.5rem;
+}
+.vision-phase p {
+  font-family: 'Source Serif 4', serif;
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  color: rgba(248, 245, 240, 0.8);
+  line-height: 1.7;
+  margin-bottom: 1rem;
+}
+.vision-phase p:last-child { margin-bottom: 0; }
+.vision-phase strong {
+  color: var(--brass-light);
+}
+.vision-mockup {
+  width: 100%;
+  max-width: 500px;
+  aspect-ratio: 16/10;
+  background: rgba(248, 245, 240, 0.05);
+  border: 1px solid rgba(248, 245, 240, 0.1);
+  border-radius: var(--radius);
+  margin: 2rem auto 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.vision-mockup .mockup-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 28px;
+  background: rgba(248, 245, 240, 0.08);
+  display: flex;
+  align-items: center;
+  padding: 0 0.75rem;
+  gap: 0.35rem;
+}
+.vision-mockup .mockup-bar .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(248, 245, 240, 0.15);
+}
+.vision-mockup span {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  color: rgba(248, 245, 240, 0.3);
+  text-align: center;
+  padding: 1rem;
+}
+.vision-stat-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-top: 2rem;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.vision-stat {
+  text-align: center;
+}
+.vision-stat .v-number {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--brass-light);
+  line-height: 1;
+  margin-bottom: 0.3rem;
+}
+.vision-stat .v-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(248, 245, 240, 0.4);
+}
+
+/* === PARTNERSHIP === */
+.partnership {
+  background: var(--paper-warm);
+}
+.partnership-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: start;
+}
+.partnership-text p {
+  font-size: 1.05rem;
+  color: var(--ink-soft);
+  margin-bottom: 1.25rem;
+}
+.partnership-text p:last-child { margin-bottom: 0; }
+.partnership-text strong {
+  color: var(--ink);
+}
+.partnership-pillars {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.pillar {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+  padding: 1.5rem;
+  background: var(--paper);
+  border: 1px solid var(--paper-dark);
+  border-radius: var(--radius);
+}
+.pillar-icon {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  background: var(--process-blue);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pillar-icon svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: var(--paper);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.pillar h4 {
+  font-family: 'Bitter', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 0.3rem;
+}
+.pillar p {
+  font-size: 0.85rem;
+  color: var(--warmgray);
+  line-height: 1.5;
+}
+
+/* === CTA === */
+.cta {
+  background: var(--ink);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(184,146,42,0.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+.cta-inner {
+  position: relative;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.cta .section-label { color: var(--brass-light); }
+.cta .section-title {
+  color: var(--paper);
+  margin-bottom: 1rem;
+}
+.cta p {
+  font-size: 1.05rem;
+  color: rgba(248, 245, 240, 0.7);
+  margin-bottom: 2rem;
+  line-height: 1.7;
+}
+.cta-button {
+  display: inline-block;
+  font-family: 'Bitter', sans-serif;
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: var(--ink);
+  background: var(--brass-light);
+  padding: 0.9rem 2.5rem;
+  border-radius: 50px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border: 2px solid var(--brass-light);
+}
+.cta-button:hover {
+  background: transparent;
+  color: var(--brass-light);
+}
+.cta-note {
+  margin-top: 1.5rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  color: rgba(248, 245, 240, 0.3);
+  letter-spacing: 0.05em;
+}
+
+/* === FOOTER === */
+footer {
+  background: var(--paper-warm);
+  padding: 2.5rem 2rem;
+  text-align: center;
+  border-top: 1px solid var(--paper-dark);
+}
+footer p {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--warmgray-light);
+  letter-spacing: 0.05em;
+}
+
+/* === FOCUS STATES === */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 2px;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  .section-padding { padding: 4rem 1.5rem; }
+
+  .legacy-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .legacy-visual { order: -1; }
+  .legacy-year { display: none; }
+
+  .problem-cards {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .competitor-item {
+    grid-template-columns: auto 1fr;
+    gap: 1rem;
+  }
+  .competitor-dist { display: none; }
+
+  .partnership-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .legacy-stats {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+  .stat-number { font-size: 1.4rem; }
+
+  .vision-stat-row {
+    gap: 1rem;
+  }
+}
+</style>
+</head>
+<body>
+
+<a href="#main" class="skip-link">Skip to content</a>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- HERO                                        -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="hero" id="top">
+  <div class="hero-content">
+    <div class="hero-badge">A Conversation About the Future</div>
+    <h1>90 Years of Craft<br>Deserves to Be <em>Seen</em></h1>
+    <p class="hero-subtitle">Carl, I went home after our conversation and did some homework. Here's what I found — and what I think we could build together.</p>
+  </div>
+  <div class="scroll-indicator" aria-hidden="true">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- THE LEGACY                                  -->
+<!-- ═══════════════════════════════════════════ -->
+<main id="main">
+<section class="legacy section-padding" id="legacy">
+  <div class="container">
+    <div class="legacy-grid">
+      <div class="legacy-visual">
+        <div class="legacy-frame">
+          <div class="frame-text">
+            Quality Print Shop<br>
+            123 Duke Street<br>
+            Northumberland, PA<br><br>
+            <em>est. 1930s</em>
+          </div>
+        </div>
+        <div class="legacy-year" aria-hidden="true">90</div>
+      </div>
+      <div class="legacy-text">
+        <div class="section-label">The Legacy</div>
+        <h2 class="section-title">90 Years on Duke Street</h2>
+        <p>Since the 1930s, this shop has been putting ink to paper for this community. Church bulletins for Sunday morning. Business cards for the barber down the street. Wedding invitations for couples who grew up in this valley.</p>
+        <p><strong>Quality Print Shop isn't just a business — it's part of the fabric of Northumberland County.</strong> Every rubber stamp, every letterhead, every banner that's hung from a lamppost in this town started at 123 Duke Street.</p>
+        <p>That kind of history doesn't come from marketing. It comes from craft, consistency, and showing up every single day for ninety years.</p>
+        <div class="legacy-stats">
+          <div class="stat-item">
+            <div class="stat-number">90+</div>
+            <div class="stat-label">Years in Business</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">&#8734;</div>
+            <div class="stat-label">Jobs Printed</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">1</div>
+            <div class="stat-label">Duke Street</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- THE PROBLEM                                 -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="problem section-padding" id="problem">
+  <div class="container">
+    <div class="section-label">The Blind Spot</div>
+    <h2 class="section-title">The Best-Kept Secret in the Valley</h2>
+    <p class="problem-lead">Not a single person under 40 can find Quality Print Shop online. That's not a reflection of the work — it's a reflection of the times. The world moved, and the shop's reputation stayed local.</p>
+
+    <div class="problem-cards">
+      <div class="problem-card">
+        <div class="card-icon" aria-hidden="true">&#128270;</div>
+        <h3>No Storefront Online</h3>
+        <p>People can find you on Google — but they can't do anything when they get there. No way to browse services, check prices, or place an order. They call, or they move on.</p>
+      </div>
+      <div class="problem-card">
+        <div class="card-icon" aria-hidden="true">&#128197;</div>
+        <h3>Closed by 5pm</h3>
+        <p>Business owners work during the day too. By the time they think about ordering cards or flyers, you're already closed. No way to browse or order after hours.</p>
+      </div>
+      <div class="problem-card">
+        <div class="card-icon" aria-hidden="true">&#11088;</div>
+        <h3>Unclaimed 4.5 Stars</h3>
+        <p>You have real reviews on Google — 4.5 stars from people who love the shop. But the listing isn't even claimed. That's free reputation sitting untouched.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- THE LANDSCAPE                               -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="landscape section-padding" id="landscape">
+  <div class="container">
+    <div class="section-label">The Landscape</div>
+    <h2 class="section-title">I Looked at Every Print Shop Within 15 Miles</h2>
+    <p class="landscape-lead">Here's the thing — your competition is weaker than you think. Nobody in this entire area is doing what a modernized Quality Print could do.</p>
+
+    <div class="competitor-list">
+      <div class="competitor-item">
+        <div class="competitor-dot weak"></div>
+        <div class="competitor-info">
+          <h4>Ink Spot Printing</h4>
+          <p>Selinsgrove — website times out. Yelp reviews call the owner "condescending and rude." Customers literally tell people to go to UPS instead.</p>
+        </div>
+        <div class="competitor-dist">9 mi</div>
+      </div>
+      <div class="competitor-item">
+        <div class="competitor-dot mirror"></div>
+        <div class="competitor-info">
+          <h4>Service Printery</h4>
+          <p>Danville — nearly 100 years old, family-run, similar profile. No real web presence either. The closest thing to a mirror competitor.</p>
+        </div>
+        <div class="competitor-dist">14 mi</div>
+      </div>
+      <div class="competitor-item">
+        <div class="competitor-dot different"></div>
+        <div class="competitor-info">
+          <h4>G3 Graphics</h4>
+          <p>Muncy — focused on t-shirts, vinyl, vehicle wraps. Different niche entirely. They at least have a website and Instagram.</p>
+        </div>
+        <div class="competitor-dist">~25 mi</div>
+      </div>
+      <div class="competitor-item">
+        <div class="competitor-dot weak"></div>
+        <div class="competitor-info">
+          <h4>Minuteman Press</h4>
+          <p>Nearest franchise is 50+ miles away. The biggest name in print franchises hasn't touched this county. That's the opportunity right there.</p>
+        </div>
+        <div class="competitor-dist">50+ mi</div>
+      </div>
+    </div>
+
+    <div class="landscape-verdict">
+      <p>Nobody within 15 miles is doing print + digital. Nobody has online ordering. Nobody is taking jobs after 5pm. <strong>The bar is on the floor — and you're already standing.</strong></p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- THE VISION (Pinned Scroll)                  -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="vision" id="vision">
+  <div class="vision-inner">
+
+    <!-- Phase 1: The Website -->
+    <div class="vision-phase phase-1">
+      <div class="phase-content">
+        <div class="section-label">The Vision — Phase 1</div>
+        <h2 class="section-title">First, the World Finds You</h2>
+        <p>A clean, warm website that feels like walking into the shop. Services, hours, phone number, a way to request quotes. Claim that Google listing — your 4.5 stars start working for you overnight.</p>
+        <p>Someone Googles "business cards Northumberland" and <strong>you're the first thing they see.</strong></p>
+        <div class="vision-mockup" aria-hidden="true">
+          <div class="mockup-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+          <span>qualityprintshop.com</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase 2: Online Ordering -->
+    <div class="vision-phase phase-2">
+      <div class="phase-content">
+        <div class="section-label">The Vision — Phase 2</div>
+        <h2 class="section-title">The Shop Never Closes</h2>
+        <p>A simple ordering portal where customers upload designs, pick quantities, and pay — at 9pm on a Sunday if they want to. You wake up Monday with orders already queued.</p>
+        <p>Web-to-print shops see <strong>30-50% more volume</strong> without a single extra hour of work. The shop runs 24/7 while you keep your hours.</p>
+        <div class="vision-stat-row">
+          <div class="vision-stat">
+            <div class="v-number">24/7</div>
+            <div class="v-label">Order Window</div>
+          </div>
+          <div class="vision-stat">
+            <div class="v-number">+40%</div>
+            <div class="v-label">Avg. Volume</div>
+          </div>
+          <div class="vision-stat">
+            <div class="v-number">$0</div>
+            <div class="v-label">Extra Labor</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase 3: The Hub -->
+    <div class="vision-phase phase-3">
+      <div class="phase-content">
+        <div class="section-label">The Vision — Phase 3</div>
+        <h2 class="section-title">The Marketing Hub of the Susquehanna Valley</h2>
+        <p>Print. Social media. Websites. Direct mail campaigns. Every business that walks in for cards <strong>leaves with a full marketing partner.</strong> Every digital client gets print bundled at cost.</p>
+        <p>You're not competing with VistaPrint on price. You're competing on <strong>relationship and craft</strong> — which is exactly what small-town businesses want.</p>
+      </div>
+    </div>
+
+    <!-- Phase 4: The Legacy Lives -->
+    <div class="vision-phase phase-4">
+      <div class="phase-content">
+        <div class="section-label">The Vision</div>
+        <h2 class="section-title">Built for the Next 90 Years</h2>
+        <p>The print shop that's been on Duke Street since the 1930s — now equipped for the 2030s and beyond. Same craft. Same commitment. New reach.</p>
+        <p><strong>Quality Print Shop didn't survive 90 years by staying the same. It survived because every generation found a way to carry it forward.</strong></p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- THE PARTNERSHIP                             -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="partnership section-padding" id="partnership">
+  <div class="container">
+    <div class="section-label">The Partnership</div>
+    <h2 class="section-title">I'm Not Selling You a Service</h2>
+
+    <div class="press-divider" aria-hidden="true">
+      <div class="line"></div>
+      <div class="ornament"></div>
+      <div class="line"></div>
+    </div>
+
+    <div class="partnership-grid">
+      <div class="partnership-text">
+        <p>This isn't a pitch where I hand you a contract and disappear. I'm not a marketing agency. I'm a builder who chose this valley to put down roots.</p>
+        <p><strong>I learn the craft from you. I bring the digital to you.</strong> Together we build something neither of us could alone.</p>
+        <p>You've spent decades mastering ink and paper. I've spent years mastering the digital side — websites, automation, social media, the systems that make businesses visible in 2026.</p>
+        <p>This is a bridge between two worlds. And the shop is the perfect place to build it.</p>
+      </div>
+      <div class="partnership-pillars">
+        <div class="pillar">
+          <div class="pillar-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </div>
+          <div>
+            <h4>You Know the Craft</h4>
+            <p>The presses, the paper, the process. Ninety years of knowledge that can't be Googled.</p>
+          </div>
+        </div>
+        <div class="pillar">
+          <div class="pillar-icon">
+            <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </div>
+          <div>
+            <h4>I Build the Digital</h4>
+            <p>The website, the ordering system, the Google presence, the social media. Everything that makes the shop visible.</p>
+          </div>
+        </div>
+        <div class="pillar">
+          <div class="pillar-icon">
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div>
+            <h4>Together, It Lasts</h4>
+            <p>Not a vendor relationship. A real partnership that ensures the shop has a future beyond any one person.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- CTA                                         -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="cta section-padding" id="cta">
+  <div class="cta-inner">
+    <div class="section-label">Next Step</div>
+    <h2 class="section-title">Let's Talk About It</h2>
+    <p>No rush. No pressure. Just a conversation about what's possible — and whether it feels right to you. I'm not going anywhere.</p>
+    <div class="cta-note">No contracts. No obligations. Just two people who care about this shop.</div>
+  </div>
+</section>
+</main>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- FOOTER                                      -->
+<!-- ═══════════════════════════════════════════ -->
+<footer>
+  <p>Prepared with care by Alex &mdash; Guardia Intelligence</p>
+</footer>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- SCRIPTS                                     -->
+<!-- ═══════════════════════════════════════════ -->
+<script src="https://unpkg.com/lenis@1.1.20/dist/lenis.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+gsap.registerPlugin(ScrollTrigger);
+
+// === LENIS SMOOTH SCROLL ===
+const lenis = new Lenis({ duration: 1.2, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
+lenis.on('scroll', ScrollTrigger.update);
+gsap.ticker.add((time) => lenis.raf(time * 1000));
+gsap.ticker.lagSmoothing(0);
+
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// === HERO ===
+gsap.from('.hero-badge', { opacity: 0, y: 20, duration: 0.8, delay: 0.3, ease: 'power2.out' });
+gsap.from('.hero h1', { opacity: 0, y: 30, duration: 0.8, delay: 0.5, ease: 'power2.out' });
+gsap.from('.hero-subtitle', { opacity: 0, y: 20, duration: 0.8, delay: 0.7, ease: 'power2.out' });
+gsap.from('.scroll-indicator', { opacity: 0, duration: 0.8, delay: 1.2, ease: 'power2.out' });
+
+// === LEGACY ===
+gsap.from('.legacy .section-label, .legacy .section-title', {
+  scrollTrigger: { trigger: '.legacy', start: 'top 75%' },
+  opacity: 0, y: 30, stagger: 0.1, duration: 0.7, ease: 'power2.out'
+});
+gsap.from('.legacy-frame', {
+  scrollTrigger: { trigger: '.legacy-visual', start: 'top 75%' },
+  opacity: 0, scale: 0.95, duration: 0.8, ease: 'power2.out'
+});
+gsap.from('.legacy-year', {
+  scrollTrigger: { trigger: '.legacy-visual', start: 'top 65%' },
+  opacity: 0, x: 30, duration: 0.8, delay: 0.3, ease: 'power2.out'
+});
+gsap.from('.legacy-text p', {
+  scrollTrigger: { trigger: '.legacy-text', start: 'top 75%' },
+  opacity: 0, y: 20, stagger: 0.12, duration: 0.7, ease: 'power2.out'
+});
+gsap.from('.stat-item', {
+  scrollTrigger: { trigger: '.legacy-stats', start: 'top 85%' },
+  opacity: 0, y: 20, stagger: 0.1, duration: 0.6, ease: 'power2.out'
+});
+
+// === PROBLEM ===
+gsap.from('.problem .section-label, .problem .section-title, .problem-lead', {
+  scrollTrigger: { trigger: '.problem', start: 'top 75%' },
+  opacity: 0, y: 30, stagger: 0.1, duration: 0.7, ease: 'power2.out'
+});
+gsap.from('.problem-card', {
+  scrollTrigger: { trigger: '.problem-cards', start: 'top 75%' },
+  opacity: 0, y: 40, stagger: 0.12, duration: 0.7, ease: 'power2.out'
+});
+
+// === LANDSCAPE ===
+gsap.from('.landscape .section-label, .landscape .section-title, .landscape-lead', {
+  scrollTrigger: { trigger: '.landscape', start: 'top 75%' },
+  opacity: 0, y: 30, stagger: 0.1, duration: 0.7, ease: 'power2.out'
+});
+gsap.from('.competitor-item', {
+  scrollTrigger: { trigger: '.competitor-list', start: 'top 75%' },
+  opacity: 0, x: -30, stagger: 0.1, duration: 0.6, ease: 'power2.out'
+});
+gsap.from('.landscape-verdict', {
+  scrollTrigger: { trigger: '.landscape-verdict', start: 'top 80%' },
+  opacity: 0, y: 30, duration: 0.8, ease: 'power2.out'
+});
+
+// === VISION: Pinned Scroll ===
+ScrollTrigger.matchMedia({
+  '(min-width: 769px)': function() {
+    const phases = gsap.utils.toArray('.vision-phase');
+    gsap.set(phases[0], { opacity: 1 });
+
+    const visionTL = gsap.timeline({
+      scrollTrigger: {
+        trigger: '.vision',
+        pin: true,
+        scrub: 1,
+        start: 'top top',
+        end: '+=400%',
+        anticipatePin: 1
+      }
+    });
+
+    // Phase 1: visible, hold, fade out
+    visionTL
+      .to(phases[0], { opacity: 1, duration: 1 })
+      .to(phases[0], { opacity: 0, duration: 0.5 })
+      // Phase 2: fade in, hold, fade out
+      .to(phases[1], { opacity: 1, duration: 0.5 })
+      .to(phases[1], { opacity: 1, duration: 1 })
+      .to(phases[1], { opacity: 0, duration: 0.5 })
+      // Phase 3: fade in, hold, fade out
+      .to(phases[2], { opacity: 1, duration: 0.5 })
+      .to(phases[2], { opacity: 1, duration: 1 })
+      .to(phases[2], { opacity: 0, duration: 0.5 })
+      // Phase 4: fade in and hold
+      .to(phases[3], { opacity: 1, duration: 0.5 })
+      .to(phases[3], { opacity: 1, duration: 1 });
+  },
+  '(max-width: 768px)': function() {
+    const phases = gsap.utils.toArray('.vision-phase');
+    phases.forEach(p => {
+      p.style.position = 'relative';
+      p.style.opacity = '1';
+      p.style.marginBottom = '2rem';
+    });
+    phases.forEach(phase => {
+      gsap.from(phase, {
+        scrollTrigger: { trigger: phase, start: 'top 80%' },
+        opacity: 0, y: 40, duration: 0.8, ease: 'power2.out'
+      });
+    });
+  }
+});
+
+// === PARTNERSHIP ===
+gsap.from('.partnership .section-label, .partnership .section-title', {
+  scrollTrigger: { trigger: '.partnership', start: 'top 75%' },
+  opacity: 0, y: 30, stagger: 0.1, duration: 0.7, ease: 'power2.out'
+});
+gsap.from('.partnership-text p', {
+  scrollTrigger: { trigger: '.partnership-text', start: 'top 75%' },
+  opacity: 0, y: 20, stagger: 0.12, duration: 0.7, ease: 'power2.out'
+});
+gsap.from('.pillar', {
+  scrollTrigger: { trigger: '.partnership-pillars', start: 'top 75%' },
+  opacity: 0, x: 30, stagger: 0.12, duration: 0.7, ease: 'power2.out'
+});
+
+// === CTA ===
+gsap.from('.cta .section-label, .cta .section-title, .cta p, .cta-button, .cta-note', {
+  scrollTrigger: { trigger: '.cta', start: 'top 75%' },
+  opacity: 0, y: 30, stagger: 0.1, duration: 0.7, ease: 'power2.out'
+});
+
+// === PARALLAX (respects reduced motion) ===
+if (!prefersReducedMotion) {
+  gsap.to('.legacy-frame', {
+    y: -40,
+    ease: 'none',
+    scrollTrigger: { trigger: '.legacy', start: 'top bottom', end: 'bottom top', scrub: true }
+  });
+}
+</script>
+</body>
+</html>

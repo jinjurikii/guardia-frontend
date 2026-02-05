@@ -1,0 +1,1777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>First Class Male — Barbershop | Selinsgrove, PA</title>
+<meta name="description" content="First Class grooming, delivered. Selinsgrove's most comfortable grooming experience for men. Vintage post office atmosphere, 7+ years of craft.">
+<meta property="og:title" content="First Class Male — Selinsgrove, PA">
+<meta property="og:description" content="First Class grooming, delivered. Vintage barbershop across from the Post Office.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Oswald:wght@300;400;500;600&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/lenis@1.1.20/dist/lenis.css">
+<style>
+/* ===================================================
+   FIRST CLASS MALE — Guardia Intelligence
+   GSAP + Lenis scroll storytelling
+   Postal-themed barbershop demo
+   =================================================== */
+
+:root {
+  /* Postal Blues */
+  --navy: #1B3A5C;
+  --navy-deep: #142C47;
+  --navy-light: #2A4F7A;
+
+  /* Airmail Reds */
+  --airmail-red: #C41E3A;
+  --airmail-red-deep: #A31830;
+  --airmail-red-muted: #D4536A;
+
+  /* Paper & Parchment */
+  --cream: #F5F0E8;
+  --cream-warm: #FAF6F0;
+  --parchment: #E8DFD0;
+  --parchment-dark: #D4C9B8;
+
+  /* Brass & Gold */
+  --brass: #C9A227;
+  --brass-light: #D4B44A;
+  --brass-muted: #B8922A;
+
+  /* Neutrals */
+  --charcoal: #2A2A2A;
+  --charcoal-light: #3D3D3D;
+  --warmgray: #7A7068;
+  --warmgray-light: #9A938B;
+
+  /* Shadows */
+  --shadow-soft: 0 4px 20px rgba(42, 42, 42, 0.08);
+  --shadow-medium: 0 8px 40px rgba(42, 42, 42, 0.12);
+  --shadow-lift: 0 12px 48px rgba(42, 42, 42, 0.16);
+  --radius: 6px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* Lenis overrides */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: hidden; }
+
+html { font-size: 16px; }
+
+body {
+  font-family: 'Source Sans 3', -apple-system, sans-serif;
+  background: var(--cream);
+  color: var(--charcoal);
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+/* === GRAIN OVERLAY === */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* === AIRMAIL STRIPE DIVIDER === */
+.airmail-divider {
+  height: 8px;
+  background: repeating-linear-gradient(
+    135deg,
+    var(--airmail-red) 0px,
+    var(--airmail-red) 8px,
+    var(--cream) 8px,
+    var(--cream) 16px,
+    var(--navy) 16px,
+    var(--navy) 24px,
+    var(--cream) 24px,
+    var(--cream) 32px
+  );
+}
+@media (max-width: 768px) {
+  .airmail-divider {
+    height: 6px;
+  }
+}
+.airmail-divider-thin {
+  height: 3px;
+  background: repeating-linear-gradient(
+    135deg,
+    var(--airmail-red) 0px,
+    var(--airmail-red) 6px,
+    transparent 6px,
+    transparent 12px,
+    var(--navy) 12px,
+    var(--navy) 18px,
+    transparent 18px,
+    transparent 24px
+  );
+}
+
+/* === STAMP FRAME === */
+.stamp-frame {
+  padding: 10px;
+  background: #fff;
+  border: 2px solid var(--parchment-dark);
+  box-shadow: var(--shadow-medium);
+  position: relative;
+}
+.stamp-frame::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border: 4px solid transparent;
+  -webkit-mask-image: radial-gradient(circle at 6px 6px, transparent 4px, black 4.5px);
+  mask-image: radial-gradient(circle at 6px 6px, transparent 4px, black 4.5px);
+  -webkit-mask-size: 12px 12px;
+  mask-size: 12px 12px;
+  -webkit-mask-position: -6px -6px;
+  mask-position: -6px -6px;
+  background: var(--parchment-dark);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* === NAVIGATION === */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  padding: 0 2rem;
+  transition: background 0.4s ease, backdrop-filter 0.4s ease, box-shadow 0.4s ease;
+  background: transparent;
+}
+nav.scrolled {
+  background: rgba(245, 240, 232, 0.95);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 20px rgba(42, 42, 42, 0.08);
+}
+nav.scrolled::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+  background: repeating-linear-gradient(
+    135deg,
+    var(--airmail-red) 0px,
+    var(--airmail-red) 6px,
+    transparent 6px,
+    transparent 12px,
+    var(--navy) 12px,
+    var(--navy) 18px,
+    transparent 18px,
+    transparent 24px
+  );
+}
+.nav-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 70px;
+}
+.logo-text {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #fff;
+  text-decoration: none;
+  transition: color 0.4s ease;
+}
+.logo-text span {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 1.1rem;
+  color: var(--brass-light);
+  transition: color 0.4s ease;
+}
+nav.scrolled .logo-text { color: var(--charcoal); }
+nav.scrolled .logo-text span { color: var(--navy); }
+.nav-links { display: flex; gap: 2rem; list-style: none; }
+.nav-links a {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 400;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.85);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+nav.scrolled .nav-links a { color: var(--charcoal); }
+.nav-links a:hover { color: var(--brass-light); }
+.nav-phone {
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #fff;
+  text-decoration: none;
+  padding: 0.5rem 1.2rem;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 50px;
+  transition: all 0.3s ease;
+}
+nav.scrolled .nav-phone {
+  color: var(--navy);
+  border-color: var(--navy-light);
+}
+.nav-phone:hover {
+  background: var(--brass);
+  color: #fff;
+  border-color: var(--brass);
+}
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .nav-phone { display: none; }
+  .nav-inner { height: 56px; padding: 0 1rem; }
+  nav { padding: 0 1rem; }
+  .logo-text { font-size: 1.1rem; }
+}
+
+/* === SECTION HELPERS === */
+.section-label {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 300;
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-weight: 600;
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
+}
+.section-padding {
+  padding: 6rem 2rem;
+}
+@media (max-width: 768px) {
+  .section-padding {
+    padding: 4rem 1.5rem;
+  }
+}
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* === HERO === */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  background: var(--navy-deep);
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 30% 80%, rgba(201,162,39,0.12) 0%, transparent 50%),
+    radial-gradient(circle at 75% 25%, rgba(42,79,122,0.3) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* Postmark watermark */
+.postmark-watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-12deg);
+  width: 380px;
+  height: 380px;
+  opacity: 0.06;
+  pointer-events: none;
+  z-index: 1;
+}
+.postmark-watermark circle {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2;
+}
+.postmark-watermark text {
+  fill: #fff;
+  font-family: 'Oswald', sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.postmark-watermark .cancel-lines line {
+  stroke: #fff;
+  stroke-width: 1.5;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  padding: 2rem;
+  max-width: 800px;
+}
+.hero-badge {
+  display: inline-block;
+  font-family: 'Oswald', sans-serif;
+  font-weight: 300;
+  font-size: 0.75rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 2rem;
+}
+@media (max-width: 768px) {
+  .hero-badge {
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    padding: 0 1rem;
+    line-height: 1.4;
+  }
+}
+.hero h1 {
+  font-family: 'Playfair Display', serif;
+  font-weight: 800;
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  color: var(--cream-warm);
+  line-height: 1.1;
+  margin-bottom: 1.5rem;
+}
+.hero h1 em {
+  font-style: italic;
+  color: var(--brass-light);
+}
+.hero-subtitle {
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: clamp(1rem, 2vw, 1.15rem);
+  color: rgba(255,255,255,0.85);
+  font-weight: 300;
+  margin-bottom: 2.5rem;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+@media (max-width: 768px) {
+  .hero-subtitle {
+    font-size: clamp(0.95rem, 3.5vw, 1.05rem);
+    padding: 0 1rem;
+  }
+}
+.hero-cta {
+  display: inline-block;
+  font-family: 'Oswald', sans-serif;
+  font-weight: 500;
+  font-size: 0.9rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--cream);
+  background: transparent;
+  padding: 0.9rem 2.5rem;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 50px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+.hero-cta:hover {
+  background: var(--brass);
+  border-color: var(--brass);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+}
+@media (max-width: 768px) {
+  .hero-cta {
+    font-size: 0.85rem;
+    padding: 0.85rem 2rem;
+  }
+}
+
+/* Hero stamp image placeholder */
+.hero-stamp {
+  position: absolute;
+  bottom: 8%; right: 6%;
+  width: 280px; height: 360px;
+  z-index: 1;
+}
+.hero-stamp-inner {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--navy-light) 0%, var(--navy-deep) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.hero-stamp-inner span {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+}
+.hero-stamp-denom {
+  position: absolute;
+  top: 8px; right: 10px;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.25);
+  text-transform: uppercase;
+}
+
+/* Scroll indicator */
+.scroll-indicator {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+.scroll-indicator span {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+}
+.scroll-line {
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.5), transparent);
+  animation: scrollBounce 2s ease-in-out infinite;
+}
+@keyframes scrollBounce {
+  0%, 100% { transform: scaleY(1); opacity: 1; }
+  50% { transform: scaleY(0.5); opacity: 0.5; }
+}
+@media (max-width: 768px) {
+  .scroll-indicator {
+    bottom: 1.5rem;
+  }
+  .scroll-indicator span {
+    font-size: 0.6rem;
+  }
+  .scroll-line {
+    height: 30px;
+  }
+}
+@media (max-width: 768px) {
+  .hero-stamp { display: none; }
+  .hero-content { padding: 1.5rem; }
+  .hero h1 { font-size: clamp(2rem, 8vw, 2.5rem); }
+  .postmark-watermark { width: 280px; height: 280px; }
+}
+
+/* === THE BARBER === */
+.barber {
+  background: var(--cream);
+}
+.barber-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+.barber-portrait {
+  aspect-ratio: 4/5;
+  position: relative;
+}
+.barber-portrait .stamp-frame {
+  width: 100%;
+  height: 100%;
+}
+.barber-portrait .photo-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(160deg, var(--navy-light) 0%, var(--navy-deep) 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-medium);
+}
+.barber-portrait .photo-placeholder span {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.15em;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
+}
+.barber-portrait .photo-placeholder .placeholder-icon {
+  font-size: 3rem;
+  opacity: 0.2;
+}
+.barber-est {
+  text-align: center;
+  margin-top: 1rem;
+  font-family: 'Oswald', sans-serif;
+  font-weight: 400;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--warmgray);
+}
+.barber-text .section-label { color: var(--airmail-red); }
+.barber-text .section-title {
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  color: var(--charcoal);
+}
+.barber-text p {
+  color: var(--warmgray);
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  line-height: 1.8;
+}
+.barber-text p strong {
+  color: var(--charcoal);
+  font-weight: 600;
+}
+.pull-quote {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 1.2rem;
+  color: var(--navy);
+  border-left: 3px solid var(--brass);
+  padding-left: 1.5rem;
+  margin: 2rem 0;
+  line-height: 1.5;
+}
+.pull-quote cite {
+  display: block;
+  font-family: 'Source Sans 3', sans-serif;
+  font-style: normal;
+  font-size: 0.8rem;
+  color: var(--warmgray);
+  margin-top: 0.5rem;
+}
+.barber-credentials {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+.credential {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--navy);
+  padding: 0.4rem 1rem;
+  border: 1px solid var(--navy-light);
+  border-radius: 50px;
+}
+@media (max-width: 768px) {
+  .barber-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .barber-portrait {
+    aspect-ratio: 3/4;
+    max-height: 400px;
+  }
+  .pull-quote {
+    font-size: 1.05rem;
+    padding-left: 1rem;
+    margin: 1.5rem 0;
+  }
+  .barber-credentials {
+    justify-content: flex-start;
+  }
+}
+
+/* === SERVICES — PACKAGES === */
+.services {
+  background: var(--navy-deep);
+  position: relative;
+}
+.services::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 50%, rgba(201,162,39,0.06) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(42,79,122,0.15) 0%, transparent 50%);
+  pointer-events: none;
+}
+.services .section-label {
+  color: rgba(255,255,255,0.7);
+  text-align: center;
+}
+.services .section-title {
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  color: var(--cream);
+  text-align: center;
+}
+.services-subtitle {
+  text-align: center;
+  color: rgba(255,255,255,0.75);
+  font-size: 1rem;
+  font-weight: 300;
+  margin-bottom: 3rem;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  position: relative;
+  z-index: 2;
+}
+.service-card {
+  background: var(--navy-light);
+  border-radius: var(--radius);
+  padding: 2.5rem 1.5rem;
+  border: 1px solid rgba(255,255,255,0.08);
+  transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  text-align: center;
+}
+.service-card:hover {
+  border-color: var(--brass-muted);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+}
+.service-icon {
+  font-size: 2rem;
+  margin-bottom: 1.2rem;
+  display: block;
+}
+.service-tier {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 500;
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--brass-light);
+  margin-bottom: 0.5rem;
+}
+.service-card h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.15rem;
+  font-weight: 500;
+  color: var(--cream);
+  margin-bottom: 0.75rem;
+}
+.service-card p {
+  color: rgba(255,255,255,0.8);
+  font-size: 0.9rem;
+  line-height: 1.7;
+  margin-bottom: 1.2rem;
+}
+.service-price {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 600;
+  font-size: 1.5rem;
+  color: var(--brass-light);
+}
+.services-note {
+  text-align: center;
+  color: rgba(255,255,255,0.4);
+  font-size: 0.85rem;
+  font-weight: 300;
+  margin-top: 2rem;
+  position: relative;
+  z-index: 2;
+}
+@media (max-width: 900px) {
+  .services-grid { grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
+  .service-card { padding: 2rem 1.25rem; }
+}
+@media (max-width: 520px) {
+  .services-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .service-card { padding: 2rem 1.5rem; }
+  .service-card h3 { font-size: 1.05rem; }
+  .service-card p { font-size: 0.85rem; }
+}
+
+/* === THE SHOP (Gallery) === */
+.shop {
+  background: var(--cream);
+}
+.shop .section-label { color: var(--airmail-red); }
+.shop .section-title {
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  color: var(--charcoal);
+}
+.shop-subtitle {
+  color: var(--warmgray);
+  font-size: 1rem;
+  margin-bottom: 3rem;
+  max-width: 500px;
+}
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+.shop-card {
+  background: #fff;
+  padding: 0.6rem 0.6rem 1.2rem;
+  border-radius: 2px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.shop-card:nth-child(1) { transform: rotate(-2deg); }
+.shop-card:nth-child(2) { transform: rotate(1deg); }
+.shop-card:nth-child(3) { transform: rotate(-1deg); }
+.shop-card:nth-child(4) { transform: rotate(1.5deg); }
+.shop-card:nth-child(5) { transform: rotate(-0.5deg); }
+.shop-card:nth-child(6) { transform: rotate(2deg); }
+.shop-card:hover {
+  transform: rotate(0deg) scale(1.03) !important;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+  z-index: 2;
+}
+.shop-image {
+  aspect-ratio: 4/3;
+  background: var(--parchment);
+  border-radius: 1px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.shop-image span {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  color: var(--warmgray-light);
+  text-transform: uppercase;
+}
+.shop-caption {
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 0.8rem;
+  color: var(--charcoal);
+  text-align: center;
+  margin-top: 0.8rem;
+  font-weight: 400;
+}
+.shop-caption em {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--warmgray);
+  margin-top: 0.2rem;
+}
+@media (max-width: 768px) {
+  .shop-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  .shop-card { transform: rotate(0deg) !important; }
+  .shop-card:hover { transform: scale(1.02) !important; }
+  .shop-caption { font-size: 0.75rem; }
+  .shop-caption em { font-size: 0.65rem; }
+}
+@media (max-width: 520px) {
+  .shop-grid { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
+}
+
+/* === DELIVERED (Pinned Scroll Section) === */
+.delivered {
+  background: var(--parchment);
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+}
+.delivered::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(201,162,39,0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 50%, rgba(27,58,92,0.03) 0%, transparent 50%);
+  pointer-events: none;
+}
+.delivered-inner {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.delivered-phase {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+}
+.delivered-phase .phase-content {
+  max-width: 650px;
+  text-align: center;
+  padding: 2rem;
+}
+@media (max-width: 768px) {
+  .delivered-phase .phase-content {
+    padding: 1.5rem;
+  }
+  .delivered .section-title {
+    font-size: clamp(1.5rem, 6vw, 2rem);
+  }
+  .delivered-phase p {
+    font-size: clamp(0.95rem, 3vw, 1rem);
+  }
+  .delivered-phase .story-quote {
+    font-size: clamp(1rem, 4vw, 1.2rem);
+    padding-left: 1rem;
+    margin: 1.5rem auto;
+  }
+  .delivered-postmark {
+    font-size: 0.65rem;
+    padding: 0.35rem 1.2rem;
+  }
+}
+.delivered .section-label { color: var(--airmail-red); }
+.delivered .section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  color: var(--charcoal);
+  margin-bottom: 2rem;
+}
+.delivered-phase p {
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: clamp(1rem, 2vw, 1.15rem);
+  color: var(--charcoal-light);
+  line-height: 1.8;
+  margin-bottom: 1rem;
+}
+.delivered-phase .story-quote {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: clamp(1.1rem, 2.2vw, 1.4rem);
+  color: var(--navy);
+  border-left: 3px solid var(--airmail-red);
+  padding-left: 1.5rem;
+  text-align: left;
+  margin: 2rem auto;
+  max-width: 500px;
+  line-height: 1.6;
+}
+.delivered-phase .green-glow {
+  color: #2D8B4E;
+  font-weight: 600;
+}
+.delivered-postmark {
+  display: inline-block;
+  margin-top: 1.5rem;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--airmail-red-muted);
+  border: 2px solid var(--airmail-red-muted);
+  border-radius: 50px;
+  padding: 0.4rem 1.5rem;
+  opacity: 0.6;
+  transform: rotate(-6deg);
+}
+
+/* === TESTIMONIALS — POSTCARDS === */
+.postcards {
+  background: var(--cream-warm);
+}
+.postcards .section-label {
+  color: var(--airmail-red);
+  text-align: center;
+}
+.postcards .section-title {
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  color: var(--charcoal);
+  text-align: center;
+}
+.postcards-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+.postcards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+.postcard-card {
+  background: #fff;
+  border-radius: 4px;
+  padding: 2.5rem 2rem;
+  box-shadow: var(--shadow-soft);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--parchment);
+}
+/* Decorative stamp in top-right corner */
+.postcard-stamp {
+  position: absolute;
+  top: 12px; right: 12px;
+  width: 42px; height: 50px;
+  background: var(--airmail-red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  opacity: 0.7;
+}
+.postcard-stamp::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: transparent;
+  -webkit-mask-image: radial-gradient(circle at 4px 4px, transparent 3px, black 3.5px);
+  mask-image: radial-gradient(circle at 4px 4px, transparent 3px, black 3.5px);
+  -webkit-mask-size: 8px 8px;
+  mask-size: 8px 8px;
+  -webkit-mask-position: -4px -4px;
+  mask-position: -4px -4px;
+  border: 3px solid #fff;
+  pointer-events: none;
+}
+/* Faint postmark circle */
+.postcard-postmark {
+  position: absolute;
+  top: 8px; right: 60px;
+  width: 60px; height: 60px;
+  border: 1.5px solid var(--parchment-dark);
+  border-radius: 50%;
+  opacity: 0.4;
+}
+.postcard-divider {
+  width: 100%;
+  height: 1px;
+  background: var(--parchment);
+  margin: 0 0 1.5rem;
+}
+.postcard-card p {
+  color: var(--charcoal);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  font-style: italic;
+  margin-bottom: 1.2rem;
+}
+.postcard-card cite {
+  font-style: normal;
+  font-size: 0.8rem;
+  color: var(--warmgray);
+  font-weight: 500;
+}
+.postcard-stars {
+  color: var(--brass);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  margin-left: 0.5rem;
+}
+@media (max-width: 768px) {
+  .postcards-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+  .postcard-card { padding: 2rem 1.5rem; }
+  .postcard-card p { font-size: 0.9rem; }
+}
+
+/* === SCHEDULE CTA === */
+.cta-section {
+  background: var(--navy);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  padding-bottom: 6rem;
+}
+.cta-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 100%, rgba(201,162,39,0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+.cta-section h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  color: var(--cream);
+  font-weight: 700;
+  margin-bottom: 1rem;
+  position: relative;
+  z-index: 2;
+}
+.cta-section .cta-sub {
+  font-size: 1.05rem;
+  color: rgba(255,255,255,0.7);
+  font-weight: 300;
+  margin-bottom: 2.5rem;
+  position: relative;
+  z-index: 2;
+}
+@media (max-width: 768px) {
+  .cta-section .cta-sub {
+    font-size: 0.95rem;
+    padding: 0 1rem;
+  }
+}
+
+/* Envelope CTA block */
+.envelope-cta {
+  max-width: 380px;
+  margin: 0 auto 2.5rem;
+  background: var(--cream-warm);
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+  z-index: 2;
+}
+.envelope-cta::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 6px;
+  background: repeating-linear-gradient(
+    135deg,
+    var(--airmail-red) 0px,
+    var(--airmail-red) 6px,
+    var(--cream-warm) 6px,
+    var(--cream-warm) 12px,
+    var(--navy) 12px,
+    var(--navy) 18px,
+    var(--cream-warm) 18px,
+    var(--cream-warm) 24px
+  );
+  border-radius: 8px 8px 0 0;
+}
+.envelope-header {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--charcoal);
+  margin-bottom: 1rem;
+}
+.envelope-cta .cta-phone-link {
+  display: inline-block;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--navy);
+  text-decoration: none;
+  margin-bottom: 0.5rem;
+  transition: color 0.3s ease;
+}
+.envelope-cta .cta-phone-link:hover { color: var(--airmail-red); }
+
+/* Wax seal */
+.wax-seal {
+  width: 48px; height: 48px;
+  background: radial-gradient(circle at 40% 35%, #D4536A, var(--airmail-red-deep));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1rem auto 0;
+  box-shadow: 0 3px 10px rgba(163,24,48,0.4), inset 0 -2px 4px rgba(0,0,0,0.2);
+}
+.wax-seal span {
+  font-family: 'Playfair Display', serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--cream-warm);
+  letter-spacing: 0.05em;
+}
+
+.cta-address {
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.6);
+  margin-top: 1rem;
+  position: relative;
+  z-index: 2;
+}
+.cta-hours {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 400;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+  margin-top: 0.5rem;
+  position: relative;
+  z-index: 2;
+}
+@media (max-width: 768px) {
+  .cta-section {
+    padding-bottom: 4rem;
+  }
+  .cta-section h2 {
+    font-size: clamp(1.5rem, 6vw, 2rem);
+  }
+  .envelope-cta {
+    max-width: 100%;
+    margin: 0 0 2rem;
+  }
+  .cta-address {
+    font-size: 0.85rem;
+    padding: 0 1rem;
+  }
+  .cta-hours {
+    font-size: 0.75rem;
+    padding: 0 1rem;
+  }
+}
+
+/* === FOOTER === */
+footer {
+  background: var(--charcoal);
+  padding: 3rem 2rem;
+  color: rgba(255,255,255,0.6);
+  position: relative;
+  z-index: 1;
+}
+.footer-grid {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+.footer-col h4 {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 400;
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--brass-light);
+  margin-bottom: 1rem;
+}
+.footer-col p, .footer-col a {
+  font-size: 0.85rem;
+  line-height: 2;
+  color: rgba(255,255,255,0.5);
+  text-decoration: none;
+}
+.footer-col a:hover { color: var(--brass-light); }
+.footer-bottom {
+  max-width: 1100px;
+  margin: 2rem auto 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.footer-bottom span {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.3);
+}
+.guardia-badge {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.2);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+.guardia-badge:hover { color: rgba(255,255,255,0.4); }
+
+/* === FOCUS STATES === */
+a:focus-visible, button:focus-visible {
+  outline: 2px solid var(--brass-light);
+  outline-offset: 2px;
+}
+@media (max-width: 768px) {
+  footer { padding: 3rem 1.5rem; padding-bottom: 6rem; }
+  .footer-grid { grid-template-columns: 1fr; text-align: center; gap: 1.5rem; }
+  .footer-bottom { flex-direction: column; gap: 0.5rem; text-align: center; }
+}
+
+/* === STICKY MOBILE CTA === */
+.sticky-cta {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 100;
+  background: var(--navy-deep);
+  padding: 0.75rem 1.5rem;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+  transform: translateY(100%);
+  transition: transform 0.4s ease;
+}
+.sticky-cta.visible { transform: translateY(0); }
+.sticky-cta-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 500px;
+  margin: 0 auto;
+  gap: 1rem;
+}
+.sticky-cta a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+.sticky-cta .book-btn {
+  background: var(--airmail-red);
+  padding: 0.6rem 1.75rem;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background 0.3s ease;
+  flex-shrink: 0;
+}
+.sticky-cta .book-btn:hover { background: var(--airmail-red-deep); }
+@media (max-width: 768px) {
+  .sticky-cta { display: block; }
+}
+@media (max-width: 400px) {
+  .sticky-cta { padding: 0.75rem 1rem; }
+  .sticky-cta a { font-size: 0.85rem; }
+  .sticky-cta .book-btn { padding: 0.55rem 1.5rem; font-size: 0.8rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- NAVIGATION                                  -->
+<!-- ═══════════════════════════════════════════ -->
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="logo-text">First Class <span>Male</span></a>
+    <ul class="nav-links">
+      <li><a href="#barber">The Barber</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#shop">The Shop</a></li>
+      <li><a href="#postcards">Reviews</a></li>
+    </ul>
+    <a href="tel:+15703746253" class="nav-phone">(570) 374-6253</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- HERO                                        -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="hero">
+  <!-- Postmark watermark SVG -->
+  <svg class="postmark-watermark" viewBox="0 0 380 380" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <path id="postmark-circle" d="M 190,190 m -140,0 a 140,140 0 1,1 280,0 a 140,140 0 1,1 -280,0" />
+    </defs>
+    <circle cx="190" cy="190" r="140" />
+    <circle cx="190" cy="190" r="130" />
+    <text font-size="16">
+      <textPath href="#postmark-circle" startOffset="15%">SELINSGROVE, PA &bull; U.S. MAIL &bull;</textPath>
+    </text>
+    <text x="190" y="200" text-anchor="middle" font-size="36" font-weight="600">17870</text>
+    <!-- Cancellation wavy lines -->
+    <g class="cancel-lines">
+      <line x1="280" y1="165" x2="370" y2="165" />
+      <line x1="275" y1="180" x2="375" y2="180" />
+      <line x1="280" y1="195" x2="370" y2="195" />
+      <line x1="275" y1="210" x2="375" y2="210" />
+    </g>
+  </svg>
+
+  <div class="hero-content">
+    <div class="hero-badge">103 S Market St &mdash; Across from the Post Office</div>
+    <h1>First Class<br>Grooming,<br><em>Delivered.</em></h1>
+    <p class="hero-subtitle">Selinsgrove's most comfortable grooming experience for men. 7+ years of craft.</p>
+    <a href="tel:+15703746253" class="hero-cta">Book Your Cut</a>
+  </div>
+
+  <!-- Hero stamp photo placeholder -->
+  <div class="hero-stamp stamp-frame">
+    <div class="hero-stamp-inner">
+      <span>Barber Chair</span>
+      <div class="hero-stamp-denom">USA 2019</div>
+    </div>
+  </div>
+
+  <div class="scroll-indicator">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- Airmail stripe divider -->
+<div class="airmail-divider"></div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- THE BARBER                                  -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="barber section-padding" id="barber">
+  <div class="container">
+    <div class="barber-grid">
+      <div class="barber-portrait">
+        <div class="photo-placeholder">
+          <div class="placeholder-icon">&#9986;</div>
+          <span>Photo Coming Soon</span>
+        </div>
+        <div class="barber-est">Est. 2019</div>
+      </div>
+      <div class="barber-text">
+        <div class="section-label">The Barber</div>
+        <h2 class="section-title">Duane DeWire.<br>7 Years. One Chair.<br>One Standard.</h2>
+        <p>Located right across from the Selinsgrove Post Office &mdash; hence the name &mdash; <strong>First Class Male</strong> is Duane DeWire's vision of what a barbershop should be.</p>
+        <p>Not a franchise. Not a rush job. A place where a man can sit down, have a real conversation, and walk out looking sharp. The shop is filled with <strong>vintage post office memorabilia</strong> that gives it character you won't find anywhere else.</p>
+        <p>Customers drive in from Hershey and Harrisburg for their cuts. Not because it's the closest shop &mdash; because it's the right one.</p>
+        <blockquote class="pull-quote">
+          "DD is very friendly and does a great job. Highly recommend."
+          <cite>&mdash; Google Review</cite>
+        </blockquote>
+        <div class="barber-credentials">
+          <span class="credential">7+ Years</span>
+          <span class="credential">4.8 &#9733; Rating</span>
+          <span class="credential">Vintage Atmosphere</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- SERVICES — PACKAGES                         -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="services section-padding" id="services">
+  <div class="container">
+    <div class="section-label">Services</div>
+    <h2 class="section-title">Every Cut, First Class.</h2>
+    <p class="services-subtitle">No appointments necessary. Walk-ins welcome. Every service comes with the full First Class experience.</p>
+    <div class="services-grid">
+      <!-- Card 1 -->
+      <div class="service-card">
+        <div class="service-icon">&#9997;</div>
+        <div class="service-tier">Express</div>
+        <h3>Shape-Up / Lineup</h3>
+        <p>Clean edges, sharp lines. The quick refresh when you're short on time.</p>
+        <!-- Prices are placeholders — confirm with Duane -->
+        <div class="service-price">$15</div>
+      </div>
+      <!-- Card 2 -->
+      <div class="service-card">
+        <div class="service-icon">&#9986;</div>
+        <div class="service-tier">Standard</div>
+        <h3>The Classic Cut</h3>
+        <p>Haircut with hot towel finish. The staple. The standard. First Class through and through.</p>
+        <div class="service-price">$25</div>
+      </div>
+      <!-- Card 3 -->
+      <div class="service-card">
+        <div class="service-icon">&#129682;</div>
+        <div class="service-tier">Priority</div>
+        <h3>Cut + Beard</h3>
+        <p>Full haircut plus expert beard shaping and trim. Walk in rough, walk out refined.</p>
+        <div class="service-price">$35</div>
+      </div>
+      <!-- Card 4 -->
+      <div class="service-card">
+        <div class="service-icon">&#10024;</div>
+        <div class="service-tier">First Class</div>
+        <h3>The Full Service</h3>
+        <p>Haircut, hot towel, beard work, straight razor neckline. The complete package.</p>
+        <div class="service-price">$45</div>
+      </div>
+    </div>
+    <p class="services-note">Senior &amp; youth pricing available. Just ask.</p>
+  </div>
+</section>
+
+<!-- Airmail stripe divider -->
+<div class="airmail-divider"></div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- THE SHOP                                    -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="shop section-padding" id="shop">
+  <div class="container">
+    <div class="section-label">The Shop</div>
+    <h2 class="section-title">Vintage Character.<br>Modern Comfort.</h2>
+    <p class="shop-subtitle">Post office memorabilia, comfortable seating, and the kind of atmosphere that makes you want to stay a while.</p>
+    <div class="shop-grid">
+      <div class="shop-card">
+        <div class="shop-image"><span>The Chair</span></div>
+        <div class="shop-caption">The Chair<em>Barber chair detail</em></div>
+      </div>
+      <div class="shop-card">
+        <div class="shop-image"><span>Memorabilia Wall</span></div>
+        <div class="shop-caption">Memorabilia Wall<em>Vintage postal pieces</em></div>
+      </div>
+      <div class="shop-card">
+        <div class="shop-image"><span>Market Street View</span></div>
+        <div class="shop-caption">Market Street View<em>Looking out the window</em></div>
+      </div>
+      <div class="shop-card">
+        <div class="shop-image"><span>The Pole</span></div>
+        <div class="shop-caption">The Pole<em>Classic barber pole</em></div>
+      </div>
+      <div class="shop-card">
+        <div class="shop-image"><span>Details</span></div>
+        <div class="shop-caption">Details<em>Shop interior touches</em></div>
+      </div>
+      <div class="shop-card">
+        <div class="shop-image"><span>The Sign</span></div>
+        <div class="shop-caption">The Sign<em>First Class Male signage</em></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- DELIVERED (Pinned Scroll)                   -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="delivered" id="delivered">
+  <div class="delivered-inner">
+    <!-- Phase 1 — The Shutdown -->
+    <div class="delivered-phase phase-1">
+      <div class="phase-content">
+        <div class="section-label">The Story</div>
+        <h2 class="section-title">Ten Weeks. Doors Locked.<br>Phone Ringing.</h2>
+        <div class="story-quote">
+          "I have people calling 6-7 times &mdash; are you open? Are you open? And we can't."
+        </div>
+        <p>In March 2020, Duane DeWire closed the doors to First Class Male for the first time since he opened. Like every small business owner, he waited. And waited.</p>
+      </div>
+    </div>
+
+    <!-- Phase 2 — The Reopening -->
+    <div class="delivered-phase phase-2">
+      <div class="phase-content">
+        <h2 class="section-title"><span class="green-glow">12:01 AM.</span> Green Phase.<br>Doors Open.</h2>
+        <p>When Snyder County finally went green, Duane didn't wait for morning. He opened at <strong>12:01 AM</strong>. The shop was lit up in green. Local officials showed up for a ribbon-cutting. He was booked until 2:30 in the morning.</p>
+        <div class="story-quote">
+          "We wanted to think outside the box, have a celebration, kind of take the edge off."
+        </div>
+        <p>He worked straight through the night.</p>
+      </div>
+    </div>
+
+    <!-- Phase 3 — The First Customer -->
+    <div class="delivered-phase phase-3">
+      <div class="phase-content">
+        <p>His first customer back, Vincent Stoops, wasn't just there for a haircut. He donated <strong>14 inches of hair</strong> to Wigs for Kids.</p>
+        <div class="story-quote">
+          "It's one of those things where it's so easy to do and make such a big impact that it's hard to say I can, and I shouldn't."
+        </div>
+        <p>Customers drove from Hershey. From Harrisburg. Not for the closest barbershop &mdash; for <em>their</em> barbershop.</p>
+        <div class="delivered-postmark">Return to Sender &rarr; Returned to Community</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Airmail stripe divider -->
+<div class="airmail-divider"></div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- TESTIMONIALS — POSTCARDS                    -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="postcards section-padding" id="postcards">
+  <div class="container">
+    <div class="postcards-header">
+      <div class="section-label">Postcards</div>
+      <h2 class="section-title">Postmarked &amp; Approved.</h2>
+    </div>
+    <div class="postcards-grid">
+      <div class="postcard-card">
+        <div class="postcard-stamp">&#9986;</div>
+        <div class="postcard-postmark"></div>
+        <div class="postcard-divider"></div>
+        <p>"DD is very friendly and does a great job cutting hair. Great quality haircut. Highly recommend."</p>
+        <cite>Satisfied Customer <span class="postcard-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span></cite>
+      </div>
+      <div class="postcard-card">
+        <div class="postcard-stamp">&#9993;</div>
+        <div class="postcard-postmark"></div>
+        <div class="postcard-divider"></div>
+        <p>"I made the 45 minute drive and found the shop across from the Post Office. His shop is comfortable and nicely decorated with vintage post office memorabilia. We had a good rapport."</p>
+        <cite>First-Time Visitor <span class="postcard-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span></cite>
+      </div>
+      <div class="postcard-card">
+        <div class="postcard-stamp">&#9986;</div>
+        <div class="postcard-postmark"></div>
+        <div class="postcard-divider"></div>
+        <p>"Awesome barbershop. Great quality haircut. Very knowledgeable barber. Would definitely recommend."</p>
+        <cite>Regular <span class="postcard-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span></cite>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- SCHEDULE CTA                                -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="cta-section section-padding">
+  <div class="container">
+    <h2>Your Next Cut,<br>Delivered.</h2>
+    <p class="cta-sub">Walk-ins welcome. No appointments necessary.<br>Right across from the Post Office on Market Street.</p>
+
+    <div class="envelope-cta">
+      <div class="envelope-header">Ready for a First Class experience?</div>
+      <a href="tel:+15703746253" class="cta-phone-link">(570) 374-6253</a>
+      <div class="wax-seal" aria-hidden="true"><span>FCM</span></div>
+    </div>
+
+    <p class="cta-address">103 S Market St, Selinsgrove, PA 17870</p>
+    <p class="cta-hours">Tue-Fri 10-6 &bull; Sat 9-12</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- FOOTER                                      -->
+<!-- ═══════════════════════════════════════════ -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-col">
+      <h4>Hours</h4>
+      <p>Tuesday - Friday: 10am - 6pm</p>
+      <p>Saturday: 9am - 12pm</p>
+      <p>Sunday - Monday: Closed</p>
+    </div>
+    <div class="footer-col">
+      <h4>Location</h4>
+      <p>103 S Market Street, Ste A</p>
+      <p>Selinsgrove, PA 17870</p>
+      <p><a href="https://maps.google.com/?q=103+S+Market+St+Selinsgrove+PA" target="_blank">Get Directions &rarr;</a></p>
+    </div>
+    <div class="footer-col">
+      <h4>Contact</h4>
+      <p><a href="tel:+15703746253">(570) 374-6253</a></p>
+      <p><a href="#">Facebook &rarr;</a></p>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>&copy; 2026 First Class Male Barbershop. All rights reserved.</span>
+    <a href="https://guardiacontent.com" class="guardia-badge">Powered by Guardia</a>
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- STICKY MOBILE CTA                           -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="sticky-cta" id="stickyCta">
+  <div class="sticky-cta-inner">
+    <a href="tel:+15703746253">(570) 374-6253</a>
+    <a href="tel:+15703746253" class="book-btn">Call Now</a>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- SCRIPTS                                     -->
+<!-- ═══════════════════════════════════════════ -->
+<script src="https://unpkg.com/lenis@1.1.20/dist/lenis.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+
+// ═══ LENIS SMOOTH SCROLL ═══
+const lenis = new Lenis({ duration: 1.2, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
+lenis.on('scroll', ScrollTrigger.update);
+gsap.ticker.add((time) => lenis.raf(time * 1000));
+gsap.ticker.lagSmoothing(0);
+
+// ═══ NAV SCROLL BEHAVIOR ═══
+const nav = document.querySelector('nav');
+ScrollTrigger.create({
+  start: 80,
+  onUpdate: (self) => nav.classList.toggle('scrolled', self.progress > 0 || window.scrollY > 80)
+});
+if (window.scrollY > 80) nav.classList.add('scrolled');
+
+// Smooth scroll for anchor links
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', (e) => {
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) { e.preventDefault(); lenis.scrollTo(target, { offset: -70 }); }
+  });
+});
+
+// ═══ HERO ENTRANCE ═══
+const heroTL = gsap.timeline({ defaults: { ease: 'power3.out' } });
+heroTL
+  .from('.hero-badge', { opacity: 0, y: 20, duration: 0.7 })
+  .from('.hero h1', { opacity: 0, y: 40, duration: 0.9 }, '-=0.3')
+  .from('.hero-subtitle', { opacity: 0, y: 20, duration: 0.6 }, '-=0.4')
+  .from('.hero-cta', { opacity: 0, y: 20, duration: 0.6 }, '-=0.3')
+  .from('.hero-stamp', { opacity: 0, scale: 1.1, duration: 1 }, '-=0.6')
+  .from('.scroll-indicator', { opacity: 0, duration: 0.5 }, '-=0.3');
+
+// Hero stamp parallax
+gsap.to('.hero-stamp', {
+  y: -80,
+  ease: 'none',
+  scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true }
+});
+
+// Postmark watermark subtle rotate on scroll
+gsap.to('.postmark-watermark', {
+  rotation: -20,
+  ease: 'none',
+  scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true }
+});
+
+// ═══ BARBER SECTION ═══
+gsap.from('.barber-portrait', {
+  scrollTrigger: { trigger: '.barber', start: 'top 70%' },
+  opacity: 0, x: -50, duration: 0.9, ease: 'power2.out'
+});
+gsap.from('.barber-text .section-label, .barber-text .section-title', {
+  scrollTrigger: { trigger: '.barber', start: 'top 70%' },
+  opacity: 0, y: 30, stagger: 0.1, duration: 0.7, ease: 'power2.out'
+});
+gsap.from('.barber-text p, .barber-text .pull-quote', {
+  scrollTrigger: { trigger: '.barber-text', start: 'top 65%' },
+  opacity: 0, y: 20, stagger: 0.12, duration: 0.6, ease: 'power2.out'
+});
+gsap.from('.credential', {
+  scrollTrigger: { trigger: '.barber-credentials', start: 'top 85%' },
+  opacity: 0, scale: 0.8, stagger: 0.1, duration: 0.5, ease: 'back.out(1.7)'
+});
+// Portrait parallax
+gsap.to('.barber-portrait', {
+  y: -30,
+  ease: 'none',
+  scrollTrigger: { trigger: '.barber', start: 'top bottom', end: 'bottom top', scrub: true }
+});
+
+// ═══ SERVICES ═══
+gsap.from('.services .section-label, .services .section-title, .services-subtitle', {
+  scrollTrigger: { trigger: '.services', start: 'top 75%' },
+  opacity: 0, y: 30, stagger: 0.1, duration: 0.7, ease: 'power2.out'
+});
+gsap.from('.service-card', {
+  scrollTrigger: { trigger: '.services-grid', start: 'top 75%' },
+  opacity: 0, y: 50, stagger: 0.12, duration: 0.7, ease: 'power2.out'
+});
+
+// ═══ THE SHOP ═══
+gsap.from('.shop .section-label, .shop .section-title, .shop-subtitle', {
+  scrollTrigger: { trigger: '.shop', start: 'top 75%' },
+  opacity: 0, y: 30, stagger: 0.1, duration: 0.7, ease: 'power2.out'
+});
+gsap.from('.shop-card', {
+  scrollTrigger: { trigger: '.shop-grid', start: 'top 75%' },
+  opacity: 0, y: 60, scale: 0.95, stagger: 0.1, duration: 0.8, ease: 'power2.out'
+});
+
+// ═══ DELIVERED: Pinned Scroll ═══
+ScrollTrigger.matchMedia({
+  // Desktop: pinned with phase crossfade
+  '(min-width: 769px)': function() {
+    const phases = gsap.utils.toArray('.delivered-phase');
+
+    gsap.set(phases[0], { opacity: 1 });
+
+    const deliveredTL = gsap.timeline({
+      scrollTrigger: {
+        trigger: '.delivered',
+        pin: true,
+        scrub: 1,
+        start: 'top top',
+        end: '+=300%',
+        anticipatePin: 1
+      }
+    });
+
+    deliveredTL
+      .to(phases[0], { opacity: 1, duration: 1 })
+      .to(phases[0], { opacity: 0, duration: 0.5 })
+      .to(phases[1], { opacity: 1, duration: 0.5 })
+      .to(phases[1], { opacity: 1, duration: 1 })
+      .to(phases[1], { opacity: 0, duration: 0.5 })
+      .to(phases[2], { opacity: 1, duration: 0.5 })
+      .to(phases[2], { opacity: 1, duration: 1 });
+  },
+  // Mobile: stacked, no pin
+  '(max-width: 768px)': function() {
+    const phases = gsap.utils.toArray('.delivered-phase');
+    const deliveredSection = document.querySelector('.delivered');
+    const deliveredInner = document.querySelector('.delivered-inner');
+
+    // Reset delivered section for mobile stacking
+    deliveredSection.style.padding = '4rem 1.5rem';
+    deliveredInner.style.minHeight = 'auto';
+    deliveredInner.style.display = 'block';
+
+    phases.forEach(p => {
+      p.style.position = 'relative';
+      p.style.opacity = '1';
+      p.style.marginBottom = '3rem';
+      p.style.inset = 'auto';
+    });
+
+    // Simple fade-in on mobile
+    phases.forEach(phase => {
+      gsap.from(phase, {
+        scrollTrigger: { trigger: phase, start: 'top 80%' },
+        opacity: 0, y: 40, duration: 0.8, ease: 'power2.out'
+      });
+    });
+  }
+});
+
+// ═══ POSTCARDS ═══
+gsap.from('.postcards-header', {
+  scrollTrigger: { trigger: '.postcards', start: 'top 75%' },
+  opacity: 0, y: 30, duration: 0.7, ease: 'power2.out'
+});
+gsap.from('.postcard-card', {
+  scrollTrigger: { trigger: '.postcards-grid', start: 'top 75%' },
+  opacity: 0, y: 40, rotation: (i) => [3, -2, 4][i] || 0, stagger: 0.15, duration: 0.7, ease: 'power2.out'
+});
+
+// ═══ CTA SECTION ═══
+gsap.from('.cta-section h2', {
+  scrollTrigger: { trigger: '.cta-section', start: 'top 75%' },
+  opacity: 0, y: 40, duration: 0.8, ease: 'power2.out'
+});
+gsap.from('.cta-section .cta-sub', {
+  scrollTrigger: { trigger: '.cta-section', start: 'top 70%' },
+  opacity: 0, y: 20, duration: 0.6, delay: 0.15, ease: 'power2.out'
+});
+gsap.from('.envelope-cta', {
+  scrollTrigger: { trigger: '.cta-section', start: 'top 65%' },
+  opacity: 0, y: 30, scale: 0.95, duration: 0.7, delay: 0.3, ease: 'power2.out'
+});
+
+// ═══ FOOTER ═══
+gsap.from('.footer-col', {
+  scrollTrigger: { trigger: 'footer', start: 'top 85%' },
+  opacity: 0, y: 30, stagger: 0.15, duration: 0.6, ease: 'power2.out'
+});
+
+// ═══ STICKY MOBILE CTA ═══
+const stickyCta = document.getElementById('stickyCta');
+const heroSection = document.querySelector('.hero');
+
+if (heroSection && stickyCta) {
+  ScrollTrigger.create({
+    start: () => heroSection.offsetHeight,
+    onUpdate: () => {
+      if (window.scrollY > heroSection.offsetHeight && window.innerWidth <= 768) {
+        stickyCta.classList.add('visible');
+      } else {
+        stickyCta.classList.remove('visible');
+      }
+    }
+  });
+
+  // Initial check
+  if (window.scrollY > heroSection.offsetHeight && window.innerWidth <= 768) {
+    stickyCta.classList.add('visible');
+  }
+}
+
+</script>
+</body>
+</html>

@@ -189,7 +189,7 @@ function DetailPanel({
   const isOnline = details?.status === "online";
 
   return (
-    <div className="fixed inset-y-0 right-0 w-[400px] bg-[#0a0a0b] border-l border-[#1a1a1f] shadow-2xl z-50 flex flex-col">
+    <div className="fixed inset-y-0 right-0 w-full sm:w-[400px] bg-[#0a0a0b] border-l border-[#1a1a1f] shadow-2xl z-50 flex flex-col">
       {/* Header */}
       <div className="p-4 border-b border-[#1a1a1f] flex items-center justify-between">
         <div className="flex items-center gap-3">

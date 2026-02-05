@@ -61,7 +61,7 @@ function Sidebar({
   const cats = Object.keys(categories).filter(c => c !== "..");
 
   return (
-    <div className="w-64 border-r border-[#1a1a1f] bg-[#0a0a0b] overflow-y-auto flex-shrink-0">
+    <div className="hidden md:block w-64 border-r border-[#1a1a1f] bg-[#0a0a0b] overflow-y-auto flex-shrink-0">
       <div className="p-4">
         <h2 className="text-[#555] text-[10px] font-semibold tracking-wider mb-3">CATEGORIES</h2>
         <div className="space-y-1">
@@ -257,6 +257,7 @@ export default function AthernyxPage() {
   const [view, setView] = useState<"browse" | "threads">("browse");
   const [searchQuery, setSearchQuery] = useState("");
   const [total, setTotal] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     // Fetch entries
@@ -317,8 +318,17 @@ export default function AthernyxPage() {
               <h1 className="text-purple-400 font-semibold text-sm tracking-wider">ATHER-PEDIA</h1>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="w-64">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="md:hidden text-[#555] hover:text-[#888] p-2 -ml-2 transition-colors"
+              aria-label="Toggle categories"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <div className="hidden sm:block w-64">
               <SearchBar onSearch={setSearchQuery} />
             </div>
             <div className="flex items-center gap-1 bg-[#0a0a0b] border border-[#1a1a1f] rounded-lg p-1">
@@ -335,7 +345,7 @@ export default function AthernyxPage() {
                 Threads
               </button>
             </div>
-            <span className="text-[#555] text-xs font-mono">{total} entries</span>
+            <span className="hidden sm:inline text-[#555] text-xs font-mono">{total} entries</span>
           </div>
         </div>
       </header>
@@ -352,6 +362,59 @@ export default function AthernyxPage() {
           <EntryView entry={selectedEntry} onClose={() => setSelectedEntry(null)} />
         ) : (
           <>
+            {/* Mobile sidebar overlay */}
+            {sidebarOpen && (
+              <div className="md:hidden fixed inset-0 z-40 flex">
+                <div className="w-72 bg-[#0a0a0b] border-r border-[#1a1a1f] overflow-y-auto flex-shrink-0">
+                  <div className="p-4 border-b border-[#1a1a1f] flex items-center justify-between">
+                    <span className="text-[#555] text-[10px] font-semibold tracking-wider">CATEGORIES</span>
+                    <button onClick={() => setSidebarOpen(false)} className="text-[#555] hover:text-[#888] p-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="p-4">
+                    <div className="mb-3">
+                      <SearchBar onSearch={setSearchQuery} />
+                    </div>
+                    <div className="space-y-1">
+                      {Object.keys(displayCategories).filter(c => c !== "..").map(cat => {
+                        const config = CATEGORY_LABELS[cat] || { label: cat, color: "#666" };
+                        const isSelected = selectedCat === cat;
+                        return (
+                          <div key={cat}>
+                            <button
+                              onClick={() => setSelectedCat(cat)}
+                              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${isSelected ? "bg-[#1a1a1f]" : "hover:bg-[#151518]"}`}
+                              style={{ color: isSelected ? config.color : "#888" }}
+                            >
+                              <span className="font-medium">{config.label}</span>
+                              <span className="ml-2 text-[#444] text-xs">{displayCategories[cat].length}</span>
+                            </button>
+                            {isSelected && (
+                              <div className="ml-3 mt-1 space-y-0.5 border-l border-[#1a1a1f] pl-3">
+                                {displayCategories[cat].map(entry => (
+                                  <button
+                                    key={entry.id}
+                                    onClick={() => { handleSelectEntry(entry); setSidebarOpen(false); }}
+                                    className="w-full text-left px-2 py-1.5 text-xs text-[#666] hover:text-[#ccc] truncate transition-colors"
+                                  >
+                                    {entry.title}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex-1 bg-black/50" onClick={() => setSidebarOpen(false)} />
+              </div>
+            )}
+            {/* Desktop sidebar */}
             <Sidebar
               categories={displayCategories}
               selected={selectedCat}

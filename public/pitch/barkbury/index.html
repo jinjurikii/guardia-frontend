@@ -1,0 +1,1493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Barkbury — A Vision for Sunbury's Dog Community</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,400;1,9..144,500&family=DM+Sans:wght@300;400;500;600&family=Josefin+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/lenis@1.1.20/dist/lenis.css">
+<style>
+/* ===================================================
+   BARKBURY PITCH — Guardia Intelligence
+   Scroll-driven pitch presentation for Shawnee
+   =================================================== */
+
+:root {
+  --bark: #4A6741;
+  --bark-light: #6B8F5E;
+  --bark-soft: #8FB383;
+  --bark-pale: #D4E4CF;
+  --bark-deep: #2D4028;
+
+  --earth: #F7F3EE;
+  --earth-warm: #EDE5DA;
+  --earth-deep: #D4C8B8;
+  --parchment: #FEFCF9;
+
+  --charcoal: #2A2C28;
+  --charcoal-light: #4A4C48;
+  --warmgray: #7A776F;
+  --warmgray-light: #A8A49C;
+
+  --teal: #6ABFAD;
+  --teal-deep: #4A9E8E;
+  --coral: #E8746A;
+  --gold: #C9A227;
+  --gold-warm: #D4A84B;
+
+  --shadow-soft: 0 4px 24px rgba(42, 44, 40, 0.06);
+  --shadow-medium: 0 8px 40px rgba(42, 44, 40, 0.10);
+  --shadow-lift: 0 16px 56px rgba(42, 44, 40, 0.14);
+  --radius: 8px;
+  --radius-lg: 16px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+html { font-size: 16px; }
+
+body {
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  background: var(--parchment);
+  color: var(--charcoal);
+  line-height: 1.75;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Grain overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* === TYPOGRAPHY === */
+.label {
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 300;
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.display {
+  font-family: 'Fraunces', serif;
+  font-optical-sizing: auto;
+  font-weight: 600;
+  line-height: 1.15;
+}
+.body-lg {
+  font-size: 1.15rem;
+  line-height: 1.85;
+  color: var(--charcoal-light);
+}
+.body-sm {
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: var(--warmgray);
+}
+
+/* === SECTION DEFAULTS === */
+section {
+  position: relative;
+  overflow: hidden;
+}
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+.container-wide {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* === FADE IN ANIMATION === */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+}
+.reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ============================================
+   SECTION 0 — PERSONAL INTRO (from Alex)
+   ============================================ */
+.intro {
+  padding: 4rem 2rem 3rem;
+  background: var(--parchment);
+}
+.intro-inner {
+  max-width: 620px;
+  margin: 0 auto;
+}
+.intro-note {
+  background: #fff;
+  border: 1px solid var(--earth-warm);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem 2.5rem 2rem;
+  box-shadow: var(--shadow-soft);
+  position: relative;
+}
+.intro-note::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: 2.5rem;
+  width: 50px; height: 3px;
+  background: var(--bark);
+  border-radius: 0 0 3px 3px;
+}
+.intro-from {
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 400;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--bark);
+  margin-bottom: 1.25rem;
+}
+.intro-note p {
+  font-size: 1.05rem;
+  color: var(--charcoal-light);
+  line-height: 1.85;
+  margin-bottom: 1rem;
+}
+.intro-note p:last-of-type { margin-bottom: 0; }
+.intro-name {
+  margin-top: 1.5rem;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1.1rem;
+  color: var(--bark);
+}
+
+/* ============================================
+   SECTION 1 — HERO
+   ============================================ */
+.hero {
+  padding: 5rem 2rem 6rem;
+  background: var(--bark-deep);
+  color: #fff;
+  text-align: center;
+  position: relative;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(107, 143, 94, 0.2) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-label {
+  color: var(--bark-soft);
+  margin-bottom: 2rem;
+  position: relative;
+}
+.hero-title {
+  font-size: clamp(2.4rem, 5.5vw, 3.8rem);
+  color: #fff;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+.hero-title em {
+  font-style: italic;
+  color: var(--bark-soft);
+}
+.hero-sub {
+  font-size: 1.15rem;
+  color: rgba(255,255,255,0.7);
+  max-width: 520px;
+  margin: 0 auto;
+  line-height: 1.8;
+  position: relative;
+}
+.hero-divider {
+  width: 40px;
+  height: 2px;
+  background: var(--bark-soft);
+  margin: 2.5rem auto 0;
+  opacity: 0.5;
+}
+
+/* ============================================
+   SECTION 2 — THE MOMENTUM (her story)
+   ============================================ */
+.momentum {
+  padding: 6rem 2rem;
+  background: var(--parchment);
+}
+.momentum-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: start;
+  margin-top: 3rem;
+}
+.momentum-story h3 {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 1.6rem;
+  line-height: 1.3;
+  margin-bottom: 1.25rem;
+  color: var(--charcoal);
+}
+.momentum-story p {
+  font-size: 1.05rem;
+  line-height: 1.85;
+  color: var(--charcoal-light);
+  margin-bottom: 1rem;
+}
+.momentum-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.fact-card {
+  background: #fff;
+  border: 1px solid var(--earth-warm);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.fact-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+}
+.fact-number {
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-size: 1.6rem;
+  color: var(--bark);
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+.fact-label {
+  font-size: 0.88rem;
+  color: var(--warmgray);
+  line-height: 1.5;
+}
+
+/* Sponsors strip */
+.sponsors-strip {
+  margin-top: 3rem;
+  padding: 2rem 0;
+  border-top: 1px solid var(--earth-warm);
+}
+.sponsors-strip .label {
+  color: var(--warmgray-light);
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+.sponsor-logos {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 1rem;
+}
+.sponsor-pill {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--warmgray);
+  background: var(--earth);
+  border: 1px solid var(--earth-warm);
+  border-radius: 50px;
+  padding: 0.45rem 1rem;
+  white-space: nowrap;
+}
+
+/* ============================================
+   SECTION 3 — THE PROBLEM (the silence)
+   ============================================ */
+.problem {
+  padding: 6rem 2rem;
+  background: var(--earth);
+  position: relative;
+}
+.problem::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: var(--earth-deep);
+}
+.problem-center {
+  text-align: center;
+  max-width: 650px;
+  margin: 0 auto;
+}
+.problem-center .label {
+  color: var(--coral);
+  margin-bottom: 1.5rem;
+}
+.problem-center h2 {
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  margin-bottom: 1.5rem;
+  color: var(--charcoal);
+}
+.problem-center p {
+  font-size: 1.1rem;
+  line-height: 1.85;
+  color: var(--charcoal-light);
+  margin-bottom: 1rem;
+}
+.problem-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-top: 3rem;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.stat-block {
+  text-align: center;
+  padding: 1.5rem 1rem;
+  background: var(--parchment);
+  border: 1px solid var(--earth-warm);
+  border-radius: var(--radius);
+}
+.stat-icon {
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+}
+.stat-text {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--charcoal-light);
+  line-height: 1.5;
+}
+
+/* ============================================
+   SECTION 4 — THE VISION (barkbury.club mockup)
+   ============================================ */
+.vision {
+  padding: 6rem 2rem 5rem;
+  background: var(--parchment);
+}
+.vision-header {
+  text-align: center;
+  max-width: 650px;
+  margin: 0 auto 3.5rem;
+}
+.vision-header .label {
+  color: var(--bark);
+  margin-bottom: 1.5rem;
+}
+.vision-header h2 {
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  margin-bottom: 1rem;
+}
+.vision-header p {
+  font-size: 1.1rem;
+  color: var(--charcoal-light);
+  line-height: 1.8;
+}
+
+/* Browser mockup */
+.browser-frame {
+  max-width: 900px;
+  margin: 0 auto;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-lift);
+  border: 1px solid var(--earth-deep);
+}
+.browser-bar {
+  background: #F5F3F0;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-bottom: 1px solid var(--earth-deep);
+}
+.browser-dots {
+  display: flex;
+  gap: 6px;
+}
+.browser-dots span {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--earth-deep);
+}
+.browser-dots span:first-child { background: #E8746A; }
+.browser-dots span:nth-child(2) { background: #D4A84B; }
+.browser-dots span:nth-child(3) { background: #6B8F5E; }
+.browser-url {
+  flex: 1;
+  background: #fff;
+  border: 1px solid var(--earth-warm);
+  border-radius: 6px;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.78rem;
+  color: var(--warmgray);
+  font-family: 'DM Sans', sans-serif;
+}
+.browser-url strong {
+  color: var(--bark);
+  font-weight: 600;
+}
+.browser-content {
+  background: #fff;
+  padding: 0;
+}
+
+/* Mockup site inside browser */
+.mock-hero {
+  background: linear-gradient(135deg, var(--bark-deep) 0%, var(--bark) 100%);
+  padding: 2.5rem 2rem;
+  text-align: center;
+  color: #fff;
+  position: relative;
+}
+.mock-hero::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--bark-soft), var(--gold-warm), var(--bark-soft));
+}
+.mock-logo {
+  font-family: 'Fraunces', serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+.mock-logo-sub {
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.6);
+}
+.mock-nav {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 1rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+.mock-nav span {
+  color: rgba(255,255,255,0.7);
+  cursor: default;
+}
+.mock-nav span.active {
+  color: #fff;
+  border-bottom: 2px solid var(--bark-soft);
+  padding-bottom: 2px;
+}
+
+/* Community feed mockup */
+.mock-feed {
+  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 1.5rem;
+}
+.mock-posts {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.mock-post {
+  border: 1px solid #EEE;
+  border-radius: 8px;
+  padding: 1rem;
+}
+.mock-post-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+.mock-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+}
+.mock-avatar.park { background: var(--bark-pale); }
+.mock-avatar.pooch { background: #D4EFEC; }
+.mock-avatar.sponsor { background: #FFF0D4; }
+.mock-post-name {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--charcoal);
+}
+.mock-post-time {
+  font-size: 0.65rem;
+  color: var(--warmgray-light);
+}
+.mock-post-body {
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: var(--charcoal-light);
+}
+.mock-post-image {
+  width: 100%;
+  height: 120px;
+  border-radius: 6px;
+  margin-top: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  color: var(--warmgray);
+}
+.mock-post-image.park-img { background: linear-gradient(135deg, var(--bark-pale), #E8F0E4); }
+.mock-post-image.pooch-img { background: linear-gradient(135deg, #D4EFEC, #E8F4F1); }
+.mock-post-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid #F0F0F0;
+}
+.mock-post-actions span {
+  font-size: 0.68rem;
+  color: var(--warmgray);
+  cursor: default;
+}
+
+/* Sidebar */
+.mock-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.mock-sidebar-card {
+  border: 1px solid #EEE;
+  border-radius: 8px;
+  padding: 1rem;
+}
+.mock-sidebar-title {
+  font-family: 'Fraunces', serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.6rem;
+  color: var(--charcoal);
+}
+.mock-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+}
+.mock-sidebar-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.mock-sidebar-text {
+  font-size: 0.72rem;
+  color: var(--warmgray);
+  line-height: 1.4;
+}
+.mock-book-btn {
+  display: block;
+  text-align: center;
+  background: var(--teal);
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  text-decoration: none;
+  cursor: default;
+}
+
+/* ============================================
+   SECTION 5 — PAINTED POOCH TAB
+   ============================================ */
+.pooch-section {
+  padding: 6rem 2rem;
+  background: var(--earth);
+}
+.pooch-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+.pooch-text .label {
+  color: var(--teal-deep);
+  margin-bottom: 1.5rem;
+}
+.pooch-text h2 {
+  font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+  margin-bottom: 1.25rem;
+}
+.pooch-text p {
+  font-size: 1.05rem;
+  line-height: 1.85;
+  color: var(--charcoal-light);
+  margin-bottom: 1rem;
+}
+.pooch-features {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+.pooch-feature {
+  display: flex;
+  align-items: start;
+  gap: 0.85rem;
+}
+.pooch-feature-icon {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  background: #D4EFEC;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.pooch-feature-text h4 {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--charcoal);
+  margin-bottom: 0.15rem;
+}
+.pooch-feature-text p {
+  font-size: 0.85rem;
+  color: var(--warmgray);
+  line-height: 1.6;
+  margin-bottom: 0;
+}
+
+/* Phone mockup */
+.phone-frame {
+  width: 280px;
+  margin: 0 auto;
+  background: var(--charcoal);
+  border-radius: 32px;
+  padding: 12px;
+  box-shadow: var(--shadow-lift);
+}
+.phone-screen {
+  background: #fff;
+  border-radius: 22px;
+  overflow: hidden;
+}
+.phone-status {
+  background: var(--teal);
+  padding: 0.5rem 1rem 0.35rem;
+  text-align: center;
+}
+.phone-status span {
+  font-size: 0.6rem;
+  color: #fff;
+  font-weight: 500;
+}
+.phone-header {
+  background: var(--teal);
+  padding: 0.5rem 1rem 0.85rem;
+  text-align: center;
+}
+.phone-header-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1rem;
+  color: #fff;
+  font-weight: 600;
+}
+.phone-header-sub {
+  font-size: 0.6rem;
+  color: rgba(255,255,255,0.7);
+}
+.phone-body {
+  padding: 0.85rem;
+}
+.phone-service {
+  border: 1px solid #EEE;
+  border-radius: 8px;
+  padding: 0.65rem;
+  margin-bottom: 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.phone-service-icon {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  background: var(--teal);
+  opacity: 0.15;
+  flex-shrink: 0;
+}
+.phone-service-info {
+  flex: 1;
+}
+.phone-service-name {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--charcoal);
+}
+.phone-service-desc {
+  font-size: 0.6rem;
+  color: var(--warmgray);
+}
+.phone-service-price {
+  font-family: 'Fraunces', serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--teal-deep);
+}
+.phone-cta {
+  display: block;
+  text-align: center;
+  background: var(--teal);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.55rem;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+}
+
+/* ============================================
+   SECTION 6 — WE HANDLE EVERYTHING
+   ============================================ */
+.engine {
+  padding: 6rem 2rem;
+  background: var(--parchment);
+}
+.engine-header {
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto 3rem;
+}
+.engine-header .label {
+  color: var(--bark);
+  margin-bottom: 1.5rem;
+}
+.engine-header h2 {
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
+  margin-bottom: 1rem;
+}
+.engine-header p {
+  font-size: 1.1rem;
+  color: var(--charcoal-light);
+}
+.engine-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+.engine-card {
+  background: #fff;
+  border: 1px solid var(--earth-warm);
+  border-radius: var(--radius-lg);
+  padding: 2rem 1.5rem;
+  text-align: center;
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.engine-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-medium);
+}
+.engine-icon {
+  width: 52px; height: 52px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin: 0 auto 1rem;
+}
+.engine-card h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+.engine-card p {
+  font-size: 0.88rem;
+  color: var(--warmgray);
+  line-height: 1.65;
+}
+
+/* Comparison strip */
+.compare-strip {
+  max-width: 700px;
+  margin: 3rem auto 0;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 2rem;
+  align-items: center;
+}
+.compare-side {
+  text-align: center;
+}
+.compare-side h4 {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+}
+.compare-item {
+  font-size: 0.85rem;
+  color: var(--warmgray);
+  padding: 0.3rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+.compare-divider {
+  width: 1px;
+  height: 120px;
+  background: var(--earth-deep);
+}
+
+/* ============================================
+   SECTION 7 — CTA (next step)
+   ============================================ */
+.cta-section {
+  padding: 6rem 2rem;
+  background: var(--bark-deep);
+  color: #fff;
+  text-align: center;
+  position: relative;
+}
+.cta-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 100%, rgba(107, 143, 94, 0.15) 0%, transparent 60%);
+  pointer-events: none;
+}
+.cta-inner {
+  max-width: 550px;
+  margin: 0 auto;
+  position: relative;
+}
+.cta-section .label {
+  color: var(--bark-soft);
+  margin-bottom: 1.5rem;
+}
+.cta-section h2 {
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  margin-bottom: 1.25rem;
+}
+.cta-section p {
+  font-size: 1.1rem;
+  color: rgba(255,255,255,0.7);
+  line-height: 1.85;
+  margin-bottom: 2rem;
+}
+.cta-button {
+  display: inline-block;
+  background: var(--bark-soft);
+  color: var(--bark-deep);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 1rem 2.5rem;
+  border-radius: 50px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(107, 143, 94, 0.3);
+}
+.cta-button:hover {
+  background: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 28px rgba(107, 143, 94, 0.4);
+}
+.cta-contact {
+  margin-top: 2rem;
+  font-size: 0.88rem;
+  color: rgba(255,255,255,0.5);
+}
+.cta-contact a {
+  color: var(--bark-soft);
+  text-decoration: none;
+}
+
+/* Footer */
+.pitch-footer {
+  padding: 2rem;
+  text-align: center;
+  background: var(--bark-deep);
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+.pitch-footer p {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.25);
+  font-family: 'Josefin Sans', sans-serif;
+  letter-spacing: 0.1em;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+  .momentum-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+  .problem-stats { grid-template-columns: 1fr; gap: 1rem; }
+  .mock-feed { grid-template-columns: 1fr; }
+  .mock-sidebar { display: none; }
+  .pooch-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+  .phone-frame { order: -1; }
+  .engine-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .compare-strip { grid-template-columns: 1fr; gap: 1rem; }
+  .compare-divider { width: 80%; height: 1px; margin: 0 auto; }
+  .intro-note { padding: 1.75rem; }
+  section { padding-left: 1.25rem; padding-right: 1.25rem; }
+}
+
+@media (max-width: 480px) {
+  .browser-frame { border-radius: 8px; }
+  .browser-bar { padding: 0.5rem 0.75rem; }
+  .mock-hero { padding: 1.5rem 1rem; }
+  .mock-feed { padding: 1rem; }
+  .mock-post { padding: 0.75rem; }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+  .reveal.active {
+    transition: none;
+  }
+  .fact-card,
+  .engine-card {
+    transition: none;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ====== SECTION 0: PERSONAL NOTE FROM ALEX ====== -->
+<section class="intro">
+  <div class="intro-inner reveal">
+    <div class="intro-note">
+      <div class="intro-from">A note from Alex</div>
+      <p>Hey Shawnee,</p>
+      <p>After we talked, I couldn't stop thinking about Barkbury. So I did some homework. I read the newspaper articles, looked at the sponsors you've gathered, and the plans you put in front of city council.</p>
+      <p>What you're building for this community is special. I wanted to put something together to show you how we could help bring it to life online.</p>
+      <p>Scroll down when you're ready.</p>
+      <div class="intro-name">&mdash; Alex</div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== SECTION 1: HERO ====== -->
+<section class="hero">
+  <div class="container">
+    <div class="label hero-label reveal">A Vision for Sunbury</div>
+    <h1 class="display hero-title reveal">Barkbury Deserves<br>a <em>Home</em></h1>
+    <p class="hero-sub reveal">You've built the community. You've gathered the sponsors. You've got the city behind you. Now let's give Barkbury a place to live &mdash; online, always on, always growing.</p>
+    <div class="hero-divider reveal"></div>
+  </div>
+</section>
+
+<!-- ====== SECTION 2: THE MOMENTUM ====== -->
+<section class="momentum">
+  <div class="container-wide">
+    <div class="label reveal" style="color: var(--bark); text-align: center;">What You've Already Built</div>
+    <div class="momentum-grid">
+      <div class="momentum-story reveal">
+        <h3>30 Years of Expertise.<br>One Big Dream.</h3>
+        <p>You didn't just open a grooming salon. You built a place where every dog is treated like a work of art &mdash; autism puzzle poodles, leopard bulldogs, rainbow tails that make people stop and stare.</p>
+        <p>You got published in an international grooming magazine. OPAWZ certified you. The Daily Item and The News-Item told your story. The mayor praised you for putting Sunbury on the map.</p>
+        <p>And then you decided to give back. Barkbury isn't just a dog park &mdash; it's your thank you to a community that helped you through the hardest years of your life.</p>
+      </div>
+      <div class="momentum-facts">
+        <div class="fact-card reveal">
+          <div class="fact-number">30+</div>
+          <div class="fact-label">Years in grooming &amp; dog behavior</div>
+        </div>
+        <div class="fact-card reveal">
+          <div class="fact-number">10</div>
+          <div class="fact-label">Foundation sponsors already committed</div>
+        </div>
+        <div class="fact-card reveal">
+          <div class="fact-number">2</div>
+          <div class="fact-label">Newspaper features on Barkbury</div>
+        </div>
+        <div class="fact-card reveal">
+          <div class="fact-number">6</div>
+          <div class="fact-label">Years serving Sunbury from 454 Market St</div>
+        </div>
+        <div class="fact-card reveal">
+          <div class="fact-number">&infin;</div>
+          <div class="fact-label">Dogs who deserve a safe place to play</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sponsors-strip reveal">
+      <div class="label">Foundation Sponsors</div>
+      <div class="sponsor-logos">
+        <span class="sponsor-pill">Body Mods, Inc.</span>
+        <span class="sponsor-pill">The Painted Pooch</span>
+        <span class="sponsor-pill">Brewer's Outlet</span>
+        <span class="sponsor-pill">MidTown Bistro</span>
+        <span class="sponsor-pill">The Squeeze-In</span>
+        <span class="sponsor-pill">1337 Rentals</span>
+        <span class="sponsor-pill">Pet World</span>
+        <span class="sponsor-pill">Warrior Concepts</span>
+        <span class="sponsor-pill">Smoley's Garage</span>
+        <span class="sponsor-pill">+ 1 Anonymous Supporter</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== SECTION 3: THE PROBLEM ====== -->
+<section class="problem">
+  <div class="problem-center">
+    <div class="label reveal">The Challenge</div>
+    <h2 class="display reveal">All That Momentum.<br>Nowhere to Find It.</h2>
+    <p class="reveal">Right now, if someone in Sunbury searches for Barkbury or The Painted Pooch, they won't find much. The Facebook page went quiet. The sponsors have no visibility. The community energy has no home base.</p>
+    <p class="reveal">You've been focused on what matters &mdash; the dogs, the park, the craft. But while you've been doing the real work, the digital side went silent.</p>
+
+    <div class="problem-stats">
+      <div class="stat-block reveal">
+        <div class="stat-icon" role="img" aria-label="Phone">&#x1F4F1;</div>
+        <div class="stat-text">No active social media presence</div>
+      </div>
+      <div class="stat-block reveal">
+        <div class="stat-icon" role="img" aria-label="Search">&#x1F50D;</div>
+        <div class="stat-text">Sponsors getting zero online visibility</div>
+      </div>
+      <div class="stat-block reveal">
+        <div class="stat-icon" role="img" aria-label="Paw prints">&#x1F43E;</div>
+        <div class="stat-text">Community waiting for updates</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== SECTION 4: THE VISION ====== -->
+<section class="vision">
+  <div class="container-wide">
+    <div class="vision-header">
+      <div class="label reveal">The Vision</div>
+      <h2 class="display reveal">Introducing <em>barkbury.club</em></h2>
+      <p class="reveal">A living, breathing home for Sunbury's dog community. Not just a website &mdash; a place where dog owners connect, sponsors shine, and your park dream stays visible every single day.</p>
+    </div>
+
+    <!-- Browser mockup of barkbury.club -->
+    <div class="browser-frame reveal">
+      <div class="browser-bar">
+        <div class="browser-dots">
+          <span></span><span></span><span></span>
+        </div>
+        <div class="browser-url">&#x1F512; <strong>barkbury.club</strong></div>
+      </div>
+      <div class="browser-content">
+        <div class="mock-hero">
+          <div class="mock-logo">Barkbury</div>
+          <div class="mock-logo-sub">Sunbury's Dog Community</div>
+          <div class="mock-nav">
+            <span class="active">Community</span>
+            <span>Park Updates</span>
+            <span>Sponsors</span>
+            <span>The Painted Pooch</span>
+            <span>Events</span>
+          </div>
+        </div>
+        <div class="mock-feed">
+          <div class="mock-posts">
+            <!-- Post 1 - Park Update -->
+            <div class="mock-post">
+              <div class="mock-post-header">
+                <div class="mock-avatar park">&#x1F33F;</div>
+                <div>
+                  <div class="mock-post-name">Barkbury Park Updates</div>
+                  <div class="mock-post-time">2 hours ago</div>
+                </div>
+              </div>
+              <div class="mock-post-body">Big news &mdash; we've been talking with the city about the North Fourth Street location near the skate park. Tunnels, climbing structures, and sensory stations are all in the plan. This isn't just a fenced field. &#x1F415;</div>
+              <div class="mock-post-image park-img">&#x1F4F8; Park concept rendering</div>
+              <div class="mock-post-actions">
+                <span>&#x1F43E; 24 wags</span>
+                <span>&#x1F4AC; 8 comments</span>
+                <span>&#x2197; Share</span>
+              </div>
+            </div>
+            <!-- Post 2 - Grooming Transformation -->
+            <div class="mock-post">
+              <div class="mock-post-header">
+                <div class="mock-avatar pooch">&#x2702;&#xFE0F;</div>
+                <div>
+                  <div class="mock-post-name">The Painted Pooch</div>
+                  <div class="mock-post-time">Yesterday</div>
+                </div>
+              </div>
+              <div class="mock-post-body">Meet Galen after his creative session &mdash; rocking a patriotic tail just in time for the holiday! Every dog is a work of art &#x1F3A8;</div>
+              <div class="mock-post-image pooch-img">&#x1F4F8; Before &amp; after grooming photo</div>
+              <div class="mock-post-actions">
+                <span>&#x1F43E; 41 wags</span>
+                <span>&#x1F4AC; 12 comments</span>
+                <span>&#x2197; Share</span>
+              </div>
+            </div>
+            <!-- Post 3 - Sponsor Spotlight -->
+            <div class="mock-post">
+              <div class="mock-post-header">
+                <div class="mock-avatar sponsor">&#x2B50;</div>
+                <div>
+                  <div class="mock-post-name">Sponsor Spotlight</div>
+                  <div class="mock-post-time">3 days ago</div>
+                </div>
+              </div>
+              <div class="mock-post-body">Shoutout to MidTown Bistro for hosting our upcoming "Dine with Your Dogs" fundraiser on their outdoor patio! These are the businesses making Barkbury possible. &#x1F64C;</div>
+              <div class="mock-post-actions">
+                <span>&#x1F43E; 33 wags</span>
+                <span>&#x1F4AC; 6 comments</span>
+                <span>&#x2197; Share</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sidebar -->
+          <div class="mock-sidebar">
+            <div class="mock-sidebar-card">
+              <div class="mock-sidebar-title">&#x1F43E; Park Progress</div>
+              <div class="mock-sidebar-item">
+                <div class="mock-sidebar-dot" style="background: var(--bark);"></div>
+                <div class="mock-sidebar-text">Location scouting</div>
+              </div>
+              <div class="mock-sidebar-item">
+                <div class="mock-sidebar-dot" style="background: var(--bark-pale);"></div>
+                <div class="mock-sidebar-text">Council approval</div>
+              </div>
+              <div class="mock-sidebar-item">
+                <div class="mock-sidebar-dot" style="background: var(--earth-deep);"></div>
+                <div class="mock-sidebar-text">Fundraising</div>
+              </div>
+              <div class="mock-sidebar-item">
+                <div class="mock-sidebar-dot" style="background: var(--earth-deep);"></div>
+                <div class="mock-sidebar-text">Community build day</div>
+              </div>
+            </div>
+            <div class="mock-sidebar-card">
+              <div class="mock-sidebar-title">&#x1F4C5; Upcoming</div>
+              <div class="mock-sidebar-text" style="padding: 0.25rem 0;">Dine with Your Dogs @ MidTown Bistro</div>
+              <div class="mock-sidebar-text" style="padding: 0.25rem 0;">Squeeze-In Fundraiser Night</div>
+            </div>
+            <div class="mock-sidebar-card">
+              <div class="mock-sidebar-title">&#x2702;&#xFE0F; Book a Groom</div>
+              <div class="mock-sidebar-text" style="margin-bottom: 0.6rem;">Schedule your pup's next session at The Painted Pooch</div>
+              <div class="mock-book-btn">Book Appointment</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== SECTION 5: PAINTED POOCH INSIDE ====== -->
+<section class="pooch-section">
+  <div class="container-wide">
+    <div class="pooch-grid">
+      <div class="pooch-text">
+        <div class="label reveal">Your Business, Built In</div>
+        <h2 class="display reveal">The Painted Pooch<br>Lives Inside Barkbury</h2>
+        <p class="reveal">Barkbury is the community. The Painted Pooch is the anchor. Your grooming business gets its own dedicated section &mdash; services, booking, gallery &mdash; all integrated into the same place your customers already visit.</p>
+
+        <div class="pooch-features">
+          <div class="pooch-feature reveal">
+            <div class="pooch-feature-icon">&#x1F4C5;</div>
+            <div class="pooch-feature-text">
+              <h4>Easy Online Booking</h4>
+              <p>Clients sign in with Google and book in seconds. No phone tag, no missed calls.</p>
+            </div>
+          </div>
+          <div class="pooch-feature reveal">
+            <div class="pooch-feature-icon">&#x1F3A8;</div>
+            <div class="pooch-feature-text">
+              <h4>Creative Portfolio</h4>
+              <p>Your best transformations showcased in a gallery that does your artistry justice.</p>
+            </div>
+          </div>
+          <div class="pooch-feature reveal">
+            <div class="pooch-feature-icon">&#x1F4F1;</div>
+            <div class="pooch-feature-text">
+              <h4>Social Media on Autopilot</h4>
+              <p>We create and post content for you. Your before-and-afters, styled and scheduled.</p>
+            </div>
+          </div>
+          <div class="pooch-feature reveal">
+            <div class="pooch-feature-icon">&#x1F415;</div>
+            <div class="pooch-feature-text">
+              <h4>Daycare Updates</h4>
+              <p>Quick snapshots of pups at play, so owners feel connected during the day.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phone mockup -->
+      <div class="reveal">
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <div class="phone-status"><span>barkbury.club/painted-pooch</span></div>
+            <div class="phone-header">
+              <div class="phone-header-title">The Painted Pooch</div>
+              <div class="phone-header-sub">Creative Grooming &amp; Daycare</div>
+            </div>
+            <div class="phone-body">
+              <div class="phone-service">
+                <div class="phone-service-icon"></div>
+                <div class="phone-service-info">
+                  <div class="phone-service-name">Full Grooming</div>
+                  <div class="phone-service-desc">Bath, cut, nails, ears</div>
+                </div>
+                <div class="phone-service-price">$55+</div>
+              </div>
+              <div class="phone-service">
+                <div class="phone-service-icon"></div>
+                <div class="phone-service-info">
+                  <div class="phone-service-name">Creative Color</div>
+                  <div class="phone-service-desc">Safe, pet-friendly dyes</div>
+                </div>
+                <div class="phone-service-price">$75+</div>
+              </div>
+              <div class="phone-service">
+                <div class="phone-service-icon"></div>
+                <div class="phone-service-info">
+                  <div class="phone-service-name">Doggy Daycare</div>
+                  <div class="phone-service-desc">All-day fun &amp; socialization</div>
+                </div>
+                <div class="phone-service-price">$30</div>
+              </div>
+              <div class="phone-cta">Book Now &mdash; Sign in with Google</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== SECTION 6: WE HANDLE EVERYTHING ====== -->
+<section class="engine">
+  <div class="container-wide">
+    <div class="engine-header">
+      <div class="label reveal">How It Works</div>
+      <h2 class="display reveal">You Focus on Dogs.<br>We Focus on This.</h2>
+      <p class="reveal">You don't need to learn new tools, write posts, or manage a website. We handle the entire digital side so you can do what you do best.</p>
+    </div>
+
+    <div class="engine-grid">
+      <div class="engine-card reveal">
+        <div class="engine-icon" style="background: var(--bark-pale);">&#x1F4F8;</div>
+        <h3>Content Creation</h3>
+        <p>We turn your grooming photos into polished, professional posts &mdash; styled, captioned, and ready to go.</p>
+      </div>
+      <div class="engine-card reveal">
+        <div class="engine-icon" style="background: #D4EFEC;">&#x1F4C5;</div>
+        <h3>Scheduling &amp; Posting</h3>
+        <p>Content goes out on a rhythm &mdash; consistent, strategic, and timed for when your audience is online.</p>
+      </div>
+      <div class="engine-card reveal">
+        <div class="engine-icon" style="background: #FFF0D4;">&#x1F310;</div>
+        <h3>Website &amp; Community</h3>
+        <p>Barkbury.club stays alive with fresh updates, sponsor spotlights, and park progress &mdash; no effort from you.</p>
+      </div>
+    </div>
+
+    <div class="compare-strip reveal">
+      <div class="compare-side">
+        <h4>What You Do</h4>
+        <div class="compare-item">&#x2702;&#xFE0F; Groom dogs</div>
+        <div class="compare-item">&#x1F4F7; Snap a quick photo</div>
+        <div class="compare-item">&#x1F43E; Build Barkbury</div>
+        <div class="compare-item">&#x1F49B; Love the community</div>
+      </div>
+      <div class="compare-divider"></div>
+      <div class="compare-side">
+        <h4>What We Do</h4>
+        <div class="compare-item">&#x1F3A8; Style &amp; polish content</div>
+        <div class="compare-item">&#x1F4F1; Post across platforms</div>
+        <div class="compare-item">&#x1F310; Keep the website alive</div>
+        <div class="compare-item">&#x1F4CA; Grow your audience</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== SECTION 7: CTA ====== -->
+<section class="cta-section">
+  <div class="cta-inner">
+    <div class="label reveal">Next Step</div>
+    <h2 class="display reveal">Let's Give Barkbury<br>Its Heartbeat</h2>
+    <p class="reveal">No pressure, no rush. Just a conversation about what's possible. I'd love to grab coffee and talk through how we can make this happen together.</p>
+    <a href="tel:+17173767870" class="cta-button reveal">Let's Talk</a>
+    <div class="cta-contact reveal">
+      <p>Or text Alex anytime &mdash; I'm local and I'm rooting for this.</p>
+    </div>
+  </div>
+</section>
+
+<footer class="pitch-footer">
+  <p>Prepared with care by Guardia Content Intelligence</p>
+</footer>
+
+<!-- ====== SCRIPTS ====== -->
+<script src="https://unpkg.com/lenis@1.1.20/dist/lenis.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+// Respect reduced motion
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Lenis smooth scroll
+if (!prefersReducedMotion) {
+  const lenis = new Lenis({ lerp: 0.08, smoothWheel: true });
+  function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+  requestAnimationFrame(raf);
+
+  // GSAP ScrollTrigger integration
+  lenis.on('scroll', ScrollTrigger.update);
+  gsap.ticker.add((time) => lenis.raf(time * 1000));
+  gsap.ticker.lagSmoothing(0);
+}
+
+// GSAP animations
+gsap.registerPlugin(ScrollTrigger);
+
+if (!prefersReducedMotion) {
+  // Reveal on scroll
+  document.querySelectorAll('.reveal').forEach((el) => {
+    const siblings = Array.from(el.parentElement.querySelectorAll('.reveal'));
+    const index = siblings.indexOf(el);
+
+    gsap.fromTo(el,
+      { opacity: 0, y: 30 },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 0.8,
+        delay: index * 0.1,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: el,
+          start: 'top 88%',
+          once: true
+        }
+      }
+    );
+  });
+
+  // Browser frame parallax
+  gsap.to('.browser-frame', {
+    y: -20,
+    ease: 'none',
+    scrollTrigger: {
+      trigger: '.vision',
+      start: 'top bottom',
+      end: 'bottom top',
+      scrub: 1
+    }
+  });
+
+  // Phone float
+  gsap.to('.phone-frame', {
+    y: -15,
+    ease: 'none',
+    scrollTrigger: {
+      trigger: '.pooch-section',
+      start: 'top bottom',
+      end: 'bottom top',
+      scrub: 1
+    }
+  });
+
+  // Fact cards stagger
+  gsap.utils.toArray('.fact-card').forEach((card, i) => {
+    gsap.fromTo(card,
+      { opacity: 0, x: 30 },
+      {
+        opacity: 1,
+        x: 0,
+        duration: 0.6,
+        delay: i * 0.12,
+        ease: 'power2.out',
+        scrollTrigger: {
+          trigger: card,
+          start: 'top 85%',
+          once: true
+        }
+      }
+    );
+  });
+
+  // Sponsor pills stagger
+  gsap.utils.toArray('.sponsor-pill').forEach((pill, i) => {
+    gsap.fromTo(pill,
+      { opacity: 0, scale: 0.9 },
+      {
+        opacity: 1,
+        scale: 1,
+        duration: 0.4,
+        delay: i * 0.06,
+        ease: 'back.out(1.5)',
+        scrollTrigger: {
+          trigger: '.sponsors-strip',
+          start: 'top 85%',
+          once: true
+        }
+      }
+    );
+  });
+
+  // Engine cards stagger
+  gsap.utils.toArray('.engine-card').forEach((card, i) => {
+    gsap.fromTo(card,
+      { opacity: 0, y: 40 },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 0.7,
+        delay: i * 0.15,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: '.engine-grid',
+          start: 'top 80%',
+          once: true
+        }
+      }
+    );
+  });
+} else {
+  // Show everything immediately for reduced motion
+  document.querySelectorAll('.reveal').forEach(el => {
+    el.style.opacity = '1';
+    el.style.transform = 'none';
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Shades of Dimension — Luxury Salon | Selinsgrove, PA</title>
+<meta name="description" content="Where color finds its depth. Full-service luxury salon crafting dimensional beauty in the heart of Selinsgrove. Balayage, color, cuts, extensions & more.">
+<meta property="og:title" content="Shades of Dimension — Selinsgrove, PA">
+<meta property="og:description" content="Where color finds its depth. Luxury salon by Lacy & Shaun.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&family=DM+Sans:wght@300;400;500;600&family=Montserrat:wght@200;300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/lenis@1.1.20/dist/lenis.css">
+<style>
+/* ===================================================
+   SHADES OF DIMENSION — Guardia Intelligence
+   GSAP + Lenis scroll storytelling
+   Dark luxury editorial salon demo
+   =================================================== */
+
+:root {
+  --slate: #2A2D35;
+  --slate-deep: #1C1F26;
+  --slate-light: #363A44;
+  --gunmetal: #1E2533;
+
+  --gold: #C9A74E;
+  --gold-light: #D4BE78;
+  --gold-muted: #A8904A;
+  --gold-glow: rgba(201, 167, 78, 0.15);
+
+  --cream: #F5F0E5;
+  --cream-soft: #FAF7F2;
+  --warm-white: #FAFAF8;
+
+  --rose: #C49A8B;
+  --rose-muted: #B8887A;
+
+  --text-light: #F5F0E5;
+  --text-light-muted: rgba(245, 240, 229, 0.7);
+  --text-dark: #2A2D35;
+  --text-dark-muted: #8A8078;
+
+  --shadow-soft: 0 4px 20px rgba(0,0,0,0.12);
+  --shadow-medium: 0 8px 40px rgba(0,0,0,0.2);
+  --radius: 2px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: hidden; }
+
+html { font-size: 16px; }
+
+body {
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  background: var(--slate-deep);
+  color: var(--text-light);
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+/* === GRAIN OVERLAY === */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.025;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* === FOCUS STATES === */
+a:focus-visible, button:focus-visible {
+  outline: 2px solid var(--gold-light);
+  outline-offset: 2px;
+}
+
+/* === GHOST TYPOGRAPHY === */
+.ghost-text {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(6rem, 15vw, 14rem);
+  font-weight: 700;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(201, 167, 78, 0.07);
+  position: absolute;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+  line-height: 1;
+}
+
+/* === GOLD ACCENTS === */
+.gold-line {
+  height: 1px;
+  width: 60px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin: 1.5rem auto;
+}
+.gold-line-left {
+  height: 1px;
+  width: 40px;
+  background: linear-gradient(90deg, var(--gold), transparent);
+  margin: 1rem 0;
+}
+
+/* === EDITORIAL DIVIDER === */
+.editorial-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin: 2rem 0;
+}
+.editorial-divider::before,
+.editorial-divider::after {
+  content: '';
+  height: 1px;
+  width: 40px;
+  background: linear-gradient(90deg, transparent, var(--gold-muted));
+}
+.editorial-divider::after {
+  background: linear-gradient(90deg, var(--gold-muted), transparent);
+}
+.editorial-divider span {
+  color: var(--gold-muted);
+  font-size: 0.6rem;
+}
+
+/* === GLASS PANEL === */
+.glass-panel {
+  background: rgba(42, 45, 53, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(201, 167, 78, 0.1);
+  border-radius: var(--radius);
+}
+
+/* === NAVIGATION === */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  padding: 0 2rem;
+  transition: background 0.4s ease, backdrop-filter 0.4s ease, box-shadow 0.4s ease;
+  background: transparent;
+}
+nav.scrolled {
+  background: rgba(28, 31, 38, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 2px 30px rgba(0,0,0,0.3);
+}
+nav.scrolled::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-muted), transparent);
+}
+.nav-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 70px;
+}
+.logo-text {
+  text-decoration: none;
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+.logo-script {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 1.4rem;
+  color: var(--gold);
+  transition: color 0.4s ease;
+}
+.logo-caps {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 200;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(245,240,229,0.6);
+  transition: color 0.4s ease;
+}
+.nav-links { display: flex; gap: 2rem; list-style: none; }
+.nav-links a {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 300;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(245,240,229,0.7);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+.nav-links a:hover { color: var(--gold); }
+.nav-cta {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 400;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  text-decoration: none;
+  padding: 0.5rem 1.3rem;
+  border: 1px solid var(--gold-muted);
+  border-radius: 50px;
+  transition: all 0.3s ease;
+}
+.nav-cta:hover {
+  background: var(--gold);
+  color: var(--slate-deep);
+  border-color: var(--gold);
+}
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .nav-cta { display: none; }
+  .nav-inner { height: 56px; }
+  nav { padding: 0 1rem; }
+  .logo-script { font-size: 1.2rem; }
+  .logo-caps { font-size: 0.55rem; }
+}
+
+/* === SECTION HELPERS === */
+.section-label {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 200;
+  font-size: 0.7rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-weight: 600;
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
+}
+.section-padding { padding: 6rem 2rem; }
+@media (max-width: 768px) {
+  .section-padding { padding: 4rem 1.5rem; }
+}
+.container { max-width: 1100px; margin: 0 auto; }
+
+/* === HERO === */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  background: var(--slate-deep);
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 60%, rgba(201,167,78,0.06) 0%, transparent 60%),
+    radial-gradient(circle at 70% 30%, rgba(196,154,139,0.04) 0%, transparent 40%);
+  pointer-events: none;
+}
+.hero .ghost-text {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.hero-content {
+  position: relative;
+  z-index: 2;
+  padding: 2rem;
+  max-width: 800px;
+}
+.hero-label {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 200;
+  font-size: 0.7rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: rgba(245,240,229,0.6);
+  margin-bottom: 2rem;
+}
+.hero-title-script {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(3rem, 7vw, 4.5rem);
+  color: var(--gold);
+  line-height: 1.1;
+  margin-bottom: 0.25rem;
+}
+.hero-title-main {
+  font-family: 'Playfair Display', serif;
+  font-weight: 600;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  color: var(--cream);
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
+}
+.hero-subtitle {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(0.95rem, 2vw, 1.05rem);
+  color: rgba(245,240,229,0.7);
+  font-weight: 300;
+  max-width: 480px;
+  margin: 0 auto 2.5rem;
+}
+.hero-cta {
+  display: inline-block;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 400;
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cream);
+  padding: 0.9rem 2.5rem;
+  border: 1px solid var(--gold-muted);
+  border-radius: 50px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+.hero-cta:hover {
+  background: var(--gold);
+  color: var(--slate-deep);
+  border-color: var(--gold);
+  box-shadow: 0 0 30px rgba(201,167,78,0.2);
+}
+/* Hero photo placeholder */
+.hero-photo {
+  position: absolute;
+  top: 10%; right: 5%;
+  width: 260px; height: 380px;
+  border: 1px solid rgba(201,167,78,0.15);
+  background: linear-gradient(160deg, var(--slate-light), var(--slate-deep));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  box-shadow: inset 0 0 40px rgba(0,0,0,0.3);
+}
+.hero-photo span {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  color: rgba(245,240,229,0.2);
+  text-transform: uppercase;
+}
+.scroll-indicator {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+.scroll-indicator span {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  color: rgba(245,240,229,0.3);
+  text-transform: uppercase;
+}
+.scroll-line {
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(to bottom, var(--gold-muted), transparent);
+  animation: scrollBounce 2s ease-in-out infinite;
+}
+@keyframes scrollBounce {
+  0%, 100% { transform: scaleY(1); opacity: 1; }
+  50% { transform: scaleY(0.5); opacity: 0.4; }
+}
+@media (max-width: 768px) {
+  .hero-photo { display: none; }
+  .hero-content { padding: 1.5rem; }
+  .ghost-text { font-size: clamp(4rem, 20vw, 8rem); }
+}
+
+/* === OUR STORY === */
+.story {
+  background: linear-gradient(180deg, var(--slate-deep), var(--slate));
+  position: relative;
+  overflow: hidden;
+}
+.story .ghost-text {
+  right: -5%;
+  top: 20%;
+}
+.story-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+.story-text .section-label { color: var(--gold); }
+.story-text .section-title {
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  color: var(--cream);
+}
+.story-text p {
+  color: rgba(245,240,229,0.75);
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  line-height: 1.8;
+}
+.story-text p strong {
+  color: var(--cream);
+  font-weight: 500;
+}
+.story-quote {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 1.25rem;
+  color: var(--gold);
+  border-left: 2px solid var(--gold-muted);
+  padding-left: 1.5rem;
+  margin: 2rem 0;
+  line-height: 1.6;
+}
+.story-quote cite {
+  display: block;
+  font-family: 'DM Sans', sans-serif;
+  font-style: normal;
+  font-size: 0.8rem;
+  color: var(--text-light-muted);
+  margin-top: 0.5rem;
+}
+.story-photo {
+  aspect-ratio: 3/4;
+  border: 1px solid rgba(201,167,78,0.15);
+  background: linear-gradient(160deg, var(--slate-light), var(--slate-deep));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-medium);
+  position: relative;
+}
+.story-photo span {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  color: rgba(245,240,229,0.2);
+  text-transform: uppercase;
+}
+.story-photo-label {
+  position: absolute;
+  bottom: -1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-light-muted);
+  white-space: nowrap;
+}
+@media (max-width: 768px) {
+  .story-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .story-photo { max-height: 400px; }
+  .story-quote { font-size: 1.1rem; padding-left: 1rem; }
+}
+
+/* === THE ARTISTS === */
+.artists {
+  background: var(--cream-soft);
+  position: relative;
+  overflow: hidden;
+}
+.artists .ghost-text {
+  left: 5%;
+  top: 10%;
+  -webkit-text-stroke-color: rgba(42,45,53,0.04);
+}
+.artists-header {
+  text-align: center;
+  position: relative;
+  z-index: 2;
+  margin-bottom: 3rem;
+}
+.artists .section-label { color: var(--gold-muted); }
+.artists .section-title {
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  color: var(--text-dark);
+}
+.artists-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2.5rem;
+  position: relative;
+  z-index: 2;
+}
+.artist-card {
+  background: #fff;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+  border-top: 2px solid var(--gold);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.artist-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-medium);
+}
+.artist-photo {
+  aspect-ratio: 4/5;
+  background: linear-gradient(160deg, #e8e3db, #d4cdc3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.artist-photo span {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  color: var(--text-dark-muted);
+  text-transform: uppercase;
+  opacity: 0.5;
+}
+.artist-info {
+  padding: 2rem;
+}
+.artist-name {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 500;
+  font-size: 0.85rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold-muted);
+  margin-bottom: 0.25rem;
+}
+.artist-role {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  color: var(--text-dark-muted);
+  margin-bottom: 1rem;
+}
+.artist-info p {
+  font-size: 0.95rem;
+  color: var(--text-dark);
+  line-height: 1.7;
+  margin-bottom: 1rem;
+  opacity: 0.75;
+}
+.artist-phone {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: var(--text-dark-muted);
+}
+.artist-phone a {
+  color: var(--text-dark-muted);
+  text-decoration: none;
+  transition: color 0.3s;
+}
+.artist-phone a:hover { color: var(--gold); }
+@media (max-width: 768px) {
+  .artists-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .artist-info { padding: 1.5rem; }
+}
+
+/* === SERVICES === */
+.services {
+  background: var(--slate-deep);
+  position: relative;
+  overflow: hidden;
+}
+.services .ghost-text {
+  right: -2%;
+  bottom: 10%;
+}
+.services-header {
+  text-align: center;
+  position: relative;
+  z-index: 2;
+  margin-bottom: 3rem;
+}
+.services .section-label { color: rgba(201,167,78,0.7); }
+.services .section-title {
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  color: var(--cream);
+}
+.services-subtitle {
+  color: rgba(245,240,229,0.65);
+  font-size: 1rem;
+  font-weight: 300;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  position: relative;
+  z-index: 2;
+}
+.service-category {
+  padding: 2rem 1.5rem;
+  border: 1px solid rgba(201,167,78,0.1);
+  border-radius: var(--radius);
+  background: rgba(42,45,53,0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: border-color 0.3s ease, transform 0.3s ease;
+}
+.service-category:hover {
+  border-color: rgba(201,167,78,0.25);
+  transform: translateY(-2px);
+}
+.category-name {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 500;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(201,167,78,0.15);
+}
+.service-list {
+  list-style: none;
+}
+.service-list li {
+  font-size: 0.9rem;
+  color: rgba(245,240,229,0.8);
+  line-height: 2.2;
+  font-weight: 300;
+}
+.services-note {
+  text-align: center;
+  color: var(--text-light-muted);
+  font-size: 0.85rem;
+  font-weight: 300;
+  margin-top: 2.5rem;
+  position: relative;
+  z-index: 2;
+}
+.services-note em {
+  display: block;
+  font-size: 0.75rem;
+  color: rgba(245,240,229,0.35);
+  margin-top: 0.5rem;
+  font-style: normal;
+}
+@media (max-width: 900px) {
+  .services-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 520px) {
+  .services-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .service-category { padding: 1.5rem 1.25rem; }
+}
+
+/* === THE WORK (Pinned Scroll) === */
+.work {
+  background: var(--slate);
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+}
+.work-inner {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.work-phase {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+}
+.work-phase .phase-content {
+  max-width: 700px;
+  text-align: center;
+  padding: 2rem;
+  position: relative;
+  z-index: 2;
+}
+.work-phase .ghost-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.work .section-title {
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  color: var(--cream);
+  margin-bottom: 1.5rem;
+}
+.work-phase p {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(1rem, 2vw, 1.1rem);
+  color: rgba(245,240,229,0.75);
+  line-height: 1.8;
+  margin-bottom: 1.5rem;
+}
+.work-photo-placeholder {
+  width: 100%;
+  max-width: 500px;
+  aspect-ratio: 4/3;
+  border: 1px solid rgba(201,167,78,0.12);
+  background: linear-gradient(160deg, var(--slate-light), var(--slate-deep));
+  margin: 2rem auto 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-medium);
+}
+.work-photo-placeholder span {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  color: rgba(245,240,229,0.2);
+  text-transform: uppercase;
+}
+/* Before/After side by side */
+.work-ba {
+  display: flex;
+  gap: 1px;
+  max-width: 500px;
+  margin: 2rem auto 0;
+}
+.work-ba-card {
+  flex: 1;
+  aspect-ratio: 3/4;
+  border: 1px solid rgba(201,167,78,0.12);
+  background: linear-gradient(160deg, var(--slate-light), var(--slate-deep));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.work-ba-card span {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  color: rgba(245,240,229,0.2);
+  text-transform: uppercase;
+}
+.work-ba-label {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold-muted);
+}
+.work-ba-divider {
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, var(--gold-muted), transparent);
+  align-self: stretch;
+}
+@media (max-width: 768px) {
+  .work { padding: 4rem 1.5rem; }
+  .work-phase .phase-content { padding: 1.5rem; }
+  .work .section-title { font-size: clamp(1.5rem, 6vw, 2rem); }
+  .work-phase p { font-size: 0.95rem; }
+}
+@media (max-width: 400px) {
+  .stat-card { padding: 1.25rem 1rem; }
+  .stat-number { font-size: 1.8rem; }
+  .service-category { padding: 1.25rem 1rem; }
+}
+
+/* === REVIEWS === */
+.reviews {
+  background: var(--cream-soft);
+  position: relative;
+  overflow: hidden;
+}
+.reviews .ghost-text {
+  right: 0;
+  top: 15%;
+  -webkit-text-stroke-color: rgba(42,45,53,0.03);
+}
+.reviews-header {
+  text-align: center;
+  position: relative;
+  z-index: 2;
+  margin-bottom: 3rem;
+}
+.reviews .section-label { color: var(--gold-muted); }
+.reviews .section-title {
+  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  color: var(--text-dark);
+}
+.reviews-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  position: relative;
+  z-index: 2;
+}
+.review-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 2.5rem 2rem;
+  box-shadow: var(--shadow-soft);
+  position: relative;
+}
+.review-quote-mark {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 4rem;
+  color: var(--gold-light);
+  position: absolute;
+  top: 0.5rem;
+  left: 1.5rem;
+  line-height: 1;
+  opacity: 0.4;
+}
+.review-card p {
+  color: var(--text-dark);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  font-style: italic;
+  margin-bottom: 1.2rem;
+  opacity: 0.8;
+}
+.review-card cite {
+  font-style: normal;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dark-muted);
+  font-weight: 400;
+}
+.review-stars {
+  color: var(--gold);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  margin-left: 0.5rem;
+}
+@media (max-width: 768px) {
+  .reviews-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+  .review-card { padding: 2rem 1.5rem; }
+}
+
+/* === INVISIBLE (Pitch Section) === */
+.invisible {
+  background: var(--slate-deep);
+  position: relative;
+  overflow: hidden;
+}
+.invisible::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 50%, rgba(196,154,139,0.04) 0%, transparent 60%);
+  pointer-events: none;
+}
+.invisible-content {
+  max-width: 700px;
+  margin: 0 auto;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+.invisible .section-label { color: var(--rose-muted); }
+.invisible .section-title {
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  color: var(--cream);
+}
+.invisible-body {
+  color: rgba(245,240,229,0.7);
+  font-size: 1rem;
+  line-height: 1.8;
+  margin-bottom: 3rem;
+}
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+.stat-card {
+  padding: 2rem 1.5rem;
+  border: 1px solid rgba(201,167,78,0.1);
+  border-radius: var(--radius);
+  background: rgba(42,45,53,0.5);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  text-align: center;
+}
+.stat-number {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+.stat-label {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(245,240,229,0.6);
+  line-height: 1.5;
+}
+.invisible-close {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 1.2rem;
+  color: var(--gold);
+  margin-bottom: 1rem;
+}
+@media (max-width: 768px) {
+  .stat-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .stat-card { padding: 1.5rem 1rem; }
+  .stat-number { font-size: 2rem; }
+}
+
+/* === BOOKING CTA === */
+.booking {
+  background: linear-gradient(180deg, var(--slate), var(--slate-deep));
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.booking .ghost-text {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.booking-content {
+  position: relative;
+  z-index: 2;
+}
+.booking .section-title {
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  color: var(--cream);
+}
+.booking-sub {
+  color: var(--text-light-muted);
+  font-size: 1rem;
+  font-weight: 300;
+  margin-bottom: 2.5rem;
+}
+.booking-ctas {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+.booking-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 1rem 2.5rem;
+  border: 1px solid var(--gold-muted);
+  border-radius: var(--radius);
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+.booking-btn:hover {
+  background: rgba(201,167,78,0.1);
+  border-color: var(--gold);
+}
+.booking-btn-label {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 400;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.booking-btn-phone {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--cream);
+}
+.booking-fresha {
+  display: inline-block;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 400;
+  font-size: 0.8rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--slate-deep);
+  background: var(--gold);
+  padding: 0.9rem 2.5rem;
+  border-radius: 50px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  margin-bottom: 2.5rem;
+}
+.booking-fresha:hover {
+  background: var(--gold-light);
+  box-shadow: 0 0 30px rgba(201,167,78,0.25);
+}
+.booking-address {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(245,240,229,0.5);
+  margin-bottom: 1rem;
+}
+.booking-hours {
+  font-size: 0.85rem;
+  color: rgba(245,240,229,0.55);
+  line-height: 1.8;
+}
+@media (max-width: 520px) {
+  .booking-ctas { flex-direction: column; align-items: center; }
+  .booking-btn { width: 100%; max-width: 280px; }
+}
+
+/* === FOOTER === */
+footer {
+  background: var(--gunmetal);
+  padding: 3rem 2rem;
+  color: rgba(245,240,229,0.5);
+  position: relative;
+}
+footer::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-muted), transparent);
+}
+.footer-grid {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+.footer-col h4 {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 300;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold-muted);
+  margin-bottom: 1rem;
+}
+.footer-col p, .footer-col a {
+  font-size: 0.85rem;
+  line-height: 2;
+  color: rgba(245,240,229,0.45);
+  text-decoration: none;
+}
+.footer-col a:hover { color: var(--gold-light); }
+.footer-bottom {
+  max-width: 1100px;
+  margin: 2rem auto 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(245,240,229,0.06);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.footer-bottom span {
+  font-size: 0.7rem;
+  color: rgba(245,240,229,0.25);
+}
+.guardia-badge {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  color: rgba(245,240,229,0.15);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+.guardia-badge:hover { color: rgba(245,240,229,0.35); }
+@media (max-width: 768px) {
+  footer { padding: 3rem 1.5rem 6rem; }
+  .footer-grid { grid-template-columns: 1fr; text-align: center; gap: 1.5rem; }
+  .footer-bottom { flex-direction: column; gap: 0.5rem; text-align: center; }
+}
+
+/* === STICKY MOBILE CTA === */
+.sticky-cta {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 100;
+  background: var(--slate-deep);
+  padding: 0.75rem 1.5rem;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+  transform: translateY(100%);
+  transition: transform 0.4s ease;
+  border-top: 1px solid rgba(201,167,78,0.15);
+}
+.sticky-cta.visible { transform: translateY(0); }
+.sticky-cta-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 500px;
+  margin: 0 auto;
+  gap: 1rem;
+}
+.sticky-cta-brand {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 0.9rem;
+  color: var(--cream);
+  white-space: nowrap;
+}
+.sticky-cta .book-btn {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 500;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--slate-deep);
+  background: var(--gold);
+  padding: 0.5rem 1.5rem;
+  border-radius: 50px;
+  text-decoration: none;
+  transition: background 0.3s ease;
+  flex-shrink: 0;
+}
+.sticky-cta .book-btn:hover { background: var(--gold-light); }
+@media (max-width: 768px) {
+  .sticky-cta { display: block; }
+}
+@media (max-width: 400px) {
+  .sticky-cta { padding: 0.75rem 1rem; }
+  .sticky-cta-brand { font-size: 0.8rem; }
+  .sticky-cta .book-btn { padding: 0.5rem 1.2rem; font-size: 0.7rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- NAVIGATION                                  -->
+<!-- ═══════════════════════════════════════════ -->
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="logo-text">
+      <span class="logo-script">Shades</span>
+      <span class="logo-caps">of Dimension</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#story">Our Story</a></li>
+      <li><a href="#artists">Artists</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#work">Gallery</a></li>
+      <li><a href="#reviews">Reviews</a></li>
+    </ul>
+    <a href="#booking" class="nav-cta">Book Now</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- HERO                                        -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="hero">
+  <div class="ghost-text">SHADES</div>
+
+  <div class="hero-content">
+    <div class="gold-line"></div>
+    <div class="hero-label">34 S Market Street &bull; Selinsgrove, PA</div>
+    <div class="hero-title-script">Shades</div>
+    <div class="hero-title-main">of Dimension</div>
+    <p class="hero-subtitle">Where color finds its depth. A full-service luxury salon crafting dimensional beauty in the heart of Selinsgrove.</p>
+    <a href="#booking" class="hero-cta">Book Your Experience</a>
+  </div>
+
+  <div class="hero-photo"><span>Hair Transformation</span></div>
+
+  <div class="scroll-indicator">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- OUR STORY                                   -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="story section-padding" id="story">
+  <div class="container">
+    <div class="ghost-text">DIMENSION</div>
+    <div class="story-grid">
+      <div class="story-text">
+        <div class="section-label">Our Story</div>
+        <div class="gold-line-left"></div>
+        <h2 class="section-title">Two Artists.<br>One Vision.<br>Every Shade.</h2>
+        <p>Shades of Dimension was born from a shared belief: that exceptional hair isn't about following trends &mdash; it's about understanding <strong>the person in the chair</strong>.</p>
+        <p>Lacy and Shaun bring complementary artistry to every appointment. Color that looks like it grew from your roots. Cuts that move with you, not against you. Extensions that disappear. Treatments that actually heal.</p>
+        <p>Using organic products and modern technique, they've quietly built a reputation that reaches far beyond Selinsgrove. Walk-ins are welcome. But once you experience the difference, you'll be booking ahead.</p>
+        <blockquote class="story-quote">
+          "From the moment I walked in, the staff was welcoming and professional, creating a relaxed and comfortable atmosphere."
+          <cite>&mdash; Verified Client</cite>
+        </blockquote>
+      </div>
+      <div class="story-photo">
+        <span>Salon Interior</span>
+        <div class="story-photo-label">Lacy &amp; Shaun</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- THE ARTISTS                                 -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="artists section-padding" id="artists">
+  <div class="container">
+    <div class="ghost-text">ARTISTS</div>
+    <div class="artists-header">
+      <div class="section-label">The Artists</div>
+      <h2 class="section-title">Your Hair. Their Craft.</h2>
+      <div class="editorial-divider"><span>&#9670;</span></div>
+    </div>
+    <div class="artists-grid">
+      <div class="artist-card">
+        <div class="artist-photo"><span>Portrait</span></div>
+        <div class="artist-info">
+          <div class="artist-name">Lacy</div>
+          <div class="artist-role">Color Specialist</div>
+          <p>Known for dimensional color that looks like it was born, not made. Balayage, highlights, vivids, corrective color &mdash; if it involves shade and depth, she's your artist.</p>
+          <div class="artist-phone"><a href="tel:+15708092031">(570) 809-2031</a></div>
+        </div>
+      </div>
+      <div class="artist-card">
+        <div class="artist-photo"><span>Portrait</span></div>
+        <div class="artist-info">
+          <div class="artist-name">Shaun</div>
+          <div class="artist-role">Style Architect</div>
+          <p>Precision cuts that respect your texture, your lifestyle, your face. From classic shaping to editorial edge, Shaun builds structure that lasts between visits.</p>
+          <div class="artist-phone"><a href="tel:+15702595273">(570) 259-5273</a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- SERVICES                                    -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="services section-padding" id="services">
+  <div class="container">
+    <div class="ghost-text">SERVICES</div>
+    <div class="services-header">
+      <div class="section-label">The Experience</div>
+      <h2 class="section-title">Every Service, Elevated.</h2>
+      <p class="services-subtitle">Full-service luxury. Organic products. Personalized to you.</p>
+    </div>
+    <div class="services-grid">
+      <div class="service-category glass-panel">
+        <div class="category-name">Color</div>
+        <ul class="service-list">
+          <li>Balayage</li>
+          <li>Highlights</li>
+          <li>Full Color</li>
+          <li>Color Correction</li>
+          <li>Dimensional Color</li>
+          <li>Vivids</li>
+        </ul>
+      </div>
+      <div class="service-category glass-panel">
+        <div class="category-name">Cut &amp; Style</div>
+        <ul class="service-list">
+          <li>Women's Cut</li>
+          <li>Men's Cut</li>
+          <li>Children's Cut</li>
+          <li>Blowout &amp; Style</li>
+          <li>Curly Cut Specialist</li>
+        </ul>
+      </div>
+      <div class="service-category glass-panel">
+        <div class="category-name">Texture &amp; Treatment</div>
+        <ul class="service-list">
+          <li>Hair Extensions</li>
+          <li>Keratin Treatment</li>
+          <li>Hair Braiding</li>
+          <li>Locs</li>
+          <li>Deep Conditioning</li>
+          <li>Scalp Treatment</li>
+        </ul>
+      </div>
+      <div class="service-category glass-panel">
+        <div class="category-name">Beauty</div>
+        <ul class="service-list">
+          <li>Nail Services</li>
+          <li>Waxing</li>
+          <li>Massage</li>
+        </ul>
+      </div>
+    </div>
+    <p class="services-note">All services include a personalized consultation. Pricing varies by length, texture, and desired result.<em>Organic products used throughout. Walk-ins welcome.</em></p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- THE WORK (Pinned Scroll)                    -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="work" id="work">
+  <div class="work-inner">
+    <!-- Phase 1 — Color -->
+    <div class="work-phase phase-1">
+      <div class="ghost-text">COLOR</div>
+      <div class="phase-content">
+        <div class="section-label" style="color:var(--gold)">The Work</div>
+        <h2 class="section-title">Shades That Move.</h2>
+        <p>Dimensional color isn't flat &mdash; it catches light, shifts with movement, reveals new tones as the day changes. That's what we create.</p>
+        <div class="work-photo-placeholder"><span>Balayage Transformation</span></div>
+      </div>
+    </div>
+
+    <!-- Phase 2 — Craft -->
+    <div class="work-phase phase-2">
+      <div class="ghost-text">CRAFT</div>
+      <div class="phase-content">
+        <h2 class="section-title">Structure That Lasts.</h2>
+        <p>A great cut isn't just about what happens in the chair. It's about how it falls six weeks later. How it moves in wind. How it frames you without trying.</p>
+        <div class="work-photo-placeholder"><span>Precision Cut</span></div>
+      </div>
+    </div>
+
+    <!-- Phase 3 — Transform -->
+    <div class="work-phase phase-3">
+      <div class="ghost-text">TRANSFORM</div>
+      <div class="phase-content">
+        <h2 class="section-title">Before You Walked In.<br>After You Walk Out.</h2>
+        <p>The best part of what we do isn't the technique. It's the look on your face when you see yourself for the first time.</p>
+        <div class="work-ba">
+          <div class="work-ba-card">
+            <div class="work-ba-label">Before</div>
+            <span>Photo</span>
+          </div>
+          <div class="work-ba-divider"></div>
+          <div class="work-ba-card">
+            <div class="work-ba-label">After</div>
+            <span>Photo</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- REVIEWS                                     -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="reviews section-padding" id="reviews">
+  <div class="container">
+    <div class="ghost-text">VOICES</div>
+    <div class="reviews-header">
+      <div class="section-label">Voices</div>
+      <h2 class="section-title">In Their Words.</h2>
+      <div class="editorial-divider"><span>&#9670;</span></div>
+    </div>
+    <div class="reviews-grid">
+      <div class="review-card">
+        <div class="review-quote-mark">&ldquo;</div>
+        <p>"I just had one of the best haircut experiences here. The staff was welcoming and professional, creating a relaxed and comfortable atmosphere. My stylist really listened to what I wanted and delivered exactly the cut I had in mind &mdash; actually, even better."</p>
+        <cite>Verified Client <span class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span></cite>
+      </div>
+      <div class="review-card">
+        <div class="review-quote-mark">&ldquo;</div>
+        <p>"Thank you Lacy for beautiful color that I absolutely love and the fantastic haircut."</p>
+        <cite>Color Client <span class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span></cite>
+      </div>
+      <div class="review-card">
+        <div class="review-quote-mark">&ldquo;</div>
+        <p>"New to the area and thrilled with my experience and most of all the end results! The salon itself was clean, modern, and inviting."</p>
+        <cite>New Client <span class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span></cite>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- INVISIBLE (Pitch Section)                   -->
+<!-- ═══════════════════════════════════════════ -->
+<!-- NOTE: This is a demo-only pitch section. On a real client site, replace with booking CTA. -->
+<section class="invisible section-padding" id="invisible">
+  <div class="container">
+    <div class="invisible-content">
+      <div class="section-label">The Problem</div>
+      <div class="gold-line"></div>
+      <h2 class="section-title">Your Best Work<br>Is Invisible.</h2>
+      <p class="invisible-body">Right now, when someone searches "hair salon Selinsgrove" on Google, Shades of Dimension doesn't appear. No Google Business Profile. No website. No map listing. 25 five-star reviews that almost nobody can find.<br><br>Your Instagram is beautiful. Your Fresha page works. But the 87% of people who search Google first? They don't know you exist.</p>
+      <div class="stat-grid">
+        <div class="stat-card glass-panel">
+          <div class="stat-number">0</div>
+          <div class="stat-label">Google<br>Presence</div>
+        </div>
+        <div class="stat-card glass-panel">
+          <div class="stat-number">87%</div>
+          <div class="stat-label">Search Google<br>First</div>
+        </div>
+        <div class="stat-card glass-panel">
+          <div class="stat-number">25</div>
+          <div class="stat-label">5-Star Reviews<br>Hidden</div>
+        </div>
+      </div>
+      <p class="invisible-close">Guardia fixes this. Beautifully.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- BOOKING CTA                                 -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="booking section-padding" id="booking">
+  <div class="container">
+    <div class="ghost-text">BOOK</div>
+    <div class="booking-content">
+      <h2 class="section-title">Ready When You Are.</h2>
+      <p class="booking-sub">Walk-ins welcome. Or call ahead to reserve your chair.</p>
+      <div class="booking-ctas">
+        <a href="tel:+15708092031" class="booking-btn">
+          <span class="booking-btn-label">Call Lacy</span>
+          <span class="booking-btn-phone">(570) 809-2031</span>
+        </a>
+        <a href="tel:+15702595273" class="booking-btn">
+          <span class="booking-btn-label">Call Shaun</span>
+          <span class="booking-btn-phone">(570) 259-5273</span>
+        </a>
+      </div>
+      <a href="#" class="booking-fresha">Book on Fresha</a>
+      <div class="booking-address">34 S Market Street<br>Selinsgrove, PA 17870</div>
+      <div class="booking-hours">
+        Tue &ndash; Thu: 10:30am &ndash; 7:30pm<br>
+        Fri &ndash; Sat: 10:00am &ndash; 6:00pm<br>
+        Sun &ndash; Mon: Closed
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- FOOTER                                      -->
+<!-- ═══════════════════════════════════════════ -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-col">
+      <h4>Hours</h4>
+      <p>Tuesday - Thursday: 10:30am - 7:30pm</p>
+      <p>Friday - Saturday: 10:00am - 6:00pm</p>
+      <p>Sunday - Monday: Closed</p>
+    </div>
+    <div class="footer-col">
+      <h4>Find Us</h4>
+      <p>34 S Market Street</p>
+      <p>Selinsgrove, PA 17870</p>
+      <p><a href="https://maps.google.com/?q=34+S+Market+St+Selinsgrove+PA" target="_blank">Get Directions &rarr;</a></p>
+    </div>
+    <div class="footer-col">
+      <h4>Connect</h4>
+      <p><a href="tel:+15708092031">Lacy: (570) 809-2031</a></p>
+      <p><a href="tel:+15702595273">Shaun: (570) 259-5273</a></p>
+      <p><a href="https://instagram.com/shades_of_dimension" target="_blank">Instagram &rarr;</a></p>
+      <p><a href="#">Book on Fresha &rarr;</a></p>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>&copy; 2026 Shades of Dimension. All rights reserved.</span>
+    <a href="https://guardiacontent.com" class="guardia-badge">Powered by Guardia</a>
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- STICKY MOBILE CTA                           -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="sticky-cta" id="stickyCta">
+  <div class="sticky-cta-inner">
+    <span class="sticky-cta-brand">Shades of Dimension</span>
+    <a href="#booking" class="book-btn">Book Now</a>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- SCRIPTS                                     -->
+<!-- ═══════════════════════════════════════════ -->
+<script src="https://unpkg.com/lenis@1.1.20/dist/lenis.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+
+// ═══ LENIS SMOOTH SCROLL ═══
+const lenis = new Lenis({ duration: 1.2, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
+lenis.on('scroll', ScrollTrigger.update);
+gsap.ticker.add((time) => lenis.raf(time * 1000));
+gsap.ticker.lagSmoothing(0);
+
+// ═══ NAV SCROLL BEHAVIOR ═══
+const nav = document.querySelector('nav');
+ScrollTrigger.create({
+  start: 80,
+  onUpdate: (self) => nav.classList.toggle('scrolled', self.progress > 0 || window.scrollY > 80)
+});
+if (window.scrollY > 80) nav.classList.add('scrolled');
+
+// Smooth scroll for anchor links
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', (e) => {
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) { e.preventDefault(); lenis.scrollTo(target, { offset: -70 }); }
+  });
+});
+
+// ═══ GHOST TEXT PARALLAX ═══
+gsap.utils.toArray('.ghost-text').forEach(ghost => {
+  gsap.to(ghost, {
+    yPercent: -30,
+    ease: 'none',
+    scrollTrigger: {
+      trigger: ghost.parentElement,
+      start: 'top bottom',
+      end: 'bottom top',
+      scrub: 1
+    }
+  });
+});
+
+// ═══ GOLD LINE DRAWING ═══
+gsap.utils.toArray('.gold-line, .gold-line-left').forEach(line => {
+  gsap.from(line, {
+    scaleX: 0,
+    transformOrigin: 'center center',
+    duration: 0.8,
+    ease: 'power2.out',
+    scrollTrigger: { trigger: line, start: 'top 85%' }
+  });
+});
+
+// ═══ HERO ENTRANCE ═══
+const heroTL = gsap.timeline({ defaults: { ease: 'power3.out' } });
+heroTL
+  .from('.hero .gold-line', { scaleX: 0, duration: 0.6 })
+  .from('.hero-label', { opacity: 0, y: 15, duration: 0.6 }, '-=0.2')
+  .from('.hero-title-script', { opacity: 0, y: 30, filter: 'blur(8px)', duration: 0.9 }, '-=0.3')
+  .from('.hero-title-main', { opacity: 0, y: 20, duration: 0.7 }, '-=0.4')
+  .from('.hero-subtitle', { opacity: 0, y: 15, duration: 0.6 }, '-=0.3')
+  .from('.hero-cta', { opacity: 0, y: 15, duration: 0.6 }, '-=0.2')
+  .from('.hero-photo', { opacity: 0, scale: 1.05, duration: 1 }, '-=0.6')
+  .from('.hero .ghost-text', { opacity: 0, duration: 1.2 }, '-=0.8')
+  .from('.scroll-indicator', { opacity: 0, duration: 0.5 }, '-=0.3');
+
+// Hero photo parallax
+gsap.to('.hero-photo', {
+  y: -60,
+  ease: 'none',
+  scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true }
+});
+
+// ═══ STORY SECTION ═══
+gsap.from('.story-text .section-label, .story-text .gold-line-left, .story-text .section-title', {
+  scrollTrigger: { trigger: '.story', start: 'top 70%' },
+  opacity: 0, y: 30, stagger: 0.1, duration: 0.7, ease: 'power2.out'
+});
+gsap.from('.story-text p, .story-text .story-quote', {
+  scrollTrigger: { trigger: '.story-text', start: 'top 65%' },
+  opacity: 0, y: 20, stagger: 0.12, duration: 0.6, ease: 'power2.out'
+});
+gsap.from('.story-photo', {
+  scrollTrigger: { trigger: '.story', start: 'top 70%' },
+  opacity: 0, x: 50, duration: 0.9, ease: 'power2.out'
+});
+
+// ═══ ARTISTS ═══
+gsap.from('.artists-header', {
+  scrollTrigger: { trigger: '.artists', start: 'top 75%' },
+  opacity: 0, y: 30, duration: 0.7, ease: 'power2.out'
+});
+gsap.from('.artist-card', {
+  scrollTrigger: { trigger: '.artists-grid', start: 'top 75%' },
+  opacity: 0, y: 50, stagger: 0.2, duration: 0.8, ease: 'power2.out'
+});
+
+// ═══ SERVICES ═══
+gsap.from('.services-header', {
+  scrollTrigger: { trigger: '.services', start: 'top 75%' },
+  opacity: 0, y: 30, duration: 0.7, ease: 'power2.out'
+});
+gsap.from('.service-category', {
+  scrollTrigger: { trigger: '.services-grid', start: 'top 75%' },
+  opacity: 0, y: 40, stagger: 0.12, duration: 0.7, ease: 'power2.out'
+});
+
+// ═══ THE WORK: Pinned Scroll ═══
+ScrollTrigger.matchMedia({
+  '(min-width: 769px)': function() {
+    const phases = gsap.utils.toArray('.work-phase');
+    gsap.set(phases[0], { opacity: 1 });
+
+    const workTL = gsap.timeline({
+      scrollTrigger: {
+        trigger: '.work',
+        pin: true,
+        scrub: 1,
+        start: 'top top',
+        end: '+=300%',
+        anticipatePin: 1
+      }
+    });
+
+    workTL
+      .to(phases[0], { opacity: 1, duration: 1 })
+      .to(phases[0], { opacity: 0, duration: 0.5 })
+      .to(phases[1], { opacity: 1, duration: 0.5 })
+      .to(phases[1], { opacity: 1, duration: 1 })
+      .to(phases[1], { opacity: 0, duration: 0.5 })
+      .to(phases[2], { opacity: 1, duration: 0.5 })
+      .to(phases[2], { opacity: 1, duration: 1 });
+  },
+  '(max-width: 768px)': function() {
+    const phases = gsap.utils.toArray('.work-phase');
+    const workSection = document.querySelector('.work');
+    const workInner = document.querySelector('.work-inner');
+
+    if (workInner) {
+      workInner.style.minHeight = 'auto';
+      workInner.style.display = 'block';
+    }
+
+    phases.forEach(p => {
+      p.style.position = 'relative';
+      p.style.opacity = '1';
+      p.style.marginBottom = '3rem';
+      p.style.inset = 'auto';
+    });
+
+    phases.forEach(phase => {
+      gsap.from(phase, {
+        scrollTrigger: { trigger: phase, start: 'top 80%' },
+        opacity: 0, y: 40, duration: 0.8, ease: 'power2.out'
+      });
+    });
+  }
+});
+
+// ═══ REVIEWS ═══
+gsap.from('.reviews-header', {
+  scrollTrigger: { trigger: '.reviews', start: 'top 75%' },
+  opacity: 0, y: 30, duration: 0.7, ease: 'power2.out'
+});
+gsap.from('.review-card', {
+  scrollTrigger: { trigger: '.reviews-grid', start: 'top 75%' },
+  opacity: 0, y: 40, stagger: 0.15, duration: 0.7, ease: 'power2.out'
+});
+
+// ═══ INVISIBLE (Pitch) ═══
+gsap.from('.invisible .section-label, .invisible .gold-line, .invisible .section-title', {
+  scrollTrigger: { trigger: '.invisible', start: 'top 75%' },
+  opacity: 0, y: 30, stagger: 0.1, duration: 0.7, ease: 'power2.out'
+});
+gsap.from('.invisible-body', {
+  scrollTrigger: { trigger: '.invisible', start: 'top 65%' },
+  opacity: 0, y: 20, duration: 0.7, delay: 0.2, ease: 'power2.out'
+});
+gsap.from('.stat-card', {
+  scrollTrigger: { trigger: '.stat-grid', start: 'top 80%' },
+  opacity: 0, y: 30, scale: 0.95, stagger: 0.15, duration: 0.7, ease: 'power2.out'
+});
+gsap.from('.stat-number', {
+  scrollTrigger: { trigger: '.stat-grid', start: 'top 80%' },
+  textContent: 0,
+  duration: 1.5,
+  snap: { textContent: 1 },
+  stagger: 0.2,
+  ease: 'power2.out'
+});
+gsap.from('.invisible-close', {
+  scrollTrigger: { trigger: '.invisible-close', start: 'top 85%' },
+  opacity: 0, y: 20, duration: 0.7, ease: 'power2.out'
+});
+
+// ═══ BOOKING ═══
+gsap.from('.booking .section-title, .booking-sub', {
+  scrollTrigger: { trigger: '.booking', start: 'top 75%' },
+  opacity: 0, y: 30, stagger: 0.1, duration: 0.7, ease: 'power2.out'
+});
+gsap.from('.booking-btn', {
+  scrollTrigger: { trigger: '.booking-ctas', start: 'top 80%' },
+  opacity: 0, y: 20, stagger: 0.15, duration: 0.6, ease: 'power2.out'
+});
+gsap.from('.booking-fresha', {
+  scrollTrigger: { trigger: '.booking-fresha', start: 'top 85%' },
+  opacity: 0, scale: 0.95, duration: 0.6, ease: 'power2.out'
+});
+
+// ═══ FOOTER ═══
+gsap.from('.footer-col', {
+  scrollTrigger: { trigger: 'footer', start: 'top 85%' },
+  opacity: 0, y: 30, stagger: 0.15, duration: 0.6, ease: 'power2.out'
+});
+
+// ═══ STICKY MOBILE CTA ═══
+const stickyCta = document.getElementById('stickyCta');
+const heroSection = document.querySelector('.hero');
+
+if (heroSection && stickyCta) {
+  ScrollTrigger.create({
+    start: () => heroSection.offsetHeight,
+    onUpdate: () => {
+      if (window.scrollY > heroSection.offsetHeight && window.innerWidth <= 768) {
+        stickyCta.classList.add('visible');
+      } else {
+        stickyCta.classList.remove('visible');
+      }
+    }
+  });
+}
+
+</script>
+</body>
+</html>
