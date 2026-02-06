@@ -7,9 +7,11 @@ import PublishPreviewModal from "./PublishPreviewModal";
 /**
  * GUARDIA GALLERY — Content Workbench
  *
- * Desert Mirage design language:
- * - Violet (#a78bfa) accent, soft glows, breathing animations
- * - Dark surfaces with warm translucent overlays
+ * Desert Mirage design language (LIGHT theme):
+ * - Cream palette (#FAF6F1, #F0E8E0)
+ * - Gold accent (#C9A227) for in-progress states
+ * - Indigo CTAs (#4338CA) for primary actions
+ * - Warm grays, soft shadows, grain texture
  *
  * Sections:
  * - Upload Review: new uploads needing confirmation (pending_review/received)
@@ -51,31 +53,20 @@ interface GalleryTabProps {
 
 const QUEUE_MAX = 30;
 
-// Breathing pulse animation via CSS class
-const breathingClass = "animate-[pulse_3s_ease-in-out_infinite]";
-
-// Soft glow dot for section headers
-function GlowDot({ active, color = "violet" }: { active: boolean; color?: "violet" | "emerald" | "amber" }) {
+// Status dot for section headers
+function StatusDot({ active, color = "gold" }: { active: boolean; color?: "gold" | "green" | "gray" }) {
   const colors = {
-    violet: { bg: "#a78bfa", glow: "rgba(167, 139, 250, 0.6)" },
-    emerald: { bg: "#34d399", glow: "rgba(52, 211, 153, 0.6)" },
-    amber: { bg: "#fbbf24", glow: "rgba(251, 191, 36, 0.6)" },
+    gold: "#C9A227",
+    green: "#22c55e",
+    gray: "#9CA3AF",
   };
-  const c = colors[color];
-
-  if (!active) {
-    return <div className="w-2 h-2 rounded-full bg-[#333]" />;
-  }
 
   return (
     <div
-      className={breathingClass}
+      className={`w-2 h-2 rounded-full transition-all ${active ? "animate-pulse" : ""}`}
       style={{
-        width: 8,
-        height: 8,
-        borderRadius: "50%",
-        background: c.bg,
-        boxShadow: `0 0 8px ${c.glow}, 0 0 16px ${c.glow}`,
+        background: active ? colors[color] : "#D1D5DB",
+        boxShadow: active ? `0 0 8px ${colors[color]}40` : "none",
       }}
     />
   );
@@ -109,44 +100,39 @@ function ImageCard({
 }) {
   if (!image || total === 0) {
     return (
-      <div className="rounded-xl p-6 text-center bg-[#0a0a0b]">
+      <div className="rounded-xl p-6 text-center bg-[var(--bg-elevated)] border border-[var(--border)]">
         {emptyIcon}
-        <p className="text-sm font-medium text-[#888] mt-3">{emptyTitle}</p>
-        <p className="text-xs text-[#555] mt-1">{emptySubtitle}</p>
+        <p className="text-sm font-medium text-[var(--text-secondary)] mt-3">{emptyTitle}</p>
+        <p className="text-xs text-[var(--text-muted)] mt-1">{emptySubtitle}</p>
       </div>
     );
   }
 
   return (
     <div>
-      {/* Soft-glow framed image */}
+      {/* Soft-shadow framed image */}
       <div className="relative mx-auto" style={{ maxWidth: 260 }}>
         <div
-          className="rounded-xl p-[1px]"
-          style={{
-            background: "linear-gradient(135deg, rgba(167,139,250,0.3), rgba(167,139,250,0.1))",
-            boxShadow: "0 0 20px rgba(167,139,250,0.15)",
-          }}
+          className="rounded-xl overflow-hidden bg-[var(--bg-elevated)] border border-[var(--border)]"
+          style={{ boxShadow: "var(--shadow-soft)" }}
         >
-          <div className="rounded-xl overflow-hidden bg-[#0a0a0b]">
-            <div className="aspect-square">
-              {imageUrl ? (
-                <img src={imageUrl} alt={image.original_filename || "image"} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-[#0d0d0e]">
-                  <div className="w-6 h-6 border-2 border-[#333] border-t-[#a78bfa] rounded-full animate-spin" />
-                </div>
-              )}
-            </div>
-            <div className="p-3 border-t border-[#1a1a1f]">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-medium text-[#ccc] truncate flex-1">{image.original_filename || "Image"}</p>
-                <span className="text-xs text-[#555] ml-2">{index + 1}/{total}</span>
+          <div className="aspect-square bg-[var(--bg-surface)]">
+            {imageUrl ? (
+              <img src={imageUrl} alt={image.original_filename || "image"} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="w-6 h-6 border-2 border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin" />
               </div>
-              {image.caption && (
-                <p className="text-xs text-[#888] mt-1.5 line-clamp-2">{image.caption}</p>
-              )}
+            )}
+          </div>
+          <div className="p-3 border-t border-[var(--border)]">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-medium text-[var(--text-primary)] truncate flex-1">{image.original_filename || "Image"}</p>
+              <span className="text-xs text-[var(--text-muted)] ml-2">{index + 1}/{total}</span>
             </div>
+            {image.caption && (
+              <p className="text-xs text-[var(--text-secondary)] mt-1.5 line-clamp-2">{image.caption}</p>
+            )}
           </div>
         </div>
       </div>
@@ -155,7 +141,7 @@ function ImageCard({
       <div className="flex justify-center gap-3 mt-4">
         <button
           onClick={onRed}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all active:scale-95 bg-[#1a1a1f] text-[#f87171] hover:bg-[#201a1a]"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all active:scale-95 bg-[var(--bg-elevated)] border border-[var(--border)] text-red-600 hover:bg-red-50 hover:border-red-200"
         >
           <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
             <path d="M18 6L6 18M6 6l12 12"/>
@@ -164,10 +150,10 @@ function ImageCard({
         </button>
         <button
           onClick={onGreen}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all active:scale-95 text-[#0d0d0e]"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all active:scale-95 text-white"
           style={{
-            background: "linear-gradient(135deg, #34d399, #10b981)",
-            boxShadow: "0 4px 16px rgba(52,211,153,0.3)",
+            background: "#4338CA",
+            boxShadow: "0 2px 8px rgba(67, 56, 202, 0.3)",
           }}
         >
           <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -183,20 +169,20 @@ function ImageCard({
 // Queue status badge for factory view
 function QueueStatusBadge({ status }: { status: string }) {
   const config: Record<string, { label: string; bg: string; text: string; pulse?: boolean }> = {
-    pending_review: { label: "New", bg: "rgba(167, 139, 250, 0.15)", text: "#a78bfa" },
-    received: { label: "New", bg: "rgba(167, 139, 250, 0.15)", text: "#a78bfa" },
-    raw: { label: "Queued", bg: "rgba(251, 191, 36, 0.15)", text: "#fbbf24" },
-    queued: { label: "Queued", bg: "rgba(251, 191, 36, 0.15)", text: "#fbbf24" },
-    styling: { label: "Styling", bg: "rgba(251, 191, 36, 0.15)", text: "#fbbf24", pulse: true },
-    processing: { label: "Styling", bg: "rgba(251, 191, 36, 0.15)", text: "#fbbf24", pulse: true },
-    ready: { label: "Done", bg: "rgba(52, 211, 153, 0.15)", text: "#34d399" },
-    styled: { label: "Done", bg: "rgba(52, 211, 153, 0.15)", text: "#34d399" },
+    pending_review: { label: "New", bg: "#E5E7EB", text: "#6B7280" },
+    received: { label: "New", bg: "#E5E7EB", text: "#6B7280" },
+    raw: { label: "Waiting", bg: "#FEF3C7", text: "#B45309" },
+    queued: { label: "Queued", bg: "#FEF3C7", text: "#B45309" },
+    styling: { label: "Styling", bg: "#FDE68A", text: "#92400E", pulse: true },
+    processing: { label: "Styling", bg: "#FDE68A", text: "#92400E", pulse: true },
+    ready: { label: "Done", bg: "#D1FAE5", text: "#065F46" },
+    styled: { label: "Done", bg: "#D1FAE5", text: "#065F46" },
   };
-  const c = config[status] || { label: status, bg: "rgba(100,100,100,0.15)", text: "#888" };
+  const c = config[status] || { label: status, bg: "#F3F4F6", text: "#6B7280" };
 
   return (
     <span
-      className={`px-2.5 py-1 rounded-lg text-[10px] font-medium tracking-wide ${c.pulse ? breathingClass : ''}`}
+      className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold tracking-wide ${c.pulse ? "animate-pulse" : ""}`}
       style={{ background: c.bg, color: c.text }}
     >
       {c.label}
@@ -404,25 +390,24 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
 
   if (loading) {
     return (
-      <div className="h-full flex items-center justify-center bg-[#050506]">
-        <div className="w-8 h-8 border-2 border-[#333] border-t-[#a78bfa] rounded-full animate-spin" />
+      <div className="h-full flex items-center justify-center bg-[var(--bg-base)]">
+        <div className="w-8 h-8 border-2 border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col bg-[#050506] overflow-hidden">
+    <div className="h-full flex flex-col bg-[var(--bg-base)] overflow-hidden">
 
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-3">
-        <h2 className="text-lg font-semibold text-[#e8e8e8]">Gallery</h2>
+        <h2 className="text-lg font-semibold text-[var(--text-primary)]">Gallery</h2>
         <div className="flex items-center gap-2">
           <label
-            className="flex items-center gap-2 px-3 py-2 rounded-xl font-medium text-sm cursor-pointer transition-all active:scale-95"
+            className="flex items-center gap-2 px-3 py-2 rounded-xl font-medium text-sm cursor-pointer transition-all active:scale-95 text-white"
             style={{
-              background: "linear-gradient(135deg, #a78bfa, #8b5cf6)",
-              boxShadow: "0 4px 16px rgba(167,139,250,0.3)",
-              color: "#fff",
+              background: "#4338CA",
+              boxShadow: "0 2px 8px rgba(67, 56, 202, 0.3)",
             }}
           >
             <input type="file" accept=".jpg,.jpeg,.png,.webp,.heic" onChange={handleUpload} className="hidden" disabled={uploading} />
@@ -431,7 +416,7 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
             </svg>
             {uploading ? "..." : "Add"}
           </label>
-          <div className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[#1a1a1f] text-[#666]">
+          <div className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[var(--bg-surface)] text-[var(--text-muted)] border border-[var(--border)]">
             {totalQueue}/{QUEUE_MAX}
           </div>
         </div>
@@ -442,14 +427,17 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
         {/* ═══════════════════════════════════════════════════════════════════
             UPLOAD REVIEW — New uploads needing confirmation
         ═══════════════════════════════════════════════════════════════════ */}
-        <div className="rounded-2xl overflow-hidden bg-[#0a0a0b] border border-[#1a1a1f]">
-          <div className="flex items-center justify-between p-4 border-b border-[#1a1a1f]">
+        <div
+          className="rounded-2xl overflow-hidden bg-[var(--bg-elevated)] border border-[var(--border)]"
+          style={{ boxShadow: "var(--shadow-soft)" }}
+        >
+          <div className="flex items-center justify-between p-4 border-b border-[var(--border)]">
             <div className="flex items-center gap-2.5">
-              <GlowDot active={uploadReview.length > 0} color="violet" />
-              <h3 className="text-sm font-medium text-[#ccc]">Upload Review</h3>
+              <StatusDot active={uploadReview.length > 0} color="gold" />
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Upload Review</h3>
             </div>
             {uploadReview.length > 0 && (
-              <span className="text-xs font-medium text-[#a78bfa]">{uploadReview.length}</span>
+              <span className="text-xs font-semibold" style={{ color: "#C9A227" }}>{uploadReview.length}</span>
             )}
           </div>
 
@@ -464,7 +452,7 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
               redLabel="Discard"
               greenLabel="Polish It"
               emptyIcon={
-                <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke="#444" strokeWidth="1.5" className="mx-auto">
+                <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" className="mx-auto">
                   <rect x="3" y="3" width="18" height="18" rx="2"/>
                   <path d="M12 8v8M8 12h8"/>
                 </svg>
@@ -481,8 +469,8 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
                     onClick={() => setUploadReviewIndex(i)}
                     className="w-2 h-2 rounded-full transition-all"
                     style={{
-                      background: i === uploadReviewIndex ? '#a78bfa' : '#333',
-                      boxShadow: i === uploadReviewIndex ? '0 0 8px rgba(167,139,250,0.5)' : 'none'
+                      background: i === uploadReviewIndex ? '#C9A227' : '#D1D5DB',
+                      boxShadow: i === uploadReviewIndex ? '0 0 6px rgba(201,162,39,0.4)' : 'none'
                     }}
                   />
                 ))}
@@ -494,21 +482,23 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
         {/* ═══════════════════════════════════════════════════════════════════
             FRESH FROM FACTORY — Styled images ready for approval
         ═══════════════════════════════════════════════════════════════════ */}
-        <div className="rounded-2xl overflow-hidden bg-[#0a0a0b] border border-[#1a1a1f]">
-          <div className="flex items-center justify-between p-4 border-b border-[#1a1a1f]">
+        <div
+          className="rounded-2xl overflow-hidden bg-[var(--bg-elevated)] border border-[var(--border)]"
+          style={{ boxShadow: "var(--shadow-soft)" }}
+        >
+          <div className="flex items-center justify-between p-4 border-b border-[var(--border)]">
             <div className="flex items-center gap-2.5">
-              <GlowDot active={fromFactory.length > 0} color="emerald" />
-              <h3 className="text-sm font-medium text-[#ccc]">Fresh from Factory</h3>
+              <StatusDot active={fromFactory.length > 0} color="green" />
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Fresh from Factory</h3>
             </div>
             {fromFactory.length > 0 && (
               <div className="flex items-center gap-2">
                 <button
                   onClick={handlePostNow}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all active:scale-95"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all active:scale-95 text-white"
                   style={{
-                    background: "linear-gradient(135deg, #a78bfa, #8b5cf6)",
-                    boxShadow: "0 2px 8px rgba(167,139,250,0.3)",
-                    color: "#fff",
+                    background: "#4338CA",
+                    boxShadow: "0 2px 6px rgba(67, 56, 202, 0.25)",
                   }}
                 >
                   <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -516,7 +506,7 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
                   </svg>
                   Post
                 </button>
-                <span className="text-xs font-medium text-[#34d399]">{fromFactory.length}</span>
+                <span className="text-xs font-semibold text-green-600">{fromFactory.length}</span>
               </div>
             )}
           </div>
@@ -532,7 +522,7 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
               redLabel="Reject"
               greenLabel="Approve"
               emptyIcon={
-                <svg width={32} height={32} viewBox="0 0 24 24" fill="#34d399" className="mx-auto" opacity="0.5">
+                <svg width={32} height={32} viewBox="0 0 24 24" fill="#22c55e" className="mx-auto" opacity="0.4">
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                 </svg>
               }
@@ -548,8 +538,8 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
                     onClick={() => setFromFactoryIndex(i)}
                     className="w-2 h-2 rounded-full transition-all"
                     style={{
-                      background: i === fromFactoryIndex ? '#34d399' : '#333',
-                      boxShadow: i === fromFactoryIndex ? '0 0 8px rgba(52,211,153,0.5)' : 'none'
+                      background: i === fromFactoryIndex ? '#22c55e' : '#D1D5DB',
+                      boxShadow: i === fromFactoryIndex ? '0 0 6px rgba(34,197,94,0.4)' : 'none'
                     }}
                   />
                 ))}
@@ -561,55 +551,51 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
         {/* ═══════════════════════════════════════════════════════════════════
             THE FACTORY — Queue view of all images in pipeline
         ═══════════════════════════════════════════════════════════════════ */}
-        <div className="rounded-2xl overflow-hidden bg-[#0a0a0b] border border-[#1a1a1f]">
-          <div className="flex items-center justify-between p-4 border-b border-[#1a1a1f]">
+        <div
+          className="rounded-2xl overflow-hidden bg-[var(--bg-elevated)] border border-[var(--border)]"
+          style={{ boxShadow: "var(--shadow-soft)" }}
+        >
+          <div className="flex items-center justify-between p-4 border-b border-[var(--border)]">
             <div className="flex items-center gap-2.5">
-              <GlowDot active={inQueue.length > 0} color="amber" />
-              <h3 className="text-sm font-medium text-[#888]">The Factory</h3>
+              <StatusDot active={inQueue.length > 0} color="gold" />
+              <h3 className="text-sm font-semibold text-[var(--text-secondary)]">The Factory</h3>
             </div>
             {inQueue.length > 0 && (
-              <span className="text-xs text-[#666]">{inQueue.length} processing</span>
+              <span className="text-xs text-[var(--text-muted)]">{inQueue.length} processing</span>
             )}
           </div>
 
           <div className="p-3">
             {inQueue.length === 0 ? (
               <div className="text-center py-4">
-                <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="1.5" className="mx-auto mb-2">
+                <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" className="mx-auto mb-2">
                   <rect x="3" y="3" width="18" height="18" rx="2"/>
                   <path d="M9 9h6M9 13h6M9 17h4"/>
                 </svg>
-                <p className="text-xs text-[#555]">Queue is empty</p>
+                <p className="text-xs text-[var(--text-muted)]">Queue is empty</p>
               </div>
             ) : (
               <div className="space-y-2">
                 {inQueue.map((img) => (
                   <div
                     key={img.id}
-                    className="flex items-center gap-3 p-2.5 rounded-xl bg-[#0d0d0e] border border-[#1a1a1f]"
+                    className="flex items-center gap-3 p-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border)]"
                   >
                     {/* Thumbnail */}
-                    <div
-                      className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0"
-                      style={{
-                        boxShadow: "0 0 8px rgba(167,139,250,0.1)",
-                      }}
-                    >
-                      <div className="w-full h-full bg-[#0a0a0b]">
-                        {(img.url || img.thumbnail_url) ? (
-                          <img src={img.url || img.thumbnail_url} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <div className="w-3 h-3 border border-[#333] border-t-[#a78bfa] rounded-full animate-spin" />
-                          </div>
-                        )}
-                      </div>
+                    <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-[var(--bg-base)] border border-[var(--border)]">
+                      {(img.url || img.thumbnail_url) ? (
+                        <img src={img.url || img.thumbnail_url} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <div className="w-3 h-3 border border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin" />
+                        </div>
+                      )}
                     </div>
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-[#ccc] truncate">{img.original_filename || "Image"}</p>
-                      <p className="text-[10px] text-[#555]">{timeAgo(img.uploaded_at)}</p>
+                      <p className="text-xs font-medium text-[var(--text-primary)] truncate">{img.original_filename || "Image"}</p>
+                      <p className="text-[10px] text-[var(--text-muted)]">{timeAgo(img.uploaded_at)}</p>
                     </div>
 
                     {/* Status badge */}
