@@ -218,14 +218,22 @@ function Nav() {
           </a>
         </div>
 
-        {/* Desktop CTA */}
-        <a
-          href="/intake/pro"
-          className="hidden md:inline-flex items-center gap-2 bg-[#4338CA] text-white text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-[#3730A3] transition-all hover:-translate-y-px"
-        >
-          Get Started
-          <ArrowRight className="w-4 h-4" />
-        </a>
+        {/* Desktop CTAs */}
+        <div className="hidden md:flex items-center gap-3">
+          <a
+            href="/client"
+            className="text-sm text-[#635C54] hover:text-[#2A2A2A] transition-colors font-medium"
+          >
+            Client Login
+          </a>
+          <a
+            href="/intake/pro"
+            className="inline-flex items-center gap-2 bg-[#4338CA] text-white text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-[#3730A3] transition-all hover:-translate-y-px"
+          >
+            Get Started
+            <ArrowRight className="w-4 h-4" />
+          </a>
+        </div>
 
         {/* Mobile hamburger */}
         <button
@@ -245,6 +253,7 @@ function Nav() {
           <a href="#styles" onClick={() => setMobileOpen(false)} className="block text-sm text-[#3D3D3D] py-2">Styles</a>
           <a href="#pricing" onClick={() => setMobileOpen(false)} className="block text-sm text-[#3D3D3D] py-2">Pricing</a>
           <a href="#faq" onClick={() => setMobileOpen(false)} className="block text-sm text-[#3D3D3D] py-2">FAQ</a>
+          <a href="/client" onClick={() => setMobileOpen(false)} className="block text-sm text-[#635C54] font-medium py-2">Client Login</a>
           <a
             href="/intake/pro"
             className="block text-center bg-[#4338CA] text-white font-semibold py-3 rounded-xl"
