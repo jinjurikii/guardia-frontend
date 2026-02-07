@@ -14,9 +14,10 @@ import PublishPreviewModal from "./PublishPreviewModal";
  * - Warm grays, soft shadows, grain texture
  *
  * Sections:
- * - Upload Review: new uploads needing confirmation (pending_review/received)
- * - Fresh from Factory: styled images ready for approval (ready/styled)
- * - The Factory: queue view of everything in pipeline (raw/queued/styling)
+ * - Upload Review: new uploads needing confirmation
+ * - The Factory: merged showcase window (finished) + conveyor belt (processing)
+ *
+ * Budget-aware: counter shows posts_used/posts_limit with tier-based colors
  */
 
 const API_BASE = "https://api.guardiacontent.com";
@@ -50,8 +51,6 @@ interface GalleryTabProps {
   onMessage: (msg: string) => void;
   onSwitchToGio?: (context?: string) => void;
 }
-
-const QUEUE_MAX = 30;
 
 // Status dot for section headers
 function StatusDot({ active, color = "gold" }: { active: boolean; color?: "gold" | "green" | "gray" }) {
@@ -166,7 +165,7 @@ function ImageCard({
   );
 }
 
-// Queue status badge for factory view
+// Queue status badge for conveyor belt tooltip
 function QueueStatusBadge({ status }: { status: string }) {
   const config: Record<string, { label: string; bg: string; text: string; pulse?: boolean }> = {
     pending_review: { label: "New", bg: "#E5E7EB", text: "#6B7280" },
@@ -203,6 +202,62 @@ function timeAgo(dateStr: string): string {
   return `${Math.floor(diffHours / 24)}d ago`;
 }
 
+// Cap-reached overlay card
+function CapReachedCard({
+  currentImage,
+  postsLimit,
+  tier
+}: {
+  currentImage: GalleryImage | null;
+  postsLimit: number;
+  tier?: string;
+}) {
+  return (
+    <div className="relative mx-auto" style={{ maxWidth: 260 }}>
+      <div
+        className="rounded-xl overflow-hidden bg-[var(--bg-elevated)] border-2 border-amber-300"
+        style={{ boxShadow: "0 0 16px rgba(245,158,11,0.15)" }}
+      >
+        <div className="aspect-square bg-[var(--bg-surface)] relative">
+          {currentImage?.styled_url && (
+            <img
+              src={currentImage.styled_url}
+              alt={currentImage.original_filename || "image"}
+              className="w-full h-full object-cover opacity-40"
+            />
+          )}
+          <div className="absolute inset-0 bg-amber-50/80 flex flex-col items-center justify-center p-4 text-center">
+            <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="1.5" className="mb-2">
+              <path d="M12 9v4M12 17h.01"/>
+              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            </svg>
+            <p className="text-sm font-semibold text-amber-800">Monthly limit reached</p>
+            <p className="text-xs text-amber-700 mt-1">{postsLimit} posts scheduled this month</p>
+            <p className="text-xs text-amber-600 mt-0.5">This content is ready for next month</p>
+            {tier !== "unleashed" && (
+              <button
+                className="mt-3 px-4 py-2 rounded-xl text-xs font-semibold text-white transition-all active:scale-95"
+                style={{
+                  background: "#4338CA",
+                  boxShadow: "0 2px 8px rgba(67, 56, 202, 0.3)",
+                }}
+                onClick={() => window.open("https://guardiacontent.com/#pricing", "_blank")}
+              >
+                Unlock More Posts
+              </button>
+            )}
+          </div>
+        </div>
+        {currentImage && (
+          <div className="p-3 border-t border-amber-200 bg-amber-50/50">
+            <p className="text-xs font-medium text-amber-800 truncate">{currentImage.original_filename || "Image"}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: GalleryTabProps) {
   // Split into three categories
   const [uploadReview, setUploadReview] = useState<GalleryImage[]>([]); // pending_review, received
@@ -217,6 +272,11 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
   const [fromFactoryIndex, setFromFactoryIndex] = useState(0);
   const [publishingAssetId, setPublishingAssetId] = useState<number | null>(null);
 
+  // Budget state
+  const [postsUsed, setPostsUsed] = useState(0);
+  const [postsLimit, setPostsLimit] = useState(12);
+  const [slotsLimit, setSlotsLimit] = useState(30);
+
   const loadGallery = useCallback(async () => {
     if (!jwt) return;
     if (isInitialLoad.current) {
@@ -227,6 +287,11 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
       if (res.ok) {
         const data = await res.json();
         const items = data.items || [];
+
+        // Budget data
+        setPostsUsed(data.posts_used ?? 0);
+        setPostsLimit(data.posts_limit ?? 12);
+        setSlotsLimit(data.slots_limit ?? 30);
 
         // Upload Review: needs client confirmation
         const newUploadReview = items.filter((img: GalleryImage) =>
@@ -362,7 +427,10 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
     const file = e.target.files?.[0];
     if (!file || !jwt) return;
     const totalQueue = uploadReview.length + inQueue.length + fromFactory.length;
-    if (totalQueue >= QUEUE_MAX) { onMessage(`Queue is full (${QUEUE_MAX} max).`); return; }
+    if (totalQueue >= slotsLimit) {
+      onMessage(`Queue is full (${slotsLimit} max). Approve or discard items to make room.`);
+      return;
+    }
     setUploading(true);
     try {
       const formData = new FormData();
@@ -384,9 +452,54 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
     e.target.value = "";
   };
 
+  // Showcase empty state logic
+  const getShowcaseEmpty = () => {
+    if (postsUsed >= postsLimit && fromFactory.length > 0) {
+      return null; // handled by CapReachedCard
+    }
+    if (inQueue.length > 0) {
+      return {
+        title: "Polishing in progress",
+        subtitle: `${inQueue.length} item${inQueue.length > 1 ? "s" : ""} in the factory`,
+        icon: (
+          <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke="#C9A227" strokeWidth="1.5" className="mx-auto">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+          </svg>
+        ),
+      };
+    }
+    if (uploadReview.length > 0) {
+      return {
+        title: "Review your uploads first",
+        subtitle: "Approve them above to start polishing",
+        icon: (
+          <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" className="mx-auto">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+            <path d="M14 2v6h6M12 18v-6M9 15l3 3 3-3"/>
+          </svg>
+        ),
+      };
+    }
+    return {
+      title: "All caught up!",
+      subtitle: "Upload images to get started",
+      icon: (
+        <svg width={32} height={32} viewBox="0 0 24 24" fill="#22c55e" className="mx-auto" opacity="0.4">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+        </svg>
+      ),
+    };
+  };
+
   const currentUploadReview = uploadReview[uploadReviewIndex];
   const currentFromFactory = fromFactory[fromFactoryIndex];
   const totalQueue = uploadReview.length + inQueue.length + fromFactory.length;
+
+  // Budget display
+  const budgetRatio = postsLimit > 0 ? postsUsed / postsLimit : 0;
+  const budgetColor = budgetRatio >= 1 ? "#EF4444" : budgetRatio >= 0.8 ? "#F59E0B" : "var(--text-muted)";
+  const budgetBg = budgetRatio >= 1 ? "#FEE2E2" : budgetRatio >= 0.8 ? "#FEF3C7" : "var(--bg-surface)";
+  const isCapReached = postsUsed >= postsLimit;
 
   if (loading) {
     return (
@@ -416,8 +529,12 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
             </svg>
             {uploading ? "..." : "Add"}
           </label>
-          <div className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[var(--bg-surface)] text-[var(--text-muted)] border border-[var(--border)]">
-            {totalQueue}/{QUEUE_MAX}
+          {/* Budget counter */}
+          <div
+            className="px-2.5 py-1.5 rounded-lg text-xs font-medium border border-[var(--border)]"
+            style={{ background: budgetBg, color: budgetColor }}
+          >
+            {postsUsed}/{postsLimit}
           </div>
         </div>
       </div>
@@ -480,19 +597,23 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════════
-            FRESH FROM FACTORY — Styled images ready for approval
+            THE FACTORY — Showcase Window + Conveyor Belt
         ═══════════════════════════════════════════════════════════════════ */}
         <div
           className="rounded-2xl overflow-hidden bg-[var(--bg-elevated)] border border-[var(--border)]"
           style={{ boxShadow: "var(--shadow-soft)" }}
         >
+          {/* Factory Header */}
           <div className="flex items-center justify-between p-4 border-b border-[var(--border)]">
             <div className="flex items-center gap-2.5">
-              <StatusDot active={fromFactory.length > 0} color="green" />
-              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Fresh from Factory</h3>
+              <StatusDot
+                active={fromFactory.length > 0 || inQueue.length > 0}
+                color={fromFactory.length > 0 ? "green" : "gold"}
+              />
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">The Factory</h3>
             </div>
-            {fromFactory.length > 0 && (
-              <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
+              {fromFactory.length > 0 && !isCapReached && (
                 <button
                   onClick={handlePostNow}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all active:scale-95 text-white"
@@ -506,106 +627,151 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
                   </svg>
                   Post
                 </button>
-                <span className="text-xs font-semibold text-green-600">{fromFactory.length}</span>
-              </div>
-            )}
-          </div>
-
-          <div className="p-4">
-            <ImageCard
-              image={currentFromFactory}
-              imageUrl={currentFromFactory?.styled_url}
-              index={fromFactoryIndex}
-              total={fromFactory.length}
-              onRed={handleRejectStyled}
-              onGreen={handleApproveStyled}
-              redLabel="Reject"
-              greenLabel="Approve"
-              emptyIcon={
-                <svg width={32} height={32} viewBox="0 0 24 24" fill="#22c55e" className="mx-auto" opacity="0.4">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                </svg>
-              }
-              emptyTitle="All caught up!"
-              emptySubtitle="Styled images appear here"
-            />
-
-            {fromFactory.length > 1 && (
-              <div className="flex justify-center gap-1.5 mt-4">
-                {fromFactory.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setFromFactoryIndex(i)}
-                    className="w-2 h-2 rounded-full transition-all"
-                    style={{
-                      background: i === fromFactoryIndex ? '#22c55e' : '#D1D5DB',
-                      boxShadow: i === fromFactoryIndex ? '0 0 6px rgba(34,197,94,0.4)' : 'none'
-                    }}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ═══════════════════════════════════════════════════════════════════
-            THE FACTORY — Queue view of all images in pipeline
-        ═══════════════════════════════════════════════════════════════════ */}
-        <div
-          className="rounded-2xl overflow-hidden bg-[var(--bg-elevated)] border border-[var(--border)]"
-          style={{ boxShadow: "var(--shadow-soft)" }}
-        >
-          <div className="flex items-center justify-between p-4 border-b border-[var(--border)]">
-            <div className="flex items-center gap-2.5">
-              <StatusDot active={inQueue.length > 0} color="gold" />
-              <h3 className="text-sm font-semibold text-[var(--text-secondary)]">The Factory</h3>
+              )}
+              {fromFactory.length > 0 && (
+                <span className="text-xs font-semibold text-green-600">{fromFactory.length} ready</span>
+              )}
+              {inQueue.length > 0 && fromFactory.length === 0 && (
+                <span className="text-xs text-[var(--text-muted)]">{inQueue.length} processing</span>
+              )}
             </div>
-            {inQueue.length > 0 && (
-              <span className="text-xs text-[var(--text-muted)]">{inQueue.length} processing</span>
+          </div>
+
+          {/* TOP ZONE: Showcase Window */}
+          <div className="p-4">
+            {isCapReached && fromFactory.length > 0 ? (
+              /* Cap reached — show amber overlay */
+              <CapReachedCard
+                currentImage={currentFromFactory}
+                postsLimit={postsLimit}
+                tier={client?.tier}
+              />
+            ) : fromFactory.length > 0 ? (
+              /* Normal showcase — show ImageCard */
+              <ImageCard
+                image={currentFromFactory}
+                imageUrl={currentFromFactory?.styled_url}
+                index={fromFactoryIndex}
+                total={fromFactory.length}
+                onRed={handleRejectStyled}
+                onGreen={handleApproveStyled}
+                redLabel="Reject"
+                greenLabel="Approve"
+                emptyIcon={<></>}
+                emptyTitle=""
+                emptySubtitle=""
+              />
+            ) : (
+              /* Empty showcase — contextual message */
+              (() => {
+                const empty = getShowcaseEmpty();
+                if (!empty) return null;
+                return (
+                  <div className="rounded-xl p-6 text-center bg-[var(--bg-elevated)] border border-[var(--border)]">
+                    {empty.icon}
+                    <p className="text-sm font-medium text-[var(--text-secondary)] mt-3">{empty.title}</p>
+                    <p className="text-xs text-[var(--text-muted)] mt-1">{empty.subtitle}</p>
+                  </div>
+                );
+              })()
+            )}
+
+            {/* Arrow navigation for showcase */}
+            {fromFactory.length > 1 && (
+              <div className="flex justify-center items-center gap-4 mt-4">
+                <button
+                  onClick={() => setFromFactoryIndex(i => Math.max(0, i - 1))}
+                  disabled={fromFactoryIndex === 0}
+                  className="w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-95 bg-[var(--bg-surface)] border border-[var(--border)] disabled:opacity-30"
+                >
+                  <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <path d="M15 18l-6-6 6-6"/>
+                  </svg>
+                </button>
+                <span className="text-xs text-[var(--text-muted)] tabular-nums">
+                  {fromFactoryIndex + 1} / {fromFactory.length}
+                </span>
+                <button
+                  onClick={() => setFromFactoryIndex(i => Math.min(fromFactory.length - 1, i + 1))}
+                  disabled={fromFactoryIndex === fromFactory.length - 1}
+                  className="w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-95 bg-[var(--bg-surface)] border border-[var(--border)] disabled:opacity-30"
+                >
+                  <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <path d="M9 18l6-6-6-6"/>
+                  </svg>
+                </button>
+              </div>
             )}
           </div>
 
-          <div className="p-3">
-            {inQueue.length === 0 ? (
-              <div className="text-center py-4">
-                <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" className="mx-auto mb-2">
-                  <rect x="3" y="3" width="18" height="18" rx="2"/>
-                  <path d="M9 9h6M9 13h6M9 17h4"/>
-                </svg>
-                <p className="text-xs text-[var(--text-muted)]">Queue is empty</p>
+          {/* Divider */}
+          {inQueue.length > 0 && <div className="border-t border-[var(--border)]" />}
+
+          {/* BOTTOM ZONE: Conveyor Belt */}
+          {inQueue.length > 0 && (
+            <div className="px-3 py-3">
+              <div className="flex items-center gap-1.5 mb-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#C9A227] animate-pulse" />
+                <span className="text-[10px] font-medium text-[var(--text-muted)] uppercase tracking-wider">Processing</span>
               </div>
-            ) : (
-              <div className="space-y-2">
-                {inQueue.map((img) => (
-                  <div
-                    key={img.id}
-                    className="flex items-center gap-3 p-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border)]"
-                  >
-                    {/* Thumbnail */}
-                    <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-[var(--bg-base)] border border-[var(--border)]">
+              <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollSnapType: "x mandatory" }}>
+                {inQueue.map((img) => {
+                  const isProcessing = img.status === "styling" || img.status === "processing";
+                  return (
+                    <div
+                      key={img.id}
+                      className="flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden relative"
+                      style={{
+                        scrollSnapAlign: "start",
+                        border: isProcessing ? "2px solid #C9A227" : "1px solid var(--border)",
+                        boxShadow: isProcessing ? "0 0 12px rgba(201,162,39,0.4)" : "none",
+                      }}
+                    >
                       {(img.url || img.thumbnail_url) ? (
                         <img src={img.url || img.thumbnail_url} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center">
+                        <div className="w-full h-full bg-[var(--bg-base)] flex items-center justify-center">
                           <div className="w-3 h-3 border border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin" />
                         </div>
                       )}
+                      {/* Pulse overlay for active processing */}
+                      {isProcessing && (
+                        <div
+                          className="absolute inset-0 rounded-lg animate-pulse pointer-events-none"
+                          style={{ background: "rgba(201,162,39,0.08)" }}
+                        />
+                      )}
                     </div>
-
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-[var(--text-primary)] truncate">{img.original_filename || "Image"}</p>
-                      <p className="text-[10px] text-[var(--text-muted)]">{timeAgo(img.uploaded_at)}</p>
-                    </div>
-
-                    {/* Status badge */}
-                    <QueueStatusBadge status={img.status} />
-                  </div>
-                ))}
+                  );
+                })}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
+
+        {/* Budget warning banner */}
+        {isCapReached && fromFactory.length === 0 && (
+          <div
+            className="rounded-2xl p-4 border border-amber-200"
+            style={{ background: "#FFFBEB" }}
+          >
+            <div className="flex items-start gap-3">
+              <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="1.5" className="flex-shrink-0 mt-0.5">
+                <path d="M12 9v4M12 17h.01"/>
+                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+              </svg>
+              <div>
+                <p className="text-sm font-medium text-amber-800">
+                  You&apos;ve used all {postsLimit} posts this month
+                </p>
+                <p className="text-xs text-amber-700 mt-0.5">
+                  New uploads will be saved for next month.
+                  {client?.tier !== "unleashed" && " Upgrade your plan to unlock more."}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Publish modal */}
