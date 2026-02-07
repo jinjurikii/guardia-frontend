@@ -5,7 +5,7 @@ import { ClientContext, TabletTab } from "./LobbyShell";
 import CalendarTab from "./CalendarTab";
 import GalleryTab from "./GalleryTab";
 import GuardiaAccount from "./GuardiaAccount";
-import StyleTab from "./StyleTab";
+import BrandMirror from "./BrandMirror";
 import AnalyticsTab from "./AnalyticsTab";
 // VideoTab archived - see guardia-core/archive/video_pipeline_jan15/
 
@@ -139,7 +139,7 @@ export default function TabletMode({
             <GalleryTab client={client} jwt={jwt} onMessage={onMessage} />
           )}
           {activeTab === "styles" && client && jwt && (
-            <StyleTab
+            <BrandMirror
               clientId={client.id}
               jwt={jwt}
               onStyleUpdated={() => onMessage("Your style has been updated! Future content will use this new look.")}
