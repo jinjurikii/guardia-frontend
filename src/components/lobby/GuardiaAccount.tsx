@@ -546,6 +546,45 @@ const UsageStats = ({ used, total, period }: UsageStatsProps) => {
 };
 
 // =============================================================================
+// USAGE SECTION (fetches real data from API)
+// =============================================================================
+const UsageSection = () => {
+  const [usage, setUsage] = useState<{ used: number; total: number; period: string } | null>(null);
+
+  useEffect(() => {
+    const fetchUsage = async () => {
+      const jwt = localStorage.getItem('guardia_jwt');
+      const clientId = getClientId();
+      if (!jwt || !clientId) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/clients/${clientId}/usage`, {
+          headers: { Authorization: `Bearer ${jwt}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const period = data.period; // "2026-02"
+          const [year, month] = period.split('-');
+          const monthName = new Date(parseInt(year), parseInt(month) - 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+
+          setUsage({
+            used: data.used?.posts_created || 0,
+            total: data.limits?.posts_per_month || 30,
+            period: monthName
+          });
+        }
+      } catch (err) {
+        console.error('Usage fetch error:', err);
+      }
+    };
+    fetchUsage();
+  }, []);
+
+  if (!usage) return <UsageStats used={0} total={30} period="..." />;
+  return <UsageStats used={usage.used} total={usage.total} period={usage.period} />;
+};
+
+// =============================================================================
 // CONNECTED ACCOUNT
 // =============================================================================
 interface ConnectedAccountProps {
@@ -608,14 +647,45 @@ const ConnectedAccount = ({ platform, icon: Icon, connection, onConnect }: Conne
             <span className="text-xs" style={{ color: config.color }}>{config.label}</span>
           </div>
           
+          {status === 'connected' && (
+            <button
+              onClick={async () => {
+                const clientId = getClientId();
+                if (!clientId) return;
+                if (!window.confirm(`Disconnect ${platform}? Posts won't publish to this platform until reconnected.`)) return;
+                try {
+                  const jwt = localStorage.getItem('guardia_jwt');
+                  await fetch(`${API_BASE}/auth/facebook/disconnect?client_id=${clientId}&platform=${platform.toLowerCase()}`, {
+                    headers: { Authorization: `Bearer ${jwt}` }
+                  });
+                  window.location.reload();
+                } catch (err) {
+                  console.error('Disconnect error:', err);
+                }
+              }}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all active:scale-95"
+              style={{
+                background: 'var(--bg-elevated)',
+                color: tokens.text.tertiary,
+                border: '1px solid var(--border-subtle)'
+              }}
+            >
+              Disconnect
+            </button>
+          )}
+
           {(status === 'disconnected' || status === 'needs_refresh') && (
             <button
               onClick={onConnect || handleConnect}
               className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all active:scale-95"
               style={{
-                background: 'linear-gradient(145deg, #f59e0b, #d97706)',
+                background: status === 'needs_refresh'
+                  ? 'linear-gradient(145deg, #f59e0b, #d97706)'
+                  : 'linear-gradient(145deg, var(--accent), var(--accent-hover))',
                 color: 'white',
-                boxShadow: '0 2px 6px rgba(245,158,11,0.3)'
+                boxShadow: status === 'needs_refresh'
+                  ? '0 2px 6px rgba(245,158,11,0.3)'
+                  : '0 2px 6px rgba(var(--accent-rgb),0.3)'
               }}
             >
               {status === 'needs_refresh' ? 'Reconnect' : 'Connect'}
@@ -827,7 +897,7 @@ export default function GuardiaAccount() {
 
         {/* Usage */}
         <div className="mb-6">
-          <UsageStats used={127} total={150} period="Jan 2025" />
+          <UsageSection />
         </div>
 
         {/* Connected Accounts */}
