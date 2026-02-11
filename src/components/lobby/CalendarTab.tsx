@@ -665,6 +665,16 @@ export default function CalendarTab({ client, jwt, onMessage }: CalendarTabProps
     loadAutoSchedule();
   }, [loadCalendar, loadAutoSchedule]);
 
+  // Background poll so new scheduled posts appear without refresh
+  useEffect(() => {
+    const pollTimer = setInterval(() => {
+      if (!document.hidden) {
+        loadCalendar();
+      }
+    }, 30000);
+    return () => clearInterval(pollTimer);
+  }, [loadCalendar]);
+
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const firstDay = new Date(currentYear, currentMonth, 1).getDay();
   const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;

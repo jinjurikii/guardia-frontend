@@ -15,7 +15,8 @@ import PublishPreviewModal from "./PublishPreviewModal";
  *
  * Sections:
  * - Upload Review: new uploads needing confirmation
- * - The Factory: merged showcase window (finished) + conveyor belt (processing)
+ * - Content Review: posts awaiting approval (image + caption + platform)
+ * - Conveyor Belt: items being processed in factory
  *
  * Budget-aware: counter shows posts_used/posts_limit with tier-based colors
  */
@@ -37,12 +38,24 @@ interface GalleryImage {
   url?: string;
   id: number;
   original_filename: string;
-  status: "pending" | "styled" | "approved" | "rejected" | "processing" | "ready" | "failed" | "queued" | "raw" | "styling" | "pending_review" | "received";
+  status: "pending" | "styled" | "approved" | "rejected" | "processing" | "ready" | "failed" | "queued" | "raw" | "styling" | "pending_review" | "received" | "stale";
   styled_url?: string;
   original_url?: string;
   thumbnail_url?: string;
   uploaded_at: string;
   caption?: string;
+}
+
+interface ContentReviewPost {
+  id: number;
+  asset_id?: number;
+  caption: string;
+  hashtags: string;
+  platform: string;
+  image_url: string;
+  mission_type: string;
+  source: "upload" | "ai_generated";
+  created_at: string;
 }
 
 interface GalleryTabProps {
@@ -71,7 +84,7 @@ function StatusDot({ active, color = "gold" }: { active: boolean; color?: "gold"
   );
 }
 
-// Image card for review sections
+// Image card for upload review section
 function ImageCard({
   image,
   imageUrl,
@@ -165,30 +178,6 @@ function ImageCard({
   );
 }
 
-// Queue status badge for conveyor belt tooltip
-function QueueStatusBadge({ status }: { status: string }) {
-  const config: Record<string, { label: string; bg: string; text: string; pulse?: boolean }> = {
-    pending_review: { label: "New", bg: "#E5E7EB", text: "#6B7280" },
-    received: { label: "New", bg: "#E5E7EB", text: "#6B7280" },
-    raw: { label: "Waiting", bg: "#FEF3C7", text: "#B45309" },
-    queued: { label: "Queued", bg: "#FEF3C7", text: "#B45309" },
-    styling: { label: "Styling", bg: "#FDE68A", text: "#92400E", pulse: true },
-    processing: { label: "Styling", bg: "#FDE68A", text: "#92400E", pulse: true },
-    ready: { label: "Done", bg: "#D1FAE5", text: "#065F46" },
-    styled: { label: "Done", bg: "#D1FAE5", text: "#065F46" },
-  };
-  const c = config[status] || { label: status, bg: "#F3F4F6", text: "#6B7280" };
-
-  return (
-    <span
-      className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold tracking-wide ${c.pulse ? "animate-pulse" : ""}`}
-      style={{ background: c.bg, color: c.text }}
-    >
-      {c.label}
-    </span>
-  );
-}
-
 // Relative time helper
 function timeAgo(dateStr: string): string {
   const date = new Date(dateStr);
@@ -202,75 +191,52 @@ function timeAgo(dateStr: string): string {
   return `${Math.floor(diffHours / 24)}d ago`;
 }
 
-// Cap-reached overlay card
-function CapReachedCard({
-  currentImage,
-  postsLimit,
-  tier
-}: {
-  currentImage: GalleryImage | null;
-  postsLimit: number;
-  tier?: string;
-}) {
+// Platform badge
+function PlatformBadge({ platform }: { platform: string }) {
+  const config: Record<string, { label: string; bg: string; text: string }> = {
+    facebook: { label: "FB", bg: "#E8F0FE", text: "#1877F2" },
+    instagram: { label: "IG", bg: "#FCEEF5", text: "#E4405F" },
+    tiktok: { label: "TT", bg: "#F0F0F0", text: "#000000" },
+    linkedin: { label: "LI", bg: "#E8F4FD", text: "#0A66C2" },
+    pinterest: { label: "PN", bg: "#FDE8E8", text: "#E60023" },
+  };
+  const c = config[platform] || { label: platform.slice(0, 2).toUpperCase(), bg: "#F3F4F6", text: "#6B7280" };
+
   return (
-    <div className="relative mx-auto" style={{ maxWidth: 260 }}>
-      <div
-        className="rounded-xl overflow-hidden bg-[var(--bg-elevated)] border-2 border-amber-300"
-        style={{ boxShadow: "0 0 16px rgba(245,158,11,0.15)" }}
-      >
-        <div className="aspect-square bg-[var(--bg-surface)] relative">
-          {currentImage?.styled_url && (
-            <img
-              src={currentImage.styled_url}
-              alt={currentImage.original_filename || "image"}
-              className="w-full h-full object-cover opacity-40"
-            />
-          )}
-          <div className="absolute inset-0 bg-amber-50/80 flex flex-col items-center justify-center p-4 text-center">
-            <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="1.5" className="mb-2">
-              <path d="M12 9v4M12 17h.01"/>
-              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-            </svg>
-            <p className="text-sm font-semibold text-amber-800">Monthly limit reached</p>
-            <p className="text-xs text-amber-700 mt-1">{postsLimit} posts scheduled this month</p>
-            <p className="text-xs text-amber-600 mt-0.5">This content is ready for next month</p>
-            {tier !== "unleashed" && (
-              <button
-                className="mt-3 px-4 py-2 rounded-xl text-xs font-semibold text-white transition-all active:scale-95"
-                style={{
-                  background: "#4338CA",
-                  boxShadow: "0 2px 8px rgba(67, 56, 202, 0.3)",
-                }}
-                onClick={() => window.open("https://guardiacontent.com/#pricing", "_blank")}
-              >
-                Unlock More Posts
-              </button>
-            )}
-          </div>
-        </div>
-        {currentImage && (
-          <div className="p-3 border-t border-amber-200 bg-amber-50/50">
-            <p className="text-xs font-medium text-amber-800 truncate">{currentImage.original_filename || "Image"}</p>
-          </div>
-        )}
-      </div>
-    </div>
+    <span
+      className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wide"
+      style={{ background: c.bg, color: c.text }}
+    >
+      {c.label}
+    </span>
   );
 }
 
 export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: GalleryTabProps) {
-  // Split into three categories
-  const [uploadReview, setUploadReview] = useState<GalleryImage[]>([]); // pending_review, received
-  const [fromFactory, setFromFactory] = useState<GalleryImage[]>([]);   // ready, styled
-  const [inQueue, setInQueue] = useState<GalleryImage[]>([]);           // raw, queued, styling
+  // Upload review (assets needing confirmation)
+  const [uploadReview, setUploadReview] = useState<GalleryImage[]>([]);
+  // Processing queue (assets being styled)
+  const [inQueue, setInQueue] = useState<GalleryImage[]>([]);
+  // Styled assets without posts yet (caption generation pending)
+  const [styledPending, setStyledPending] = useState(0);
+  // Content review (posts awaiting approval)
+  const [contentReview, setContentReview] = useState<ContentReviewPost[]>([]);
+  // Stale items (stuck in intermediate state >30 min)
+  const [staleItems, setStaleItems] = useState<GalleryImage[]>([]);
 
   const [uploading, setUploading] = useState(false);
   const [recentUpload, setRecentUpload] = useState(false);
   const isInitialLoad = useRef(true);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [uploadReviewIndex, setUploadReviewIndex] = useState(0);
-  const [fromFactoryIndex, setFromFactoryIndex] = useState(0);
+  const [contentReviewIndex, setContentReviewIndex] = useState(0);
   const [publishingAssetId, setPublishingAssetId] = useState<number | null>(null);
+
+  // Style reactions state
+  const [reactions, setReactions] = useState<Record<number, "loved" | "skipped">>({});
+  const [reactingId, setReactingId] = useState<number | null>(null);
+  const [heartPop, setHeartPop] = useState<number | null>(null);
 
   // Budget state
   const [postsUsed, setPostsUsed] = useState(0);
@@ -284,6 +250,8 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
     }
     try {
       const res = await fetch(`${API_BASE}/lobby/gallery`, { headers: { Authorization: `Bearer ${jwt}` } });
+      if (!res.ok) { setLoadError(true); return; }
+      setLoadError(false);
       if (res.ok) {
         const data = await res.json();
         const items = data.items || [];
@@ -303,14 +271,23 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
           img.status === "raw" || img.status === "queued" || img.status === "styling" || img.status === "processing"
         );
 
-        // From Factory: ready for approval
-        const newFromFactory = items.filter((img: GalleryImage) =>
+        // Styled but no post yet (caption being generated)
+        const styledItems = items.filter((img: GalleryImage) =>
           img.status === "ready" || img.status === "styled"
         );
+        setStyledPending(styledItems.length);
 
-        setUploadReview(prev => arraysEqual(prev, newUploadReview) ? prev : newUploadReview);
+        // Stale: items the backend flagged as stuck (>30 min in intermediate state)
+        const newStaleItems = items.filter((img: GalleryImage) => img.status === "stale");
+        setStaleItems(prev => arraysEqual(prev, newStaleItems) ? prev : newStaleItems);
+
+        setUploadReview(prev => {
+          if (arraysEqual(prev, newUploadReview)) return prev;
+          // Clamp index if list shrank
+          setUploadReviewIndex(i => Math.min(i, Math.max(0, newUploadReview.length - 1)));
+          return newUploadReview;
+        });
         setInQueue(prev => arraysEqual(prev, newInQueue) ? prev : newInQueue);
-        setFromFactory(prev => arraysEqual(prev, newFromFactory) ? prev : newFromFactory);
       }
     } catch (err) {
       console.error("Failed to load gallery:", err);
@@ -321,20 +298,43 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
     }
   }, [jwt]);
 
-  useEffect(() => { loadGallery(); }, [loadGallery]);
+  const loadContentReview = useCallback(async () => {
+    if (!jwt) return;
+    try {
+      const res = await fetch(`${API_BASE}/lobby/content-review`, {
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const posts = data.posts || [];
+        setContentReview((prev: ContentReviewPost[]) => {
+          if (prev.length === posts.length && prev.every((p: ContentReviewPost, i: number) => p.id === posts[i]?.id)) return prev;
+          // Clamp index if list shrank
+          setContentReviewIndex(i => Math.min(i, Math.max(0, posts.length - 1)));
+          return posts;
+        });
+      }
+    } catch (err) {
+      console.error("Failed to load content review:", err);
+    }
+  }, [jwt]);
 
-  // Poll when items are in queue or after recent upload
+  useEffect(() => { loadGallery(); loadContentReview(); }, [loadGallery, loadContentReview]);
+
+  // Fast poll (3s) when items are actively processing, slow poll (30s) when idle
   useEffect(() => {
-    if (inQueue.length === 0 && uploadReview.length === 0 && !recentUpload) return;
+    const isBusy = inQueue.length > 0 || uploadReview.length > 0 || styledPending > 0 || recentUpload;
+    const interval = isBusy ? 3000 : 30000;
 
     const pollTimer = setInterval(() => {
       if (!document.hidden) {
         loadGallery();
+        loadContentReview();
       }
-    }, 3000);
+    }, interval);
 
     return () => clearInterval(pollTimer);
-  }, [inQueue.length, uploadReview.length, recentUpload, loadGallery]);
+  }, [inQueue.length, uploadReview.length, styledPending, recentUpload, loadGallery, loadContentReview]);
 
   useEffect(() => {
     if (!recentUpload) return;
@@ -342,18 +342,24 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
     return () => clearTimeout(timeout);
   }, [recentUpload]);
 
-  // Actions
+  // ── Upload Review Actions ──
+
   const handleDiscardUpload = async () => {
     if (uploadReview.length === 0) return;
     const img = uploadReview[uploadReviewIndex];
     try {
-      await fetch(`${API_BASE}/lobby/gallery/${img.id}/reject`, {
+      const res = await fetch(`${API_BASE}/lobby/gallery/${img.id}/reject`, {
         method: "POST",
         headers: { Authorization: `Bearer ${jwt}` },
       });
-      setUploadReview(items => items.filter((_, i) => i !== uploadReviewIndex));
-      setUploadReviewIndex(i => Math.min(i, Math.max(0, uploadReview.length - 2)));
-      onMessage(`Discarded "${img.original_filename || 'image'}".`);
+      const data = await res.json();
+      if (data.success) {
+        setUploadReview(items => items.filter((_, i) => i !== uploadReviewIndex));
+        setUploadReviewIndex(i => Math.min(i, Math.max(0, uploadReview.length - 2)));
+        onMessage(`Discarded "${img.original_filename || 'image'}".`);
+      } else {
+        onMessage(data.message || "Couldn't discard. Try again?");
+      }
     } catch {
       onMessage("Had trouble with that. Let's try again.");
     }
@@ -380,53 +386,129 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
     }
   };
 
-  const handleRejectStyled = async () => {
-    if (fromFactory.length === 0) return;
-    const img = fromFactory[fromFactoryIndex];
+  // ── Content Review Actions ──
+
+  const handleApprovePost = async () => {
+    if (contentReview.length === 0 || !jwt) return;
+    const post = contentReview[contentReviewIndex];
     try {
-      await fetch(`${API_BASE}/lobby/gallery/${img.id}/reject`, {
+      const res = await fetch(`${API_BASE}/lobby/content-review/${post.id}/approve`, {
         method: "POST",
         headers: { Authorization: `Bearer ${jwt}` },
       });
-      setFromFactory(items => items.filter((_, i) => i !== fromFactoryIndex));
-      setFromFactoryIndex(i => Math.min(i, Math.max(0, fromFactory.length - 2)));
-      if (onSwitchToGio) {
-        onSwitchToGio(`I rejected the styled image "${img.original_filename || 'this image'}" because`);
-      } else {
-        onMessage(`Rejected "${img.original_filename || 'this image'}". Let me know what you'd like instead.`);
+      const data = await res.json();
+      if (data.success) {
+        setContentReview(items => items.filter((_, i) => i !== contentReviewIndex));
+        setContentReviewIndex(i => Math.min(i, Math.max(0, contentReview.length - 2)));
+        onMessage("Approved! Scheduling shortly.");
+      }
+    } catch {
+      onMessage("Had trouble approving. Let's try again.");
+    }
+  };
+
+  const handleRejectPost = async () => {
+    if (contentReview.length === 0 || !jwt) return;
+    const post = contentReview[contentReviewIndex];
+    try {
+      const res = await fetch(`${API_BASE}/lobby/content-review/${post.id}/reject`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setContentReview(items => items.filter((_, i) => i !== contentReviewIndex));
+        setContentReviewIndex(i => Math.min(i, Math.max(0, contentReview.length - 2)));
+        onMessage("Post removed.");
       }
     } catch {
       onMessage("Had trouble with that. Let's try again.");
     }
   };
 
-  const handleApproveStyled = async () => {
-    if (fromFactory.length === 0 || !jwt) return;
-    const img = fromFactory[fromFactoryIndex];
-    setFromFactory(items => items.filter((_, i) => i !== fromFactoryIndex));
-    setFromFactoryIndex(i => Math.min(i, Math.max(0, fromFactory.length - 2)));
-    fetch(`${API_BASE}/lobby/gallery/${img.id}/approve`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${jwt}` },
-    }).catch(() => loadGallery());
+  const handleReaction = async (assetId: number | undefined, reaction: "loved" | "skipped") => {
+    if (!assetId || contentReview.length === 0 || !jwt) return;
+    const post = contentReview[contentReviewIndex];
+    setReactingId(assetId);
+    if (reaction === "loved") {
+      setHeartPop(assetId);
+      setTimeout(() => setHeartPop(null), 600);
+    }
+    try {
+      // Record style reaction (non-blocking)
+      fetch(`${API_BASE}/approval/review/${assetId}/react`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reaction }),
+      }).then(res => {
+        if (res.ok) setReactions(prev => ({ ...prev, [assetId]: reaction }));
+      }).catch(() => {});
+
+      // Love = approve, Skip = reject
+      const action = reaction === "loved" ? "approve" : "reject";
+      const res = await fetch(`${API_BASE}/lobby/content-review/${post.id}/${action}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setContentReview(items => items.filter((_, i) => i !== contentReviewIndex));
+        setContentReviewIndex(i => Math.min(i, Math.max(0, contentReview.length - 2)));
+        onMessage(reaction === "loved" ? "Approved! Scheduling shortly." : "Skipped — we'll try a different style.");
+      }
+    } catch {
+      onMessage("Had trouble with that. Let's try again.");
+    } finally {
+      setReactingId(null);
+    }
   };
 
-  const handlePostNow = () => {
-    if (fromFactory.length === 0) return;
-    const img = fromFactory[fromFactoryIndex];
-    setPublishingAssetId(img.id);
+  const handleBulkApprove = async () => {
+    if (contentReview.length === 0 || !jwt) return;
+    try {
+      const res = await fetch(`${API_BASE}/lobby/content-review/bulk-approve`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setContentReview([]);
+        setContentReviewIndex(0);
+        onMessage(`Approved ${data.approved_count} post${data.approved_count > 1 ? "s" : ""}!`);
+      }
+    } catch {
+      onMessage("Had trouble with bulk approve. Try again?");
+    }
   };
 
-  const handlePublished = () => {
-    setFromFactory(items => items.filter((_, i) => i !== fromFactoryIndex));
-    setFromFactoryIndex(i => Math.min(i, Math.max(0, fromFactory.length - 2)));
+  const handleRetryStale = async (items: GalleryImage[]) => {
+    if (!jwt) return;
+    for (const item of items) {
+      await fetch(`${API_BASE}/lobby/gallery/${item.id}/retry`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+    }
+    onMessage("Sent back to the factory!");
+    loadGallery();
+  };
+
+  const handleDiscardStale = async (items: GalleryImage[]) => {
+    if (!jwt) return;
+    for (const item of items) {
+      await fetch(`${API_BASE}/lobby/gallery/${item.id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+    }
+    onMessage("Cleared!");
     loadGallery();
   };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !jwt) return;
-    const totalQueue = uploadReview.length + inQueue.length + fromFactory.length;
+    const totalQueue = uploadReview.length + inQueue.length + styledPending + contentReview.length;
     if (totalQueue >= slotsLimit) {
       onMessage(`Queue is full (${slotsLimit} max). Approve or discard items to make room.`);
       return;
@@ -452,10 +534,32 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
     e.target.value = "";
   };
 
-  // Showcase empty state logic
-  const getShowcaseEmpty = () => {
-    if (postsUsed >= postsLimit && fromFactory.length > 0) {
-      return null; // handled by CapReachedCard
+  // Content Review empty state
+  const getContentReviewEmpty = () => {
+    if (staleItems.length > 0) {
+      return {
+        title: `${staleItems.length} item${staleItems.length > 1 ? "s" : ""} got stuck`,
+        subtitle: "Something went wrong during processing",
+        icon: (
+          <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke="#B45309" strokeWidth="1.5" className="mx-auto">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        ),
+        stale: true,
+      };
+    }
+    if (styledPending > 0) {
+      return {
+        title: "Generating captions...",
+        subtitle: `${styledPending} styled image${styledPending > 1 ? "s" : ""} being prepared`,
+        icon: (
+          <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke="#C9A227" strokeWidth="1.5" className="mx-auto">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+          </svg>
+        ),
+      };
     }
     if (inQueue.length > 0) {
       return {
@@ -492,8 +596,7 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
   };
 
   const currentUploadReview = uploadReview[uploadReviewIndex];
-  const currentFromFactory = fromFactory[fromFactoryIndex];
-  const totalQueue = uploadReview.length + inQueue.length + fromFactory.length;
+  const currentPost = contentReview[contentReviewIndex];
 
   // Budget display
   const budgetRatio = postsLimit > 0 ? postsUsed / postsLimit : 0;
@@ -505,6 +608,24 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
     return (
       <div className="h-full flex items-center justify-center bg-[var(--bg-base)]">
         <div className="w-8 h-8 border-2 border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (loadError && uploadReview.length === 0 && contentReview.length === 0) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center bg-[var(--bg-base)] gap-3 px-6">
+        <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 8v4M12 16h.01"/>
+        </svg>
+        <p className="text-sm text-[var(--text-secondary)] text-center">Couldn&apos;t load gallery</p>
+        <button
+          onClick={() => { setLoadError(false); loadGallery(); loadContentReview(); }}
+          className="px-4 py-2 rounded-xl text-sm font-medium transition-all active:scale-95 bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text-primary)]"
+        >
+          Try Again
+        </button>
       </div>
     );
   }
@@ -597,110 +718,211 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════════
-            THE FACTORY — Showcase Window + Conveyor Belt
+            CONTENT REVIEW — Posts awaiting client approval
         ═══════════════════════════════════════════════════════════════════ */}
         <div
           className="rounded-2xl overflow-hidden bg-[var(--bg-elevated)] border border-[var(--border)]"
           style={{ boxShadow: "var(--shadow-soft)" }}
         >
-          {/* Factory Header */}
+          {/* Content Review Header */}
           <div className="flex items-center justify-between p-4 border-b border-[var(--border)]">
             <div className="flex items-center gap-2.5">
               <StatusDot
-                active={fromFactory.length > 0 || inQueue.length > 0}
-                color={fromFactory.length > 0 ? "green" : "gold"}
+                active={contentReview.length > 0 || inQueue.length > 0 || styledPending > 0}
+                color={contentReview.length > 0 ? "green" : "gold"}
               />
-              <h3 className="text-sm font-semibold text-[var(--text-primary)]">The Factory</h3>
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Content Review</h3>
             </div>
             <div className="flex items-center gap-2">
-              {fromFactory.length > 0 && !isCapReached && (
+              {contentReview.length > 1 && (
                 <button
-                  onClick={handlePostNow}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all active:scale-95 text-white"
+                  onClick={handleBulkApprove}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all active:scale-95 text-white"
                   style={{
                     background: "#4338CA",
                     boxShadow: "0 2px 6px rgba(67, 56, 202, 0.25)",
                   }}
                 >
-                  <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-                  </svg>
-                  Post
+                  Approve All
                 </button>
               )}
-              {fromFactory.length > 0 && (
-                <span className="text-xs font-semibold text-green-600">{fromFactory.length} ready</span>
+              {contentReview.length > 0 && (
+                <span className="text-xs font-semibold text-green-600">{contentReview.length} ready</span>
               )}
-              {inQueue.length > 0 && fromFactory.length === 0 && (
-                <span className="text-xs text-[var(--text-muted)]">{inQueue.length} processing</span>
+              {contentReview.length === 0 && staleItems.length > 0 && inQueue.length === 0 && styledPending === 0 && (
+                <span className="text-xs font-semibold" style={{ color: "#B45309" }}>{staleItems.length} stuck</span>
+              )}
+              {contentReview.length === 0 && (inQueue.length > 0 || styledPending > 0) && (
+                <span className="text-xs text-[var(--text-muted)]">
+                  {inQueue.length > 0 ? `${inQueue.length} processing` : `${styledPending} captioning`}
+                </span>
               )}
             </div>
           </div>
 
-          {/* TOP ZONE: Showcase Window */}
+          {/* Post Preview */}
           <div className="p-4">
-            {isCapReached && fromFactory.length > 0 ? (
-              /* Cap reached — show amber overlay */
-              <CapReachedCard
-                currentImage={currentFromFactory}
-                postsLimit={postsLimit}
-                tier={client?.tier}
-              />
-            ) : fromFactory.length > 0 ? (
-              /* Normal showcase — show ImageCard */
-              <ImageCard
-                image={currentFromFactory}
-                imageUrl={currentFromFactory?.styled_url}
-                index={fromFactoryIndex}
-                total={fromFactory.length}
-                onRed={handleRejectStyled}
-                onGreen={handleApproveStyled}
-                redLabel="Reject"
-                greenLabel="Approve"
-                emptyIcon={<></>}
-                emptyTitle=""
-                emptySubtitle=""
-              />
+            {contentReview.length > 0 && currentPost ? (
+              <div>
+                {/* Post card with image + caption */}
+                <div className="relative mx-auto" style={{ maxWidth: 300 }}>
+                  <div
+                    className="rounded-xl overflow-hidden bg-[var(--bg-elevated)] border border-[var(--border)]"
+                    style={{ boxShadow: "var(--shadow-soft)" }}
+                  >
+                    {/* Image */}
+                    <div className="aspect-square bg-[var(--bg-surface)] relative overflow-hidden">
+                      {currentPost.image_url ? (
+                        <img src={currentPost.image_url} alt="Post preview" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <div className="w-6 h-6 border-2 border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin" />
+                        </div>
+                      )}
+                      {/* Heart pop animation on love */}
+                      {heartPop === currentPost.asset_id && (
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <svg
+                            width={64} height={64} viewBox="0 0 24 24" fill="#e74c6f" stroke="none"
+                            className="animate-[heartPop_0.5s_ease-out_forwards] opacity-0"
+                            style={{ filter: "drop-shadow(0 2px 8px rgba(231,76,111,0.4))" }}
+                          >
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                    {/* Caption + meta */}
+                    <div className="p-3 border-t border-[var(--border)]">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-1.5">
+                          <PlatformBadge platform={currentPost.platform} />
+                          {currentPost.source === "ai_generated" && (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-violet-50 text-violet-600">
+                              AI Generated
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-xs text-[var(--text-muted)]">{contentReviewIndex + 1}/{contentReview.length}</span>
+                      </div>
+                      {currentPost.caption && (
+                        <p className="text-xs text-[var(--text-secondary)] line-clamp-4 leading-relaxed">
+                          {currentPost.caption}
+                        </p>
+                      )}
+                      {currentPost.hashtags && (
+                        <p className="text-[10px] text-[var(--text-muted)] mt-1.5 line-clamp-2">
+                          {currentPost.hashtags}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Style reaction buttons */}
+                {currentPost.asset_id && (
+                  <div className="flex justify-center gap-2.5 mt-3 mx-auto" style={{ maxWidth: 320 }}>
+                    {(() => {
+                      const r = reactions[currentPost.asset_id!];
+                      const isLoving = reactingId === currentPost.asset_id;
+                      return (
+                        <>
+                          <button
+                            onClick={() => handleReaction(currentPost.asset_id, "loved")}
+                            disabled={isLoving}
+                            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-95 ${
+                              r === "loved"
+                                ? "bg-pink-50 border-2 border-pink-300 text-pink-600 shadow-sm"
+                                : r === "skipped"
+                                ? "bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text-muted)] opacity-40"
+                                : "bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text-primary)] hover:border-pink-300 hover:text-pink-600 hover:shadow-sm"
+                            }`}
+                          >
+                            <svg width={14} height={14} viewBox="0 0 24 24" fill={r === "loved" ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+                              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                            </svg>
+                            Love it
+                          </button>
+                          <button
+                            onClick={() => handleReaction(currentPost.asset_id, "skipped")}
+                            disabled={isLoving}
+                            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-95 ${
+                              r === "skipped"
+                                ? "bg-[var(--parchment)] border-2 border-[var(--warmgray)] text-[var(--warmgray)] shadow-sm"
+                                : r === "loved"
+                                ? "bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text-muted)] opacity-40"
+                                : "bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--warmgray)] hover:text-[var(--warmgray)] hover:shadow-sm"
+                            }`}
+                          >
+                            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                              <path d="M9 18l6-6-6-6"/>
+                            </svg>
+                            Skip
+                          </button>
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
+
+
+                {/* Arrow navigation */}
+                {contentReview.length > 1 && (
+                  <div className="flex justify-center items-center gap-4 mt-4">
+                    <button
+                      onClick={() => setContentReviewIndex(i => Math.max(0, i - 1))}
+                      disabled={contentReviewIndex === 0}
+                      className="w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-95 bg-[var(--bg-surface)] border border-[var(--border)] disabled:opacity-30"
+                    >
+                      <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <path d="M15 18l-6-6 6-6"/>
+                      </svg>
+                    </button>
+                    <span className="text-xs text-[var(--text-muted)] tabular-nums">
+                      {contentReviewIndex + 1} / {contentReview.length}
+                    </span>
+                    <button
+                      onClick={() => setContentReviewIndex(i => Math.min(contentReview.length - 1, i + 1))}
+                      disabled={contentReviewIndex === contentReview.length - 1}
+                      className="w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-95 bg-[var(--bg-surface)] border border-[var(--border)] disabled:opacity-30"
+                    >
+                      <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <path d="M9 18l6-6-6-6"/>
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
-              /* Empty showcase — contextual message */
+              /* Empty content review — contextual message */
               (() => {
-                const empty = getShowcaseEmpty();
-                if (!empty) return null;
+                const empty = getContentReviewEmpty();
                 return (
                   <div className="rounded-xl p-6 text-center bg-[var(--bg-elevated)] border border-[var(--border)]">
                     {empty.icon}
                     <p className="text-sm font-medium text-[var(--text-secondary)] mt-3">{empty.title}</p>
                     <p className="text-xs text-[var(--text-muted)] mt-1">{empty.subtitle}</p>
+                    {"stale" in empty && (
+                      <div className="flex gap-2 justify-center mt-4">
+                        <button
+                          onClick={() => handleRetryStale(staleItems)}
+                          className="px-4 py-2 rounded-lg text-xs font-semibold transition-all active:scale-95"
+                          style={{ background: "rgba(180, 83, 9, 0.1)", color: "#B45309", border: "1px solid rgba(180, 83, 9, 0.2)" }}
+                        >
+                          Retry
+                        </button>
+                        <button
+                          onClick={() => handleDiscardStale(staleItems)}
+                          className="px-4 py-2 rounded-lg text-xs font-semibold transition-all active:scale-95"
+                          style={{ background: "rgba(220, 38, 38, 0.1)", color: "#DC2626", border: "1px solid rgba(220, 38, 38, 0.2)" }}
+                        >
+                          Discard
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })()
-            )}
-
-            {/* Arrow navigation for showcase */}
-            {fromFactory.length > 1 && (
-              <div className="flex justify-center items-center gap-4 mt-4">
-                <button
-                  onClick={() => setFromFactoryIndex(i => Math.max(0, i - 1))}
-                  disabled={fromFactoryIndex === 0}
-                  className="w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-95 bg-[var(--bg-surface)] border border-[var(--border)] disabled:opacity-30"
-                >
-                  <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                    <path d="M15 18l-6-6 6-6"/>
-                  </svg>
-                </button>
-                <span className="text-xs text-[var(--text-muted)] tabular-nums">
-                  {fromFactoryIndex + 1} / {fromFactory.length}
-                </span>
-                <button
-                  onClick={() => setFromFactoryIndex(i => Math.min(fromFactory.length - 1, i + 1))}
-                  disabled={fromFactoryIndex === fromFactory.length - 1}
-                  className="w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-95 bg-[var(--bg-surface)] border border-[var(--border)] disabled:opacity-30"
-                >
-                  <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                    <path d="M9 18l6-6-6-6"/>
-                  </svg>
-                </button>
-              </div>
             )}
           </div>
 
@@ -734,7 +956,6 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
                           <div className="w-3 h-3 border border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin" />
                         </div>
                       )}
-                      {/* Pulse overlay for active processing */}
                       {isProcessing && (
                         <div
                           className="absolute inset-0 rounded-lg animate-pulse pointer-events-none"
@@ -750,7 +971,7 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
         </div>
 
         {/* Budget warning banner */}
-        {isCapReached && fromFactory.length === 0 && (
+        {isCapReached && contentReview.length === 0 && (
           <div
             className="rounded-2xl p-4 border border-amber-200"
             style={{ background: "#FFFBEB" }}
@@ -780,7 +1001,7 @@ export default function GalleryTab({ client, jwt, onMessage, onSwitchToGio }: Ga
           assetId={publishingAssetId}
           jwt={jwt}
           onClose={() => setPublishingAssetId(null)}
-          onPublished={handlePublished}
+          onPublished={() => { loadGallery(); loadContentReview(); }}
         />
       )}
     </div>
