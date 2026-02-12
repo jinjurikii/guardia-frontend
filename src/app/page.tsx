@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import StyleShowcaseViewer from "@/components/StyleShowcaseViewer";
 import {
   Camera,
   Palette,
@@ -97,25 +98,23 @@ const steps = [
   },
 ];
 
-const transformations = [
-  {
-    before: "https://api.guardiacontent.com/storage/library/unsplash_t1jlLrsMpjc.jpg",
-    after: "https://api.guardiacontent.com/storage/clients/guardia00/overlay/d978095d61f74b6bb60b2161e6ae8b8d.png",
-    style: "Salon",
-    business: "Beauty & Wellness",
-  },
-  {
-    before: "https://api.guardiacontent.com/storage/stock/pexels_414029.jpg",
-    after: "https://api.guardiacontent.com/storage/clients/guardia00/overlay/8f4488178e3048acae5a6f04fb3359b9.png",
-    style: "Fitness",
-    business: "Gym & Training",
-  },
-  {
-    before: "https://api.guardiacontent.com/storage/library/unsplash_w2oj_k8w-UM.jpg",
-    after: "https://api.guardiacontent.com/storage/clients/guardia00/overlay/a067650035774f8cb51f58a9506cd1bf.png",
-    style: "Cafe",
-    business: "Food & Beverage",
-  },
+const showcaseItems = [
+  { slug: "salon", label: "Hair Salon", style: "Warm", before: "https://api.guardiacontent.com/storage/showcase/salon_before.jpg", after: "https://api.guardiacontent.com/storage/showcase/salon_after.jpg" },
+  { slug: "restaurant", label: "Restaurant", style: "Vibrant", before: "https://api.guardiacontent.com/storage/showcase/restaurant_before.jpg", after: "https://api.guardiacontent.com/storage/showcase/restaurant_after.jpg" },
+  { slug: "barbershop", label: "Barbershop", style: "Moody", before: "https://api.guardiacontent.com/storage/showcase/barbershop_before.jpg", after: "https://api.guardiacontent.com/storage/showcase/barbershop_after.jpg" },
+  { slug: "tattoo", label: "Tattoo Studio", style: "Crisp", before: "https://api.guardiacontent.com/storage/showcase/tattoo_before.jpg", after: "https://api.guardiacontent.com/storage/showcase/tattoo_after.jpg" },
+  { slug: "fitness", label: "Fitness", style: "Natural", before: "https://api.guardiacontent.com/storage/showcase/fitness_before.jpg", after: "https://api.guardiacontent.com/storage/showcase/fitness_after.jpg" },
+];
+
+const SHOWCASE_BASE = "https://api.guardiacontent.com/storage/showcase";
+
+const multiCardStyles = [
+  { id: "natural", name: "Natural", description: "Minimal touch, colors stay true", afterImage: `${SHOWCASE_BASE}/bakery_after_natural.jpg` },
+  { id: "warm", name: "Warm", description: "Golden hour vibes, soft vignette", afterImage: `${SHOWCASE_BASE}/bakery_after_warm.jpg` },
+  { id: "crisp", name: "Crisp", description: "Sharp and punchy, enhanced clarity", afterImage: `${SHOWCASE_BASE}/bakery_after_crisp.jpg` },
+  { id: "vibrant", name: "Vibrant", description: "Bold colors that pop on feeds", afterImage: `${SHOWCASE_BASE}/bakery_after_vibrant.jpg` },
+  { id: "moody", name: "Moody", description: "Dramatic, desaturated, film grain", afterImage: `${SHOWCASE_BASE}/bakery_after_moody.jpg` },
+  { id: "none", name: "None", description: "Zero processing, web-optimized only", afterImage: `${SHOWCASE_BASE}/bakery_after_none.jpg` },
 ];
 
 const faqs = [
@@ -372,8 +371,119 @@ function HowItWorks() {
   );
 }
 
+function ShowcaseSlider({ before, afterSrc, label }: { before: string; afterSrc: string; label: string }) {
+  const [pos, setPos] = useState(50);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const dragging = useRef(false);
+
+  const updatePos = (clientX: number) => {
+    const rect = cardRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const pct = ((clientX - rect.left) / rect.width) * 100;
+    setPos(Math.max(2, Math.min(98, pct)));
+  };
+
+  useEffect(() => {
+    const onMove = (e: PointerEvent) => {
+      if (!dragging.current) return;
+      e.preventDefault();
+      updatePos(e.clientX);
+    };
+    const onUp = () => {
+      dragging.current = false;
+    };
+    document.addEventListener("pointermove", onMove);
+    document.addEventListener("pointerup", onUp);
+    return () => {
+      document.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerup", onUp);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={cardRef}
+      className="relative aspect-square rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(42,42,42,0.12)] cursor-col-resize select-none touch-none"
+      onPointerDown={(e) => {
+        dragging.current = true;
+        updatePos(e.clientX);
+      }}
+    >
+      {/* After image (full background) */}
+      <img
+        src={afterSrc}
+        alt={`${label} after`}
+        className="absolute inset-0 w-full h-full object-cover transition-opacity duration-200"
+        draggable={false}
+        loading="lazy"
+      />
+      {/* Before image (clipped from right) */}
+      <img
+        src={before}
+        alt={`${label} before`}
+        className="absolute inset-0 w-full h-full object-cover"
+        style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}
+        draggable={false}
+        loading="lazy"
+      />
+
+      {/* Slider handle */}
+      <div
+        className="absolute top-0 bottom-0 -translate-x-1/2 pointer-events-none"
+        style={{ left: `${pos}%` }}
+      >
+        <div className="w-0.5 h-full bg-white/80 shadow-[0_0_6px_rgba(0,0,0,0.3)]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white border-2 border-[#C9A227] shadow-md flex items-center justify-center">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M4.5 3L1.5 7L4.5 11" stroke="#C9A227" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M9.5 3L12.5 7L9.5 11" stroke="#C9A227" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Before / After labels */}
+      <div className="absolute top-3 left-3 bg-black/50 backdrop-blur-sm text-white text-[10px] font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider pointer-events-none">
+        Before
+      </div>
+      <div className="absolute top-3 right-3 bg-[#C9A227]/90 backdrop-blur-sm text-white text-[10px] font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider pointer-events-none">
+        After
+      </div>
+    </div>
+  );
+}
+
+function ShowcaseCard({ item }: { item: (typeof showcaseItems)[number] }) {
+  return (
+    <div>
+      <ShowcaseSlider before={item.before} afterSrc={item.after} label={item.label} />
+      {/* Niche + Style labels */}
+      <div className="mt-3 flex items-center justify-between px-1">
+        <span className="text-sm font-medium text-[#2A2A2A]">{item.label}</span>
+        <span className="text-xs font-semibold text-[#C9A227] bg-[#C9A227]/10 px-2.5 py-1 rounded-full">{item.style}</span>
+      </div>
+    </div>
+  );
+}
+
+function MultiShowcaseCard() {
+  return (
+    <div>
+      <StyleShowcaseViewer
+        beforeImage={`${SHOWCASE_BASE}/bakery_before.jpg`}
+        styles={multiCardStyles}
+        activeId="warm"
+      />
+      <div className="mt-3 px-1">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-[#2A2A2A]">Bakery</span>
+          <span className="text-[10px] text-[#635C54] uppercase tracking-wider">Choose your style</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function StyleShowcase() {
-  const [activeIndex, setActiveIndex] = useState(0);
   const { ref, visible } = useScrollReveal();
 
   return (
@@ -385,89 +495,23 @@ function StyleShowcase() {
             <span className="text-sm font-medium text-[#C9A227]">Real transformations from our pipeline</span>
           </div>
           <h2 className="text-3xl md:text-4xl font-bold text-[#2A2A2A] mb-4 font-[var(--font-fraunces)]">
-            See what we actually create
+            See the Difference
           </h2>
           <p className="text-[#635C54] max-w-2xl mx-auto">
-            These aren't mockups. Real posts styled and published for businesses like yours.
+            Same photo. Different styles. You pick what fits your brand.
           </p>
         </div>
 
-        <div className={`mt-12 transition-all duration-700 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-          {/* Active transformation */}
-          <div className="bg-white rounded-2xl p-6 md:p-8 border border-[#E8DDD3] shadow-[0_8px_40px_rgba(42,42,42,0.12)] mb-6">
-            <div className="grid md:grid-cols-2 gap-6 md:gap-8">
-              {/* Before */}
-              <div className="relative">
-                <div className="absolute top-3 left-3 z-10 bg-white/90 backdrop-blur-sm text-[#2A2A2A] text-xs font-medium px-3 py-1.5 rounded-full shadow-sm">
-                  Your photo
-                </div>
-                <div className="aspect-square rounded-xl overflow-hidden bg-[#F0E8E0]">
-                  <img
-                    src={transformations[activeIndex].before}
-                    alt="Before"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </div>
-
-              {/* After */}
-              <div className="relative">
-                <div className="absolute top-3 left-3 z-10 bg-[#C9A227] text-white text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
-                  <Sparkles className="w-3 h-3" />
-                  Guardia styled
-                </div>
-                <div className="aspect-square rounded-xl overflow-hidden bg-[#F0E8E0] ring-2 ring-[#C9A227]/30">
-                  <img
-                    src={transformations[activeIndex].after}
-                    alt="After"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 flex items-center justify-between">
-              <div>
-                <div className="text-sm text-[#635C54]">Style applied</div>
-                <div className="text-[#2A2A2A] font-medium">{transformations[activeIndex].style}</div>
-              </div>
-              <div className="text-right">
-                <div className="text-sm text-[#635C54]">Perfect for</div>
-                <div className="text-[#2A2A2A] font-medium">{transformations[activeIndex].business}</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Thumbnails */}
-          <div className="grid grid-cols-3 gap-3 md:gap-4">
-            {transformations.map((t, i) => (
-              <button
-                key={i}
-                onClick={() => setActiveIndex(i)}
-                aria-label={`View ${t.style} transformation`}
-                className={`relative aspect-square rounded-xl overflow-hidden transition-all ${
-                  activeIndex === i
-                    ? "ring-2 ring-[#C9A227] ring-offset-2 ring-offset-[#F0E8E0] shadow-lg"
-                    : "opacity-60 hover:opacity-100"
-                }`}
-              >
-                <img
-                  src={t.after}
-                  alt={`${t.style} style example`}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                <div className="absolute bottom-2 left-2 right-2 text-left">
-                  <div className="text-white text-xs font-medium">{t.style}</div>
-                </div>
-              </button>
-            ))}
-          </div>
+        <div className={`mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 transition-all duration-700 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+          {showcaseItems.map((item) => (
+            <ShowcaseCard key={item.slug} item={item} />
+          ))}
+          <MultiShowcaseCard />
         </div>
 
         <div className="text-center mt-12">
           <p className="text-[#635C54] mb-4">
-            We have styles for every industry. During onboarding, we'll find the perfect one for your brand.
+            Every business. Every vibe. Always professional.
           </p>
           <a
             href="/intake/pro"
