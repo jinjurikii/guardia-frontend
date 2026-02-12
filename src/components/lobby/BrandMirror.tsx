@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import StyleShowcaseViewer, { type StyleOption } from "@/components/StyleShowcaseViewer";
-
 const API_BASE = "https://api.guardiacontent.com";
 const SHOWCASE_BASE = "https://api.guardiacontent.com/storage/showcase";
 
@@ -34,22 +32,6 @@ interface BrandData {
   recent_posts: { styled_url: string; original_url: string }[];
 }
 
-interface Preset {
-  id: string;
-  name: string;
-  description: string;
-  gradient: string;
-  accent: string;
-}
-
-const PRESETS: Preset[] = [
-  { id: "natural", name: "Natural", description: "Minimal touch, colors stay true", gradient: "from-stone-600 to-stone-800", accent: "#a8a29e" },
-  { id: "warm", name: "Warm", description: "Golden hour vibes, soft vignette", gradient: "from-amber-500 to-orange-700", accent: "#f59e0b" },
-  { id: "crisp", name: "Crisp", description: "Sharp and punchy, enhanced clarity", gradient: "from-slate-400 to-slate-700", accent: "#94a3b8" },
-  { id: "vibrant", name: "Vibrant", description: "Bold colors that pop on feeds", gradient: "from-fuchsia-500 to-purple-700", accent: "#d946ef" },
-  { id: "moody", name: "Moody", description: "Dramatic, desaturated, film grain", gradient: "from-zinc-600 to-zinc-900", accent: "#71717a" },
-  { id: "none", name: "None", description: "Zero processing, web-optimized only", gradient: "from-neutral-500 to-neutral-700", accent: "#737373" },
-];
 
 // Pencil icon for edit buttons
 function EditIcon() {
@@ -502,24 +484,60 @@ export default function BrandMirror({ clientId, jwt, onStyleUpdated }: BrandMirr
           <div className="h-px flex-1" style={{ background: 'var(--border)' }} />
         </div>
 
-        {/* Polish Preset Selector — interactive showcase */}
-        <div>
-          <p className="text-sm text-[var(--text-secondary)] mb-4">
-            How your photos look after polish. Applies to all future uploads.
+        {/* Guardia Style — single toggle */}
+        <div className="space-y-3">
+          <p className="text-sm text-[var(--text-secondary)]">
+            Professional enhancement for every photo you upload.
           </p>
 
-          <StyleShowcaseViewer
-            beforeImage={`${SHOWCASE_BASE}/bakery_before.jpg`}
-            styles={PRESETS.map((p) => ({
-              id: p.id,
-              name: p.name,
-              description: p.description,
-              afterImage: `${SHOWCASE_BASE}/bakery_after_${p.id}.jpg`,
-            }))}
-            activeId={brand.visual.polish_preset}
-            onSelect={applyPreset}
-            compact
-          />
+          {/* Before/After preview */}
+          <div className="relative w-full aspect-[16/10] rounded-xl overflow-hidden" style={{ background: 'var(--bg-surface, #1a1a1a)' }}>
+            <img
+              src={`${SHOWCASE_BASE}/bakery_after.jpg`}
+              alt="Guardia Style"
+              className="absolute inset-0 w-full h-full object-cover"
+              loading="lazy"
+            />
+            <img
+              src={`${SHOWCASE_BASE}/bakery_before.jpg`}
+              alt="Before"
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ clipPath: 'inset(0 50% 0 0)' }}
+              loading="lazy"
+            />
+            <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-0.5 bg-white/80" />
+            <div className="absolute top-3 left-3 bg-black/50 backdrop-blur-sm text-white text-[9px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider pointer-events-none">
+              Before
+            </div>
+            <div className="absolute top-3 right-3 bg-[#C9A227]/90 backdrop-blur-sm text-white text-[9px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider pointer-events-none">
+              After
+            </div>
+          </div>
+
+          {/* On/Off toggle */}
+          <div className="flex items-center justify-between rounded-xl px-4 py-3" style={{ background: 'var(--bg-surface, #fff)', border: '1px solid var(--border, #e8ddd3)' }}>
+            <div>
+              <h4 className="text-sm font-medium text-[var(--text-primary,#2a2a2a)]">Guardia Style</h4>
+              <p className="text-[10px] text-[var(--text-muted,#635c54)]">
+                {brand.visual.polish_preset === "none" ? "Photos upload as-is" : "Even lighting, clean detail, balanced exposure"}
+              </p>
+            </div>
+            <button
+              onClick={() => applyPreset(brand.visual.polish_preset === "none" ? "guardia" : "none")}
+              disabled={!!applying}
+              className="relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none"
+              style={{
+                background: brand.visual.polish_preset !== "none" ? "#C9A227" : "var(--border, #d1d5db)",
+              }}
+            >
+              <span
+                className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200"
+                style={{
+                  transform: brand.visual.polish_preset !== "none" ? "translateX(20px)" : "translateX(0)",
+                }}
+              />
+            </button>
+          </div>
         </div>
 
         {/* Bottom breathing room */}
