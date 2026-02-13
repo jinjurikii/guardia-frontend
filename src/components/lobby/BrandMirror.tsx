@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 const API_BASE = "https://api.guardiacontent.com";
-const SHOWCASE_BASE = "https://api.guardiacontent.com/storage/showcase";
 
 interface BrandMirrorProps {
   clientId: string;
@@ -27,7 +26,7 @@ interface BrandData {
   };
   visual: {
     style: string | null;
-    polish_preset: string;
+
   };
   recent_posts: { styled_url: string; original_url: string }[];
 }
@@ -45,7 +44,6 @@ function EditIcon() {
 export default function BrandMirror({ clientId, jwt, onStyleUpdated }: BrandMirrorProps) {
   const [brand, setBrand] = useState<BrandData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [applying, setApplying] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [showOriginals, setShowOriginals] = useState(false);
@@ -175,29 +173,6 @@ export default function BrandMirror({ clientId, jwt, onStyleUpdated }: BrandMirr
     setEditingVisual(true);
   };
 
-  const applyPreset = async (presetId: string) => {
-    if (!brand || presetId === brand.visual.polish_preset || applying) return;
-    setApplying(presetId);
-    setError(null);
-
-    try {
-      const res = await fetch(`${API_BASE}/client/polish-preset`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt}` },
-        body: JSON.stringify({ preset: presetId }),
-      });
-      if (res.ok) {
-        setBrand({ ...brand, visual: { ...brand.visual, polish_preset: presetId } });
-        onStyleUpdated?.();
-      } else {
-        const data = await res.json();
-        setError(data.detail || "Failed to update");
-      }
-    } catch {
-      setError("Connection error");
-    }
-    setApplying(null);
-  };
 
   if (loading) {
     return (
@@ -477,68 +452,6 @@ export default function BrandMirror({ clientId, jwt, onStyleUpdated }: BrandMirr
 
 
 
-        {/* Divider */}
-        <div className="flex items-center gap-3 pt-2">
-          <div className="h-px flex-1" style={{ background: 'var(--border)' }} />
-          <span className="text-xs text-[var(--text-muted)]">Photo Polish</span>
-          <div className="h-px flex-1" style={{ background: 'var(--border)' }} />
-        </div>
-
-        {/* Guardia Style — single toggle */}
-        <div className="space-y-3">
-          <p className="text-sm text-[var(--text-secondary)]">
-            Professional enhancement for every photo you upload.
-          </p>
-
-          {/* Before/After preview */}
-          <div className="relative w-full aspect-[16/10] rounded-xl overflow-hidden" style={{ background: 'var(--bg-surface, #1a1a1a)' }}>
-            <img
-              src={`${SHOWCASE_BASE}/bakery_after.jpg`}
-              alt="Guardia Style"
-              className="absolute inset-0 w-full h-full object-cover"
-              loading="lazy"
-            />
-            <img
-              src={`${SHOWCASE_BASE}/bakery_before.jpg`}
-              alt="Before"
-              className="absolute inset-0 w-full h-full object-cover"
-              style={{ clipPath: 'inset(0 50% 0 0)' }}
-              loading="lazy"
-            />
-            <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-0.5 bg-white/80" />
-            <div className="absolute top-3 left-3 bg-black/50 backdrop-blur-sm text-white text-[9px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider pointer-events-none">
-              Before
-            </div>
-            <div className="absolute top-3 right-3 bg-[#C9A227]/90 backdrop-blur-sm text-white text-[9px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider pointer-events-none">
-              After
-            </div>
-          </div>
-
-          {/* On/Off toggle */}
-          <div className="flex items-center justify-between rounded-xl px-4 py-3" style={{ background: 'var(--bg-surface, #fff)', border: '1px solid var(--border, #e8ddd3)' }}>
-            <div>
-              <h4 className="text-sm font-medium text-[var(--text-primary,#2a2a2a)]">Guardia Style</h4>
-              <p className="text-[10px] text-[var(--text-muted,#635c54)]">
-                {brand.visual.polish_preset === "none" ? "Photos upload as-is" : "Even lighting, clean detail, balanced exposure"}
-              </p>
-            </div>
-            <button
-              onClick={() => applyPreset(brand.visual.polish_preset === "none" ? "guardia" : "none")}
-              disabled={!!applying}
-              className="relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none"
-              style={{
-                background: brand.visual.polish_preset !== "none" ? "#C9A227" : "var(--border, #d1d5db)",
-              }}
-            >
-              <span
-                className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200"
-                style={{
-                  transform: brand.visual.polish_preset !== "none" ? "translateX(20px)" : "translateX(0)",
-                }}
-              />
-            </button>
-          </div>
-        </div>
 
         {/* Bottom breathing room */}
         <div className="h-4" />

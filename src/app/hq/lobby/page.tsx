@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
+
 
 const API_BASE = "https://api.guardiacontent.com";
 const HQ_CREDENTIALS = { username: "jinjurikii", pin: "1991" };
@@ -230,9 +230,6 @@ export default function LobbyPage() {
       {/* Header */}
       <div className="px-4 py-3 border-b border-[#1a1a1f] bg-[#0a0a0b] flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href="/hq" className="text-[#555] hover:text-[#888] text-sm">
-            ← HQ
-          </Link>
           <div className="flex items-center gap-2">
             <span className="text-xl">🌙</span>
             <span className="text-violet-400 font-medium">Luna</span>

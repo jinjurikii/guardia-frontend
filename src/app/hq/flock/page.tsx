@@ -305,8 +305,6 @@ export default function FlockPage() {
       <header className="border-b border-[#1a1a1f] bg-[#0a0a0b]/50 px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/hq" className="text-[#444] hover:text-[#888] transition-colors text-sm">← HQ</Link>
-            <div className="w-px h-4 bg-[#1a1a1f]" />
             <div className="w-2 h-2 rounded-full bg-blue-500" />
             <h1 className="text-blue-500 font-semibold text-sm tracking-wider">FLOCK</h1>
           </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import Link from "next/link";
+
 
 const API_BASE = "https://api.guardiacontent.com";
 const HQ_CREDENTIALS = { username: "jinjurikii", pin: "1991" };
@@ -163,10 +163,7 @@ function SessionSidebar({
   return (
     <div className="w-64 border-r border-[#1a1a1f] flex flex-col h-full bg-[#0a0a0b]">
       {/* Header */}
-      <div className="p-3 border-b border-[#1a1a1f] flex items-center justify-between">
-        <Link href="/hq" className="text-[#888] font-semibold text-xs tracking-wider hover:text-[#aaa]">
-          ← HQ
-        </Link>
+      <div className="p-3 border-b border-[#1a1a1f] flex items-center justify-center">
         <span className="text-[#555] text-xs">CONSOLE</span>
       </div>
 

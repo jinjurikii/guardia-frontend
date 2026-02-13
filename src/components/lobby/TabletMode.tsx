@@ -7,6 +7,8 @@ import GalleryTab from "./GalleryTab";
 import GuardiaAccount from "./GuardiaAccount";
 import BrandMirror from "./BrandMirror";
 import AnalyticsTab from "./AnalyticsTab";
+import ContentDirectionPanel from "./ContentDirectionPanel";
+import PlanningPreferencesPanel from "./PlanningPreferencesPanel";
 // VideoTab archived - see guardia-core/archive/video_pipeline_jan15/
 
 interface TabletModeProps {
@@ -139,11 +141,28 @@ export default function TabletMode({
             <GalleryTab client={client} jwt={jwt} onMessage={onMessage} />
           )}
           {activeTab === "styles" && client && jwt && (
-            <BrandMirror
-              clientId={client.id}
-              jwt={jwt}
-              onStyleUpdated={() => onMessage("Your style has been updated! Future content will use this new look.")}
-            />
+            <div className="h-full overflow-y-auto">
+              <BrandMirror
+                clientId={client.id}
+                jwt={jwt}
+                onStyleUpdated={() => onMessage("Your style has been updated! Future content will use this new look.")}
+              />
+              <div className="border-t border-[var(--border)]">
+                <ContentDirectionPanel
+                  clientId={client.id}
+                  industry={client.industry || ""}
+                  jwt={jwt}
+                  onMessage={onMessage}
+                />
+              </div>
+              <div className="border-t border-[var(--border)]">
+                <PlanningPreferencesPanel
+                  clientId={client.id}
+                  jwt={jwt}
+                  onMessage={onMessage}
+                />
+              </div>
+            </div>
           )}
           {activeTab === "analytics" && (
             <AnalyticsTab client={client} jwt={jwt} />

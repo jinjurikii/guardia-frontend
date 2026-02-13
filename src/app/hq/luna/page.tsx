@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
+
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import DaemonRoomsIndicator from "@/components/DaemonRoomsIndicator";
@@ -610,10 +610,7 @@ export default function LunaPage() {
       {/* Sidebar */}
       <div className="w-72 border-r border-[#1a1a1f] flex flex-col bg-[#0a0a0b]">
         {/* Header */}
-        <div className="p-3 border-b border-[#1a1a1f] flex items-center justify-between">
-          <Link href="/hq" className="text-[#888] font-semibold text-xs tracking-wider hover:text-[#aaa]">
-            ← HQ
-          </Link>
+        <div className="p-3 border-b border-[#1a1a1f] flex items-center justify-end">
           <div className="flex items-center gap-1.5">
             <span className="text-lg">🌙</span>
             <span className="text-violet-400 font-medium text-sm">Luna</span>

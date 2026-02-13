@@ -1,19 +1,22 @@
 "use client";
 
-import { Suspense } from "react";
-import { useState, useEffect } from "react";
+import { Suspense, createContext, useContext } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 const API_BASE = "https://api.guardiacontent.com";
+const REFRESH_INTERVAL = 60000;
+
+const RefreshContext = createContext(0);
 
 // ══════════════════════════════════════════════════════════════════════════════
 // TYPES
 // ══════════════════════════════════════════════════════════════════════════════
 
-interface PortfolioData {
-  positions: unknown[];
-  summary: { cash: number; invested: number; unrealized_pnl: number };
+interface ParadiseDashboard {
+  account: { balance: number; realized_pnl: number; unrealized_pnl: number; total_trades: number; open_count: number };
+  signals: unknown[];
 }
 
 interface CortexData {
@@ -21,6 +24,7 @@ interface CortexData {
   pipeline: { posts: { scheduled: number; posted: number; failed: number; cancelled: number } };
   services_online: number;
   services_total: number;
+  signals_24h: number;
 }
 
 interface ClientData {
@@ -28,6 +32,10 @@ interface ClientData {
   business_name: string;
   tier: string;
   status: string;
+  scheduled: number;
+  posted: number;
+  failed: number;
+  last_posted: string | null;
 }
 
 interface HealthData {
@@ -160,31 +168,32 @@ function Widget({ title, color, href, loading, error, alert, children }: WidgetP
 // ══════════════════════════════════════════════════════════════════════════════
 
 function ParadiseWidget() {
-  const [data, setData] = useState<PortfolioData | null>(null);
+  const refreshKey = useContext(RefreshContext);
+  const [data, setData] = useState<ParadiseDashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
 
   useEffect(() => {
-    fetch(`${API_BASE}/hq/paradise/portfolio`)
+    fetch(`${API_BASE}/hq/paradise/dashboard`)
       .then(res => res.ok ? res.json() : Promise.reject("Failed"))
       .then(setData)
       .catch(e => setError(String(e)))
       .finally(() => setLoading(false));
-  }, []);
+  }, [refreshKey]);
 
-  const nav = data ? data.summary.cash + data.summary.invested + data.summary.unrealized_pnl : 0;
-  const pnl = data?.summary.unrealized_pnl || 0;
+  const totalPnl = data ? data.account.realized_pnl + data.account.unrealized_pnl : 0;
 
   return (
     <Widget title="Paradise" color="#d4af37" href="/hq/paradise" loading={loading} error={error}>
       <div className="space-y-3">
         <div>
-          <span className="text-[#555] text-[10px] tracking-wider">NAV</span>
-          <p className="text-[#d4af37] font-mono text-lg">${nav.toLocaleString("en-US", { minimumFractionDigits: 2 })}</p>
+          <span className="text-[#555] text-[10px] tracking-wider">BALANCE</span>
+          <p className="text-[#d4af37] font-mono text-lg">${data?.account.balance.toFixed(2) || "0.00"}</p>
         </div>
         <div className="flex items-center gap-4 text-xs">
-          <span className="text-[#555]">P/L <span className={`ml-1 font-mono ${pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>{pnl >= 0 ? "+" : ""}{pnl.toFixed(2)}</span></span>
-          <span className="text-[#555]">Positions <span className="ml-1 text-[#888]">{data?.positions?.length || 0}</span></span>
+          <span className="text-[#555]">P&L <span className={`ml-1 font-mono ${totalPnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>{totalPnl >= 0 ? "+" : ""}{totalPnl.toFixed(2)}</span></span>
+          <span className="text-[#555]">Open <span className="ml-1 text-[#888]">{data?.account.open_count || 0}</span></span>
+          <span className="text-[#555]">Signals <span className="ml-1 text-[#888]">{data?.signals?.length || 0}</span></span>
         </div>
       </div>
     </Widget>
@@ -192,6 +201,7 @@ function ParadiseWidget() {
 }
 
 function FactoryWidget() {
+  const refreshKey = useContext(RefreshContext);
   const [data, setData] = useState<CortexData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
@@ -202,13 +212,13 @@ function FactoryWidget() {
       .then(setData)
       .catch(e => setError(String(e)))
       .finally(() => setLoading(false));
-  }, []);
+  }, [refreshKey]);
 
   const posts = data?.pipeline?.posts || { scheduled: 0, posted: 0, failed: 0 };
   const hasFailed = posts.failed > 0;
 
   return (
-    <Widget title="Factory" color="#10b981" href="/hq/factory" loading={loading} error={error} alert={hasFailed}>
+    <Widget title="Factory" color="#10b981" href={hasFailed ? "/hq/factory?filter=failed" : "/hq/factory"} loading={loading} error={error} alert={hasFailed}>
       <div className="space-y-3">
         <div className="flex items-center gap-6">
           <div>
@@ -231,6 +241,7 @@ function FactoryWidget() {
 }
 
 function CortexWidget() {
+  const refreshKey = useContext(RefreshContext);
   const [data, setData] = useState<CortexData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
@@ -241,21 +252,37 @@ function CortexWidget() {
       .then(setData)
       .catch(e => setError(String(e)))
       .finally(() => setLoading(false));
-  }, []);
+  }, [refreshKey]);
 
   const focusCount = data?.focus?.length || 0;
+  const topFocus = data?.focus?.[0];
+  const signals = data?.signals_24h || 0;
 
   return (
     <Widget title="Cortex" color="#8b5cf6" href="/hq/cortex" loading={loading} error={error}>
-      <div>
-        <span className="text-[#555] text-[10px] tracking-wider">FOCUS ITEMS</span>
-        <p className="text-violet-400 font-mono text-lg">{focusCount}</p>
+      <div className="space-y-3">
+        <div className="flex items-center gap-6">
+          <div>
+            <span className="text-[#555] text-[10px] tracking-wider block">FOCUS</span>
+            <p className="text-violet-400 font-mono text-lg">{focusCount}</p>
+          </div>
+          <div>
+            <span className="text-[#555] text-[10px] tracking-wider block">SIGNALS 24H</span>
+            <p className="text-[#888] font-mono text-lg">{signals}</p>
+          </div>
+        </div>
+        {topFocus && (
+          <p className="text-violet-400/60 text-[10px] truncate">
+            P{topFocus.p}: {topFocus.task}
+          </p>
+        )}
       </div>
     </Widget>
   );
 }
 
 function ClientsWidget() {
+  const refreshKey = useContext(RefreshContext);
   const [data, setData] = useState<ClientData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
@@ -266,22 +293,45 @@ function ClientsWidget() {
       .then(d => setData(Array.isArray(d) ? d : []))
       .catch(e => setError(String(e)))
       .finally(() => setLoading(false));
-  }, []);
+  }, [refreshKey]);
+
+  const totals = data.reduce((acc, c) => ({
+    scheduled: acc.scheduled + c.scheduled,
+    posted: acc.posted + c.posted,
+    failed: acc.failed + c.failed,
+  }), { scheduled: 0, posted: 0, failed: 0 });
+
+  const starving = data.filter(c => c.scheduled === 0 && c.posted === 0).length;
 
   return (
-    <Widget title="Clients" color="#f59e0b" href="/clients" loading={loading} error={error}>
+    <Widget title="Clients" color="#f59e0b" href="/clients" loading={loading} error={error} alert={starving > 0}>
       <div className="space-y-2">
-        <div>
-          <span className="text-[#555] text-[10px] tracking-wider">ACTIVE</span>
+        <div className="flex items-baseline gap-3">
           <p className="text-amber-400 font-mono text-lg">{data.length}</p>
+          <span className="text-[#555] text-[10px] tracking-wider">ACTIVE</span>
         </div>
-        {data[0] && <p className="text-xs text-[#666] truncate">{data[0].business_name}</p>}
+        <div className="flex items-center gap-3 text-[10px] font-mono">
+          <span className="text-emerald-400">{totals.scheduled}</span>
+          <span className="text-[#444]">sched</span>
+          <span className="text-[#888]">{totals.posted}</span>
+          <span className="text-[#444]">posted</span>
+          {totals.failed > 0 && (
+            <>
+              <span className="text-red-400">{totals.failed}</span>
+              <span className="text-[#444]">failed</span>
+            </>
+          )}
+        </div>
+        {starving > 0 && (
+          <p className="text-amber-400/60 text-[10px]">{starving} client{starving > 1 ? "s" : ""} with no content</p>
+        )}
       </div>
     </Widget>
   );
 }
 
 function AtlasWidget() {
+  const refreshKey = useContext(RefreshContext);
   const [data, setData] = useState<AtlasData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
@@ -292,7 +342,7 @@ function AtlasWidget() {
       .then(setData)
       .catch(e => setError(String(e)))
       .finally(() => setLoading(false));
-  }, []);
+  }, [refreshKey]);
 
   const healthy = data?.total_online === data?.total_services && (data?.total_services || 0) > 0;
   const HEALTH_COLORS = { green: "bg-emerald-400", amber: "bg-amber-400", red: "bg-red-400" };
@@ -328,6 +378,7 @@ function AtlasWidget() {
 }
 
 function LabWidget() {
+  const refreshKey = useContext(RefreshContext);
   const [data, setData] = useState<LabData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
@@ -338,7 +389,7 @@ function LabWidget() {
       .then(setData)
       .catch(e => setError(String(e)))
       .finally(() => setLoading(false));
-  }, []);
+  }, [refreshKey]);
 
   return (
     <Widget title="Lab" color="#14b8a6" href="/hq/lab" loading={loading} error={error}>
@@ -357,6 +408,7 @@ function LabWidget() {
 }
 
 function AthernyxWidget() {
+  const refreshKey = useContext(RefreshContext);
   const [data, setData] = useState<AthernyxData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
@@ -367,7 +419,7 @@ function AthernyxWidget() {
       .then(setData)
       .catch(e => setError(String(e)))
       .finally(() => setLoading(false));
-  }, []);
+  }, [refreshKey]);
 
   const chapter = data?.current_chapter;
   const hasOrphans = (data?.orphan_designs || 0) > 0;
@@ -402,6 +454,7 @@ function AthernyxWidget() {
 // ══════════════════════════════════════════════════════════════════════════════
 
 function FlockSection() {
+  const refreshKey = useContext(RefreshContext);
   const [leads, setLeads] = useState<FlockLead[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -411,7 +464,7 @@ function FlockSection() {
       .then(data => setLeads(Array.isArray(data) ? data : data.picks || data.leads || []))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [refreshKey]);
 
   if (!loading && leads.length === 0) return null;
 
@@ -472,6 +525,14 @@ function HQPageContent() {
   const searchParams = useSearchParams();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [globalHealth, setGlobalHealth] = useState<"healthy" | "degraded" | "loading">("loading");
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const [ago, setAgo] = useState("now");
+
+  const doRefresh = useCallback(() => {
+    setRefreshKey(k => k + 1);
+    setLastRefresh(new Date());
+  }, []);
 
   useEffect(() => {
     const devKey = searchParams?.get("dev");
@@ -493,26 +554,41 @@ function HQPageContent() {
         setGlobalHealth(online === total ? "healthy" : "degraded");
       })
       .catch(() => setGlobalHealth("degraded"));
-  }, [isAuthenticated]);
+  }, [isAuthenticated, refreshKey]);
+
+  // Auto-refresh every 60s
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const interval = setInterval(doRefresh, REFRESH_INTERVAL);
+    return () => clearInterval(interval);
+  }, [isAuthenticated, doRefresh]);
+
+  // Update "ago" label every 10s
+  useEffect(() => {
+    const tick = setInterval(() => {
+      const secs = Math.floor((Date.now() - lastRefresh.getTime()) / 1000);
+      if (secs < 5) setAgo("now");
+      else if (secs < 60) setAgo(`${secs}s ago`);
+      else setAgo(`${Math.floor(secs / 60)}m ago`);
+    }, 10000);
+    return () => clearInterval(tick);
+  }, [lastRefresh]);
 
   if (!isAuthenticated) return <LoginScreen onLogin={() => setIsAuthenticated(true)} />;
 
   return (
+    <RefreshContext.Provider value={refreshKey}>
     <div className="min-h-screen bg-[#050506] text-[#e8e8e8]">
-      <header className="border-b border-[#1a1a1f] bg-[#0a0a0b]/50 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-5 h-5 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500" />
-            <h1 className="text-[#888] font-semibold text-sm tracking-wider">GUARDIA HQ</h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${globalHealth === "loading" ? "bg-[#444] animate-pulse" : globalHealth === "healthy" ? "bg-emerald-400" : "bg-amber-400 animate-pulse"}`} />
-            <span className="text-[#666] text-xs font-mono uppercase">{globalHealth === "loading" ? "..." : globalHealth}</span>
-          </div>
-        </div>
-      </header>
-
       <main className="max-w-7xl mx-auto p-6">
+        <div className="flex items-center justify-end gap-3 mb-4">
+          <span className="text-[#333] text-[10px] font-mono">{ago}</span>
+          <button
+            onClick={doRefresh}
+            className="text-[#444] hover:text-[#888] text-[10px] font-mono tracking-wider transition-colors"
+          >
+            REFRESH
+          </button>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <ParadiseWidget />
           <FactoryWidget />
@@ -525,6 +601,7 @@ function HQPageContent() {
         <FlockSection />
       </main>
     </div>
+    </RefreshContext.Provider>
   );
 }
 

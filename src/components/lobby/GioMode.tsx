@@ -8,6 +8,7 @@ import MessageBubble from "./MessageBubble";
 import LoadingIndicator from "./LoadingIndicator";
 import ChatInput from "./ChatInput";
 import QuickActions from "./QuickActions";
+import QuickSetupCard from "./QuickSetupCard";
 
 const API_BASE = "https://api.guardiacontent.com";
 
@@ -161,6 +162,33 @@ export default function GioMode({
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4" style={{ maxHeight: "calc(100vh - 180px)" }}>
             <div className="max-w-2xl mx-auto space-y-4">
+              {/* Setup card for new clients */}
+              {client && (
+                <QuickSetupCard
+                  steps={[
+                    {
+                      id: "connect",
+                      label: "Connect your Facebook page",
+                      complete: !!client.facebook_connected,
+                      action: handleConnectFacebook,
+                      actionLabel: "Connect",
+                    },
+                    {
+                      id: "upload",
+                      label: "Upload your first photo",
+                      complete: (client.pending_uploads || 0) > 0 || (client.styled_ready || 0) > 0 || (client.posted_this_month || 0) > 0,
+                      action: onOpenTablet,
+                      actionLabel: "Upload",
+                    },
+                    {
+                      id: "post",
+                      label: "Publish your first post",
+                      complete: (client.posted_this_month || 0) > 0,
+                    },
+                  ]}
+                />
+              )}
+
               {messages?.map((msg, i) => (
                 <MessageBubble key={i} message={msg} isUser={msg.role === "user"} />
               ))}

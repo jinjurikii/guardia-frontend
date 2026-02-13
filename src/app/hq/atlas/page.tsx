@@ -540,12 +540,6 @@ export default function AtlasPage() {
       <header className="border-b border-[#1a1a1f] bg-[#0a0a0b]/50 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link
-              href="/hq"
-              className="text-[#555] hover:text-[#888] text-sm transition-colors"
-            >
-              ← HQ
-            </Link>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-cyan-500" />
               <h1 className="text-cyan-400 font-semibold text-sm tracking-wider">

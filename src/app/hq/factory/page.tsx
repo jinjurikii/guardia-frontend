@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 
 const API_BASE = "https://api.guardiacontent.com";
 
@@ -24,22 +24,31 @@ interface PipelineStats {
 }
 
 export default function FactoryPage() {
+  return (
+    <Suspense>
+      <FactoryContent />
+    </Suspense>
+  );
+}
+
+function FactoryContent() {
+  const searchParams = useSearchParams();
   const [stats, setStats] = useState<PipelineStats | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<string>("all");
+  const [filter, setFilter] = useState<string>(searchParams?.get("filter") || "all");
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [retrying, setRetrying] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch stats from cortex-state
         const statsRes = await fetch(`${API_BASE}/hq/cortex-state`);
         if (statsRes.ok) {
           const data = await statsRes.json();
           setStats(data.pipeline?.posts || { scheduled: 0, posted: 0, failed: 0, cancelled: 0 });
         }
 
-        // Fetch recent posts
         const postsRes = await fetch(`${API_BASE}/hq/factory/posts`);
         if (postsRes.ok) {
           const postsData = await postsRes.json();
@@ -53,6 +62,26 @@ export default function FactoryPage() {
     };
     fetchData();
   }, []);
+
+  const retryPost = async (postId: number) => {
+    setRetrying(postId);
+    try {
+      const res = await fetch(`${API_BASE}/hq/factory/posts/${postId}/retry`, { method: "POST" });
+      if (res.ok) {
+        const updated = await res.json();
+        setPosts(prev => prev.map(p => p.id === postId ? updated : p));
+        setExpandedId(null);
+        // Update stats
+        if (stats) {
+          setStats({ ...stats, failed: Math.max(0, stats.failed - 1), scheduled: stats.scheduled + 1 });
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setRetrying(null);
+    }
+  };
 
   const filteredPosts = filter === "all" ? posts : posts.filter(p => p.status === filter);
 
@@ -75,11 +104,6 @@ export default function FactoryPage() {
       <header className="border-b border-[#1a1a1f] bg-[#0a0a0b]/50 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/hq?dev=serb" className="text-[#555] hover:text-[#888] transition-colors">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </Link>
             <div className="w-2 h-2 rounded-full bg-emerald-500" />
             <h1 className="text-[#10b981] font-semibold text-sm tracking-wider">THE FACTORY</h1>
           </div>
@@ -146,24 +170,58 @@ export default function FactoryPage() {
               </thead>
               <tbody>
                 {filteredPosts.map(post => (
-                  <tr key={post.id} className="border-b border-[#1a1a1f] hover:bg-[#0d0d0e]">
-                    <td className="p-4 text-sm text-[#888]">{post.client_id}</td>
-                    <td className="p-4 text-sm text-[#888]">{post.platform}</td>
-                    <td className="p-4 text-sm text-[#888] max-w-[300px] truncate">{post.caption?.slice(0, 50)}...</td>
-                    <td className={`p-4 text-sm font-mono ${statusColors[post.status] || "text-[#888]"}`}>
-                      {post.status}
-                    </td>
-                    <td className="p-4 text-sm text-[#555]">
-                      {formatDate(post.posted_at || post.scheduled_for)}
-                    </td>
-                  </tr>
+                  <>
+                    <tr
+                      key={post.id}
+                      className={`border-b border-[#1a1a1f] transition-colors ${
+                        post.status === "failed" ? "hover:bg-red-500/5 cursor-pointer" : "hover:bg-[#0d0d0e]"
+                      }`}
+                      onClick={() => post.status === "failed" && setExpandedId(expandedId === post.id ? null : post.id)}
+                    >
+                      <td className="p-4 text-sm text-[#888]">{post.client_id}</td>
+                      <td className="p-4 text-sm text-[#888]">{post.platform}</td>
+                      <td className="p-4 text-sm text-[#888] max-w-[300px] truncate">{post.caption?.slice(0, 50)}...</td>
+                      <td className={`p-4 text-sm font-mono ${statusColors[post.status] || "text-[#888]"}`}>
+                        {post.status}
+                      </td>
+                      <td className="p-4 text-sm text-[#555]">
+                        {formatDate(post.posted_at || post.scheduled_for)}
+                      </td>
+                    </tr>
+                    {/* Expanded error detail */}
+                    {post.status === "failed" && expandedId === post.id && (
+                      <tr key={`${post.id}-error`} className="border-b border-[#1a1a1f]">
+                        <td colSpan={5} className="px-4 py-3 bg-red-500/5">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1 min-w-0">
+                              <span className="text-[#555] text-[10px] tracking-wider block mb-1">ERROR</span>
+                              <p className="text-red-300/80 text-xs font-mono whitespace-pre-wrap">
+                                {post.error_message || "No error message recorded"}
+                              </p>
+                            </div>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); retryPost(post.id); }}
+                              disabled={retrying === post.id}
+                              className="shrink-0 px-4 py-2 rounded-lg text-xs font-medium transition-all bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 disabled:opacity-50"
+                            >
+                              {retrying === post.id ? "Retrying..." : "Retry"}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
                 ))}
               </tbody>
             </table>
             {/* Mobile cards */}
             <div className="md:hidden divide-y divide-[#1a1a1f]">
               {filteredPosts.map(post => (
-                <div key={post.id} className="p-4 space-y-2">
+                <div
+                  key={post.id}
+                  className={`p-4 space-y-2 ${post.status === "failed" ? "cursor-pointer" : ""}`}
+                  onClick={() => post.status === "failed" && setExpandedId(expandedId === post.id ? null : post.id)}
+                >
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-[#ccc] font-medium">{post.client_id}</span>
                     <span className={`text-xs font-mono ${statusColors[post.status] || "text-[#888]"}`}>{post.status}</span>
@@ -173,6 +231,22 @@ export default function FactoryPage() {
                     <span>{post.platform}</span>
                     <span>{formatDate(post.posted_at || post.scheduled_for)}</span>
                   </div>
+                  {/* Mobile error detail */}
+                  {post.status === "failed" && expandedId === post.id && (
+                    <div className="mt-2 p-3 rounded-lg bg-red-500/5 border border-red-500/10">
+                      <span className="text-[#555] text-[10px] tracking-wider block mb-1">ERROR</span>
+                      <p className="text-red-300/80 text-xs font-mono whitespace-pre-wrap mb-3">
+                        {post.error_message || "No error message recorded"}
+                      </p>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); retryPost(post.id); }}
+                        disabled={retrying === post.id}
+                        className="px-4 py-2 rounded-lg text-xs font-medium transition-all bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 disabled:opacity-50"
+                      >
+                        {retrying === post.id ? "Retrying..." : "Retry"}
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

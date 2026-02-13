@@ -188,8 +188,8 @@ function Nav() {
           <a href="#how" className="text-sm text-[#635C54] hover:text-[#2A2A2A] transition-colors">
             How It Works
           </a>
-          <a href="#styles" className="text-sm text-[#635C54] hover:text-[#2A2A2A] transition-colors">
-            Styles
+          <a href="#results" className="text-sm text-[#635C54] hover:text-[#2A2A2A] transition-colors">
+            Results
           </a>
           <a href="#pricing" className="text-sm text-[#635C54] hover:text-[#2A2A2A] transition-colors">
             Pricing
@@ -231,7 +231,7 @@ function Nav() {
       {mobileOpen && (
         <div className="md:hidden bg-[#FAF6F1] border-t border-[#E8DDD3] px-4 py-4 space-y-3">
           <a href="#how" onClick={() => setMobileOpen(false)} className="block text-sm text-[#3D3D3D] py-2">How It Works</a>
-          <a href="#styles" onClick={() => setMobileOpen(false)} className="block text-sm text-[#3D3D3D] py-2">Styles</a>
+          <a href="#results" onClick={() => setMobileOpen(false)} className="block text-sm text-[#3D3D3D] py-2">Styles</a>
           <a href="#pricing" onClick={() => setMobileOpen(false)} className="block text-sm text-[#3D3D3D] py-2">Pricing</a>
           <a href="#faq" onClick={() => setMobileOpen(false)} className="block text-sm text-[#3D3D3D] py-2">FAQ</a>
           <a href="/client" onClick={() => setMobileOpen(false)} className="block text-sm text-[#635C54] font-medium py-2">Client Login</a>
@@ -283,10 +283,10 @@ function Hero() {
             <ArrowRight className="w-5 h-5" />
           </a>
           <a
-            href="#styles"
+            href="#results"
             className="inline-flex items-center justify-center gap-2 border-[1.5px] border-[#4338CA] text-[#4338CA] font-medium px-8 py-4 rounded-xl hover:bg-[#4338CA]/5 transition-colors"
           >
-            See Styles
+            See Results
           </a>
         </div>
 
@@ -358,7 +358,7 @@ function StyleShowcase() {
   const { ref, visible } = useScrollReveal();
 
   return (
-    <section id="styles" className="py-24 px-6 bg-[#F0E8E0]">
+    <section id="results" className="py-24 px-6 bg-[#F0E8E0]">
       <div ref={ref} className="max-w-6xl mx-auto">
         <div className="text-center mb-6">
           <div className="inline-flex items-center gap-2 bg-[#C9A227]/10 border border-[#C9A227]/20 rounded-full px-4 py-2 mb-6">
@@ -369,7 +369,7 @@ function StyleShowcase() {
             See the Difference
           </h2>
           <p className="text-[#635C54] max-w-2xl mx-auto">
-            Same photo. Different styles. You pick what fits your brand.
+            Your phone photos, professionally enhanced. Every niche. One standard.
           </p>
         </div>
 
@@ -385,7 +385,7 @@ function StyleShowcase() {
             href="/intake/pro"
             className="inline-flex items-center gap-2 text-[#4338CA] hover:text-[#3730A3] font-medium transition-colors"
           >
-            Get your style in 48 hours
+            Get your first post in 48 hours
             <ArrowRight className="w-4 h-4" />
           </a>
         </div>

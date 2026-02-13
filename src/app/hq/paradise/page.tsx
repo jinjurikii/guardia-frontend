@@ -1,8 +1,5 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
-
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 
@@ -12,53 +9,143 @@ const API_BASE = "https://api.guardiacontent.com";
 // TYPES
 // ══════════════════════════════════════════════════════════════════════════════
 
+interface CatPerformance {
+  total_signals: number;
+  wins: number;
+  losses: number;
+  expired: number;
+  win_rate: number;
+  total_pips: number;
+  avg_pips: number;
+  shadow_count: number;
+}
+
+interface CatData {
+  strategy: string;
+  timeframe: string;
+  last_signal: {
+    pair: string;
+    direction: string;
+    outcome: string;
+    pnl_pips: number;
+    shadow: number;
+    created_at: string;
+  } | null;
+  vulture: { approved: boolean; consecutive_losses: number };
+  performance: CatPerformance;
+  trades: { realized_pnl: number; total: number };
+}
+
 interface Position {
-  id: number;
-  symbol: string;
-  cat: string;
-  shares: number;
+  strategy: string;
+  pair: string;
+  direction: string;
   entry_price: number;
-  current_price: number;
-  pnl: number;
-  pnl_pct: number;
-}
-
-interface PortfolioSummary {
-  cash: number;
-  invested: number;
+  stop_loss: number;
+  units: number;
   unrealized_pnl: number;
-  unrealized_pct: number;
-  realized_pnl: number;
+  oanda_id: string;
 }
 
-const CAT_COLORS: Record<string, string> = {
-  cheetah: '#FFD700',
-  lion: '#FF8C00',
-  jaguar: '#00CED1',
-  tiger: '#FF6347'
-};
+interface Signal {
+  id: number;
+  cat: string;
+  pair: string;
+  direction: string;
+  entry_price: number;
+  outcome: string;
+  pnl_pips: number;
+  shadow: number;
+  created_at: string;
+}
 
-const CAT_LABELS: Record<string, string> = {
-  cheetah: 'Momentum',
-  lion: 'Value',
-  jaguar: 'Growth',
-  tiger: 'Swing'
-};
+interface BirdStatus {
+  mode: string;
+  daily_pnl?: number;
+  can_trade?: boolean;
+  threshold?: number;
+}
+
+interface PriceData {
+  bid: number;
+  ask: number;
+  spread: number;
+  timestamp: string;
+}
+
+interface DashboardData {
+  account: {
+    balance: number;
+    realized_pnl: number;
+    unrealized_pnl: number;
+    total_trades: number;
+    open_count: number;
+  };
+  cats: Record<string, CatData>;
+  other_cats: Record<string, { strategy: string; status: string }>;
+  positions: Position[];
+  signals: Signal[];
+  birds: Record<string, BirdStatus>;
+  prices: Record<string, PriceData>;
+}
 
 // ══════════════════════════════════════════════════════════════════════════════
-// AUTH CHECK
+// CONSTANTS
+// ══════════════════════════════════════════════════════════════════════════════
+
+const CAT_COLORS: Record<string, string> = {
+  lion: "#FF8C00",
+  cheetah: "#FFD700",
+  tiger: "#FF6347",
+  jaguar: "#00CED1",
+};
+
+const CAT_EMOJI: Record<string, string> = {
+  lion: "\u{1F981}",
+  cheetah: "\u{1F406}",
+  tiger: "\u{1F42F}",
+  jaguar: "\u{1F406}",
+};
+
+const OUTCOME_COLORS: Record<string, string> = {
+  hit_target: "#10b981",
+  hit_stop: "#ef4444",
+  expired: "#f59e0b",
+  pending: "#666",
+};
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr + "Z").getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
+}
+
+function formatPips(n: number | null): string {
+  if (n == null) return "—";
+  return (n >= 0 ? "+" : "") + n.toFixed(1) + "p";
+}
+
+function formatMoney(n: number | null): string {
+  if (n == null) return "—";
+  return (n >= 0 ? "+" : "") + n.toFixed(2);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// AUTH
 // ══════════════════════════════════════════════════════════════════════════════
 
 function useAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [checking, setChecking] = useState(true);
-
   useEffect(() => {
-    const auth = localStorage.getItem("hq_auth");
-    setIsAuthenticated(auth === "true");
+    setIsAuthenticated(localStorage.getItem("hq_auth") === "true");
     setChecking(false);
   }, []);
-
   return { isAuthenticated, checking };
 }
 
@@ -66,125 +153,288 @@ function useAuth() {
 // COMPONENTS
 // ══════════════════════════════════════════════════════════════════════════════
 
-function ParadiseHeader({ summary }: { summary: PortfolioSummary }) {
-  const nav = (summary.cash + summary.invested + summary.unrealized_pnl);
-  const navFormatted = nav.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
+function ParadiseHeader({ data }: { data: DashboardData }) {
+  const totalPnl = (data.account.realized_pnl ?? 0) + (data.account.unrealized_pnl ?? 0);
   return (
-    <header className="border-b border-[#1a1a10] bg-gradient-to-b from-[#0c0a08] to-[#080706]">
+    <header className="border-b border-[#1a1a1f] bg-gradient-to-b from-[#0c0a08] to-[#080706]">
       <div className="flex justify-between items-center px-6 py-4">
-        <div className="flex items-center gap-8">
-          <Link href="/hq" className="text-[#666] hover:text-[#888] text-sm transition-colors">
-            ← HQ
-          </Link>
+        <div className="flex items-center gap-6">
           <div className="flex items-center gap-3">
-            <span className="text-[#d4af37] font-serif text-xl tracking-wide">PARADISE</span>
-            <span className="text-[#4a4535] text-xs font-mono tracking-wider">PAPER TRADING</span>
+            <span className="text-[#d4af37] font-serif text-xl tracking-wide">PARADISE FOREX</span>
+            <span className="text-[10px] tracking-[0.2em] text-[#4a4535] font-mono border border-[#2a2a2f] px-2 py-0.5 rounded">PAPER</span>
           </div>
         </div>
-
-        <div className="flex items-center gap-2">
-          <span className="text-[#6b6555] text-xs tracking-wider mr-2">NAV</span>
-          <span className="text-[#d4af37] font-mono text-lg tracking-tight">${navFormatted}</span>
+        <div className="flex items-center gap-6">
+          <div className="text-right">
+            <div className="text-[#555] text-[10px] tracking-[0.15em]">BALANCE</div>
+            <div className="text-[#d4af37] font-mono text-lg">${data.account.balance.toFixed(2)}</div>
+          </div>
+          <div className="text-right">
+            <div className="text-[#555] text-[10px] tracking-[0.15em]">TOTAL P&L</div>
+            <div className={`font-mono text-lg ${totalPnl >= 0 ? "text-[#50c878]" : "text-[#e74c3c]"}`}>
+              {formatMoney(totalPnl)}
+            </div>
+          </div>
         </div>
       </div>
     </header>
   );
 }
 
-function AccountCard({ summary }: { summary: PortfolioSummary }) {
-  const formatMoney = (n: number) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function PricesTicker({ prices }: { prices: Record<string, PriceData> }) {
+  return (
+    <div className="flex gap-4 overflow-x-auto px-6 py-2 border-b border-[#1a1a1f] bg-[#060607]">
+      {Object.entries(prices).map(([pair, p]) => (
+        <div key={pair} className="flex items-center gap-3 text-sm whitespace-nowrap">
+          <span className="text-[#888] font-mono">{pair}</span>
+          <span className="text-[#ccc] font-mono">{p.bid.toFixed(pair.includes("JPY") ? 3 : 5)}</span>
+          <span className="text-[#555] text-xs">{p.spread.toFixed(1)}sp</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CatStatusCard({ name, cat }: { name: string; cat: CatData }) {
+  const color = CAT_COLORS[name] || "#888";
+  const emoji = CAT_EMOJI[name] || "";
+  const perf = cat.performance;
+  const v = cat.vulture;
 
   return (
-    <div className="bg-gradient-to-br from-[#0f0d0a] to-[#0a0908] border border-[#1f1c15] rounded-lg p-5">
-      <div className="text-[#6b6555] text-[10px] tracking-[0.2em] mb-4 font-medium">ACCOUNT</div>
-      
-      <div className="space-y-3">
-        <div className="flex justify-between items-center">
-          <span className="text-[#7a7568] text-sm">Cash</span>
-          <span className="text-[#c9c4b5] font-mono text-sm">${formatMoney(summary.cash)}</span>
+    <div className="bg-[#0a0a0b] border border-[#1a1a1f] rounded-lg p-5 hover:border-[#2a2a2f] transition-colors">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">{emoji}</span>
+          <span className="font-medium tracking-wide" style={{ color }}>{name.toUpperCase()}</span>
         </div>
-        <div className="flex justify-between items-center">
-          <span className="text-[#7a7568] text-sm">Invested</span>
-          <span className="text-[#8a8578] font-mono text-sm">${formatMoney(summary.invested)}</span>
-        </div>
-        
-        <div className="border-t border-[#1f1c15] pt-3 mt-3">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-[#7a7568] text-sm">Unrealized</span>
-            <span className={`font-mono text-sm ${summary.unrealized_pnl >= 0 ? 'text-[#50c878]' : 'text-[#e74c3c]'}`}>
-              {summary.unrealized_pnl >= 0 ? '+' : ''}${formatMoney(summary.unrealized_pnl)}
-            </span>
+        <span className="text-[#555] text-xs">{cat.strategy} &middot; {cat.timeframe}</span>
+      </div>
+
+      {cat.last_signal ? (
+        <div className="mb-3 px-3 py-2 bg-[#0e0e10] rounded border border-[#1a1a1f]">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-[#aaa] font-mono">{cat.last_signal.pair}</span>
+            {cat.last_signal.direction === "neutral" ? (
+              <span className="text-[#555]">SCANNING</span>
+            ) : (
+              <span className={cat.last_signal.direction === "long" ? "text-[#50c878]" : "text-[#e74c3c]"}>
+                {cat.last_signal.direction === "long" ? "\u2191" : "\u2193"} {cat.last_signal.direction.toUpperCase()}
+              </span>
+            )}
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-[#7a7568] text-sm">Realized</span>
-            <span className={`font-mono text-sm ${summary.realized_pnl >= 0 ? 'text-[#50c878]' : 'text-[#e74c3c]'}`}>
-              {summary.realized_pnl >= 0 ? '+' : ''}${formatMoney(summary.realized_pnl)}
+          <div className="flex items-center justify-between mt-1">
+            <span
+              className="text-xs px-1.5 py-0.5 rounded"
+              style={{
+                backgroundColor: (OUTCOME_COLORS[cat.last_signal.outcome] || "#666") + "20",
+                color: OUTCOME_COLORS[cat.last_signal.outcome] || "#666",
+              }}
+            >
+              {cat.last_signal.outcome || (cat.last_signal.direction === "neutral" ? "scan" : "pending")}
             </span>
+            <span className="text-[#555] text-xs">{timeAgo(cat.last_signal.created_at)}</span>
           </div>
         </div>
+      ) : (
+        <div className="mb-3 px-3 py-2 bg-[#0e0e10] rounded border border-[#1a1a1f] text-[#444] text-sm">
+          No signals yet
+        </div>
+      )}
+
+      <div className="flex items-center justify-between text-sm">
+        <div className="flex items-center gap-2">
+          <span
+            className={`w-2 h-2 rounded-full ${!v.approved ? "animate-pulse" : ""}`}
+            style={{ backgroundColor: v.approved ? (v.consecutive_losses >= 2 ? "#f59e0b" : "#10b981") : "#ef4444" }}
+          />
+          <span className="text-[#777] text-xs">
+            Vulture: {v.approved ? "CLEAR" : "BLOCKED"} ({v.consecutive_losses}L)
+          </span>
+        </div>
+        <span className="text-[#555] text-xs font-mono">
+          {perf.total_signals} sigs &middot; {formatPips(perf.total_pips)}
+        </span>
       </div>
     </div>
   );
 }
 
-function StrategyFilter({ 
-  selected, 
-  onSelect,
-  positions 
-}: { 
-  selected: string | null; 
-  onSelect: (cat: string | null) => void;
-  positions: Position[];
-}) {
-  const cats = ['cheetah', 'lion', 'jaguar', 'tiger'];
-  
-  const getCatCount = (cat: string) => positions.filter(p => p.cat === cat).length;
+function OtherCatCard({ name, info }: { name: string; info: { strategy: string; status: string } }) {
+  const color = CAT_COLORS[name] || "#888";
+  const emoji = CAT_EMOJI[name] || "";
+  return (
+    <div className="bg-[#0a0a0b] border border-[#1a1a1f] rounded-lg p-4 hover:border-[#2a2a2f] transition-colors opacity-60">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span>{emoji}</span>
+          <span className="text-sm font-medium" style={{ color }}>{name.toUpperCase()}</span>
+        </div>
+        <span className="text-[#444] text-xs">{info.strategy}</span>
+      </div>
+    </div>
+  );
+}
+
+function PositionsTable({ positions }: { positions: Position[] }) {
+  if (positions.length === 0) {
+    return (
+      <div className="bg-[#0a0a0b] border border-[#1a1a1f] rounded-lg p-8 text-center">
+        <div className="text-[#444] text-sm">No open positions &mdash; cats are watching</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-gradient-to-br from-[#0f0d0a] to-[#0a0908] border border-[#1f1c15] rounded-lg p-5">
-      <div className="text-[#6b6555] text-[10px] tracking-[0.2em] mb-4 font-medium">STRATEGIES</div>
-      
-      <div className="space-y-1">
-        <button
-          onClick={() => onSelect(null)}
-          className={`w-full text-left px-3 py-2.5 rounded text-sm transition-all ${
-            !selected 
-              ? 'bg-[#d4af37]/10 text-[#d4af37] border border-[#d4af37]/20' 
-              : 'text-[#7a7568] hover:bg-[#151310] border border-transparent'
-          }`}
-        >
-          All Positions
-        </button>
-        
-        {cats.map(cat => {
-          const count = getCatCount(cat);
-          return (
-            <button
-              key={cat}
-              onClick={() => onSelect(cat)}
-              className={`w-full text-left px-3 py-2.5 rounded text-sm transition-all flex items-center justify-between ${
-                selected === cat 
-                  ? 'border' 
-                  : 'text-[#7a7568] hover:bg-[#151310] border border-transparent'
-              }`}
-              style={{
-                backgroundColor: selected === cat ? `${CAT_COLORS[cat]}10` : undefined,
-                borderColor: selected === cat ? `${CAT_COLORS[cat]}30` : 'transparent',
-                color: selected === cat ? CAT_COLORS[cat] : undefined
-              }}
-            >
-              <div className="flex items-center gap-2">
-                <span 
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: CAT_COLORS[cat], opacity: selected === cat ? 1 : 0.4 }}
-                />
-                <span className="capitalize">{cat}</span>
-              </div>
-              {count > 0 && (
-                <span className={`text-xs ${selected === cat ? '' : 'text-[#4a4540]'}`}>{count}</span>
+    <div className="bg-[#0a0a0b] border border-[#1a1a1f] rounded-lg overflow-hidden">
+      <div className="hidden md:block">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-[#1a1a1f]">
+              {["PAIR", "CAT", "DIR", "ENTRY", "STOP", "UNITS", "P&L"].map((h) => (
+                <th key={h} className="text-left text-[10px] tracking-[0.15em] text-[#555] font-medium px-4 py-3">
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {positions.map((pos, i) => (
+              <tr key={i} className="border-b border-[#111] hover:bg-[#0e0e10] transition-colors">
+                <td className="px-4 py-3 font-mono text-sm text-[#ccc]">{pos.pair}</td>
+                <td className="px-4 py-3">
+                  <span className="text-xs capitalize" style={{ color: CAT_COLORS[pos.strategy] || "#888" }}>
+                    {pos.strategy}
+                  </span>
+                </td>
+                <td className="px-4 py-3">
+                  <span className={`text-sm ${pos.direction === "long" ? "text-[#50c878]" : "text-[#e74c3c]"}`}>
+                    {pos.direction === "long" ? "\u2191" : "\u2193"} {pos.direction.toUpperCase()}
+                  </span>
+                </td>
+                <td className="px-4 py-3 font-mono text-sm text-[#888]">{pos.entry_price}</td>
+                <td className="px-4 py-3 font-mono text-sm text-[#666]">{pos.stop_loss}</td>
+                <td className="px-4 py-3 font-mono text-sm text-[#888]">{pos.units}</td>
+                <td className={`px-4 py-3 font-mono text-sm ${(pos.unrealized_pnl ?? 0) >= 0 ? "text-[#50c878]" : "text-[#e74c3c]"}`}>
+                  {formatMoney(pos.unrealized_pnl)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="md:hidden divide-y divide-[#1a1a1f]">
+        {positions.map((pos, i) => (
+          <div key={i} className="p-4">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-[#ccc] font-mono">{pos.pair}</span>
+              <span className={`font-mono ${(pos.unrealized_pnl ?? 0) >= 0 ? "text-[#50c878]" : "text-[#e74c3c]"}`}>
+                {formatMoney(pos.unrealized_pnl)}
+              </span>
+            </div>
+            <div className="flex gap-4 text-xs text-[#666]">
+              <span style={{ color: CAT_COLORS[pos.strategy] }}>{pos.strategy}</span>
+              <span>{pos.direction === "long" ? "\u2191 LONG" : "\u2193 SHORT"}</span>
+              <span>Entry: {pos.entry_price}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SignalFeed({ signals }: { signals: Signal[] }) {
+  if (signals.length === 0) {
+    return (
+      <div className="bg-[#0a0a0b] border border-[#1a1a1f] rounded-lg p-6 text-center text-[#444] text-sm">
+        No signals yet
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-[#0a0a0b] border border-[#1a1a1f] rounded-lg overflow-hidden max-h-[400px] overflow-y-auto">
+      {signals.map((sig) => {
+        const oc = OUTCOME_COLORS[sig.outcome] || "#666";
+        const isShadow = sig.shadow === 1;
+        return (
+          <div
+            key={sig.id}
+            className={`flex items-center justify-between px-4 py-2.5 border-b border-[#111] hover:bg-[#0e0e10] transition-colors ${
+              isShadow ? "border-l-2 border-l-dashed border-l-[#555]" : ""
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-[#555] text-xs w-16">{timeAgo(sig.created_at)}</span>
+              <span className="text-xs capitalize" style={{ color: CAT_COLORS[sig.cat] || "#888" }}>
+                {sig.cat}
+              </span>
+              <span className="text-[#aaa] font-mono text-sm">{sig.pair}</span>
+              {sig.direction === "neutral" ? (
+                <span className="text-[#555] text-xs">&mdash;</span>
+              ) : (
+                <span className={`text-xs ${sig.direction === "long" ? "text-[#50c878]" : "text-[#e74c3c]"}`}>
+                  {sig.direction === "long" ? "\u2191" : "\u2193"}
+                </span>
               )}
-            </button>
+              {isShadow && <span className="text-[#555] text-[10px]">(shadow)</span>}
+            </div>
+            <div className="flex items-center gap-3">
+              <span
+                className={`text-[10px] px-1.5 py-0.5 rounded tracking-wider ${!sig.outcome ? "animate-pulse" : ""}`}
+                style={{ backgroundColor: oc + "20", color: oc }}
+              >
+                {sig.outcome?.toUpperCase() || (sig.direction === "neutral" ? "SCAN" : "PENDING")}
+              </span>
+              {sig.pnl_pips != null && (
+                <span className={`font-mono text-xs w-16 text-right ${sig.pnl_pips >= 0 ? "text-[#50c878]" : "text-[#e74c3c]"}`}>
+                  {formatPips(sig.pnl_pips)}
+                </span>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function BirdGatesPanel({ birds }: { birds: Record<string, BirdStatus> }) {
+  const birdList = [
+    { key: "hawk", label: "Hawk", desc: "Risk Gate" },
+    { key: "eagle", label: "Eagle", desc: "Signal Quality" },
+    { key: "vulture", label: "Vulture", desc: "Discipline" },
+  ];
+
+  return (
+    <div className="bg-[#0a0a0b] border border-[#1a1a1f] rounded-lg p-5">
+      <div className="text-[#555] text-[10px] tracking-[0.2em] font-medium mb-4">RISK GATES</div>
+      <div className="space-y-3">
+        {birdList.map(({ key, label, desc }) => {
+          const bird = birds[key];
+          if (!bird) return null;
+          const isNormal = bird.mode === "normal";
+          return (
+            <div key={key} className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span
+                  className={`w-2 h-2 rounded-full ${!isNormal ? "animate-pulse" : ""}`}
+                  style={{ backgroundColor: isNormal ? "#10b981" : "#ef4444" }}
+                />
+                <span className="text-[#aaa] text-sm">{label}</span>
+                <span className="text-[#444] text-xs">{desc}</span>
+              </div>
+              <span
+                className="text-[10px] px-2 py-0.5 rounded tracking-wider"
+                style={{
+                  backgroundColor: isNormal ? "#10b98120" : "#ef444420",
+                  color: isNormal ? "#10b981" : "#ef4444",
+                }}
+              >
+                {bird.mode.toUpperCase()}
+              </span>
+            </div>
           );
         })}
       </div>
@@ -192,114 +442,71 @@ function StrategyFilter({
   );
 }
 
-function PositionsTable({ positions }: { positions: Position[] }) {
-  const formatMoney = (n: number) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const formatPct = (n: number) => (n >= 0 ? '+' : '') + n.toFixed(2) + '%';
-
-  if (positions.length === 0) {
-    return (
-      <div className="bg-gradient-to-br from-[#0f0d0a] to-[#0a0908] border border-[#1f1c15] rounded-lg p-8 text-center">
-        <div className="text-[#4a4540] text-sm">No open positions</div>
-      </div>
-    );
-  }
-
+function PerformancePanel({ cats }: { cats: Record<string, CatData> }) {
   return (
-    <div className="bg-gradient-to-br from-[#0f0d0a] to-[#0a0908] border border-[#1f1c15] rounded-lg overflow-hidden">
-      {/* Desktop Table */}
-      <div className="hidden md:block">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-[#1f1c15]">
-              <th className="text-left text-[10px] tracking-[0.15em] text-[#6b6555] font-medium px-5 py-3">SYMBOL</th>
-              <th className="text-left text-[10px] tracking-[0.15em] text-[#6b6555] font-medium px-5 py-3">STRATEGY</th>
-              <th className="text-right text-[10px] tracking-[0.15em] text-[#6b6555] font-medium px-5 py-3">SHARES</th>
-              <th className="text-right text-[10px] tracking-[0.15em] text-[#6b6555] font-medium px-5 py-3">ENTRY</th>
-              <th className="text-right text-[10px] tracking-[0.15em] text-[#6b6555] font-medium px-5 py-3">CURRENT</th>
-              <th className="text-right text-[10px] tracking-[0.15em] text-[#6b6555] font-medium px-5 py-3">P/L</th>
-              <th className="text-right text-[10px] tracking-[0.15em] text-[#6b6555] font-medium px-5 py-3">RETURN</th>
-            </tr>
-          </thead>
-          <tbody>
-            {positions.map((pos, i) => (
-              <tr 
-                key={pos.id} 
-                className={`border-b border-[#151310] hover:bg-[#0d0b09] transition-colors ${
-                  i % 2 === 0 ? 'bg-[#0c0a08]' : ''
-                }`}
-              >
-                <td className="px-5 py-4">
-                  <span className="text-[#e8e4d9] font-mono font-medium">{pos.symbol}</span>
-                </td>
-                <td className="px-5 py-4">
-                  <div className="flex items-center gap-2">
-                    <span 
-                      className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: CAT_COLORS[pos.cat] }}
-                    />
-                    <span className="text-[#7a7568] text-sm capitalize">{pos.cat}</span>
-                  </div>
-                </td>
-                <td className="px-5 py-4 text-right">
-                  <span className="text-[#8a8578] font-mono text-sm">{pos.shares}</span>
-                </td>
-                <td className="px-5 py-4 text-right">
-                  <span className="text-[#6b6555] font-mono text-sm">${pos.entry_price.toFixed(2)}</span>
-                </td>
-                <td className="px-5 py-4 text-right">
-                  <span className="text-[#9a9588] font-mono text-sm">${pos.current_price.toFixed(2)}</span>
-                </td>
-                <td className="px-5 py-4 text-right">
-                  <span className={`font-mono text-sm ${pos.pnl >= 0 ? 'text-[#50c878]' : 'text-[#e74c3c]'}`}>
-                    {pos.pnl >= 0 ? '+' : ''}${formatMoney(Math.abs(pos.pnl))}
-                  </span>
-                </td>
-                <td className="px-5 py-4 text-right">
-                  <span className={`font-mono text-sm ${pos.pnl_pct >= 0 ? 'text-[#50c878]' : 'text-[#e74c3c]'}`}>
-                    {formatPct(pos.pnl_pct)}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Mobile Cards */}
-      <div className="md:hidden divide-y divide-[#1f1c15]">
-        {positions.map((pos) => (
-          <div key={pos.id} className="p-4">
-            <div className="flex justify-between items-start mb-3">
-              <div className="flex items-center gap-2">
-                <span className="text-[#e8e4d9] font-mono font-medium text-lg">{pos.symbol}</span>
-                <span 
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: CAT_COLORS[pos.cat] }}
-                />
+    <div className="bg-[#0a0a0b] border border-[#1a1a1f] rounded-lg p-5">
+      <div className="text-[#555] text-[10px] tracking-[0.2em] font-medium mb-4">PERFORMANCE</div>
+      <div className="space-y-4">
+        {Object.entries(cats).map(([name, cat]) => {
+          const p = cat.performance;
+          const total = p.wins + p.losses;
+          const winPct = total > 0 ? (p.wins / total) * 100 : 0;
+          return (
+            <div key={name}>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-sm" style={{ color: CAT_COLORS[name] }}>
+                  {CAT_EMOJI[name]} {name.charAt(0).toUpperCase() + name.slice(1)}
+                </span>
+                <span className={`font-mono text-sm ${p.total_pips >= 0 ? "text-[#50c878]" : "text-[#e74c3c]"}`}>
+                  {formatPips(p.total_pips)}
+                </span>
               </div>
-              <span className={`font-mono ${pos.pnl >= 0 ? 'text-[#50c878]' : 'text-[#e74c3c]'}`}>
-                {formatPct(pos.pnl_pct)}
-              </span>
-            </div>
-            <div className="grid grid-cols-3 gap-4 text-sm">
-              <div>
-                <div className="text-[#4a4540] text-xs mb-1">Shares</div>
-                <div className="text-[#8a8578] font-mono">{pos.shares}</div>
+              <div className="flex items-center gap-3 text-xs text-[#666] mb-1.5">
+                <span className="text-[#10b981]">{p.wins}W</span>
+                <span className="text-[#ef4444]">{p.losses}L</span>
+                <span className="text-[#f59e0b]">{p.expired}E</span>
+                <span className="text-[#555]">&middot;</span>
+                <span>{cat.trades.total} trades</span>
+                <span className={`font-mono ${cat.trades.realized_pnl >= 0 ? "text-[#50c878]" : "text-[#e74c3c]"}`}>
+                  ${cat.trades.realized_pnl.toFixed(2)}
+                </span>
               </div>
-              <div>
-                <div className="text-[#4a4540] text-xs mb-1">Entry</div>
-                <div className="text-[#6b6555] font-mono">${pos.entry_price.toFixed(2)}</div>
-              </div>
-              <div>
-                <div className="text-[#4a4540] text-xs mb-1">P/L</div>
-                <div className={`font-mono ${pos.pnl >= 0 ? 'text-[#50c878]' : 'text-[#e74c3c]'}`}>
-                  {pos.pnl >= 0 ? '+' : ''}${formatMoney(Math.abs(pos.pnl))}
+              {total > 0 && (
+                <div className="h-1 bg-[#1a1a1f] rounded-full overflow-hidden">
+                  <div className="h-full bg-[#10b981] rounded-full" style={{ width: `${winPct}%` }} />
                 </div>
-              </div>
+              )}
+              {p.shadow_count > 0 && (
+                <div className="text-[10px] text-[#555] mt-1">Shadow: {p.shadow_count} tracked</div>
+              )}
+              {p.shadow_count === 0 && p.total_signals > 0 && (
+                <div className="text-[10px] text-[#444] mt-1">No shadow data yet</div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// LOADING SKELETON
+// ══════════════════════════════════════════════════════════════════════════════
+
+function LoadingSkeleton() {
+  return (
+    <div className="min-h-screen bg-[#050506] text-[#e8e4d9]">
+      <header className="border-b border-[#1a1a1f] bg-gradient-to-b from-[#0c0a08] to-[#080706] h-16" />
+      <main className="max-w-[1400px] mx-auto p-6 space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[1, 2].map((i) => (
+            <div key={i} className="bg-[#0a0a0b] border border-[#1a1a1f] rounded-lg h-40 animate-pulse" />
+          ))}
+        </div>
+        <div className="bg-[#0a0a0b] border border-[#1a1a1f] rounded-lg h-48 animate-pulse" />
+        <div className="bg-[#0a0a0b] border border-[#1a1a1f] rounded-lg h-64 animate-pulse" />
+      </main>
     </div>
   );
 }
@@ -310,22 +517,20 @@ function PositionsTable({ positions }: { positions: Position[] }) {
 
 export default function ParadisePage() {
   const { isAuthenticated, checking } = useAuth();
-  const [selectedCat, setSelectedCat] = useState<string | null>(null);
-  const [positions, setPositions] = useState<Position[]>([]);
-  const [summary, setSummary] = useState<PortfolioSummary>({
-    cash: 100000, invested: 0, unrealized_pnl: 0, unrealized_pct: 0, realized_pnl: 0
-  });
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [error, setError] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
-      const res = await fetch(`${API_BASE}/hq/paradise/portfolio`);
+      const res = await fetch(`${API_BASE}/hq/paradise/dashboard`);
       if (res.ok) {
-        const data = await res.json();
-        setPositions(data.positions || []);
-        setSummary(data.summary || { cash: 100000, invested: 0, unrealized_pnl: 0, unrealized_pct: 0, realized_pnl: 0 });
+        setData(await res.json());
+        setError(false);
+      } else {
+        setError(true);
       }
-    } catch (err) {
-      console.error("Fetch error:", err);
+    } catch {
+      setError(true);
     }
   }, []);
 
@@ -337,53 +542,69 @@ export default function ParadisePage() {
     }
   }, [isAuthenticated, fetchData]);
 
-  const filteredPositions = selectedCat 
-    ? positions.filter(p => p.cat === selectedCat)
-    : positions;
-
-  if (checking) {
-    return <div className="min-h-screen bg-[#080706]" />;
-  }
+  if (checking) return <div className="min-h-screen bg-[#050506]" />;
 
   if (!isAuthenticated) {
-    if (typeof window !== 'undefined') {
-      window.location.href = '/hq';
-    }
+    if (typeof window !== "undefined") window.location.href = "/hq";
     return null;
   }
 
+  if (!data) return <LoadingSkeleton />;
+
   return (
-    <div className="min-h-screen bg-[#080706] text-[#e8e4d9]">
-      {/* Ambient gradient overlay */}
+    <div className="min-h-screen bg-[#050506] text-[#e8e4d9]">
       <div className="fixed inset-0 bg-gradient-to-br from-[#d4af37]/[0.02] via-transparent to-[#d4af37]/[0.01] pointer-events-none" />
-      
+
       <div className="relative">
-        <ParadiseHeader summary={summary} />
-        
-        <main className="max-w-[1400px] mx-auto p-4 sm:p-6">
-          <div className="flex flex-col lg:flex-row gap-6">
-            {/* Sidebar */}
-            <div className="lg:w-[280px] flex-shrink-0 space-y-4">
-              <AccountCard summary={summary} />
-              <StrategyFilter 
-                selected={selectedCat} 
-                onSelect={setSelectedCat}
-                positions={positions}
-              />
+        <ParadiseHeader data={data} />
+        <PricesTicker prices={data.prices} />
+
+        <main className="max-w-[1400px] mx-auto p-4 sm:p-6 space-y-6">
+          {error && (
+            <div className="bg-[#ef4444]/10 border border-[#ef4444]/20 rounded-lg px-4 py-2 text-[#ef4444] text-sm">
+              Connection issue &mdash; retrying...
             </div>
-            
-            {/* Main Content */}
-            <div className="flex-1 min-w-0">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-[#6b6555] text-[10px] tracking-[0.2em] font-medium">
-                  {selectedCat ? `${selectedCat.toUpperCase()} POSITIONS` : 'ALL POSITIONS'}
-                </h2>
-                <span className="text-[#4a4540] text-xs">
-                  {filteredPositions.length} {filteredPositions.length === 1 ? 'position' : 'positions'}
-                </span>
-              </div>
-              <PositionsTable positions={filteredPositions} />
+          )}
+
+          {/* Cat Status Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {Object.entries(data.cats).map(([name, cat]) => (
+              <CatStatusCard key={name} name={name} cat={cat} />
+            ))}
+          </div>
+
+          {/* Other Cats (Tiger, Jaguar) */}
+          {Object.keys(data.other_cats).length > 0 && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {Object.entries(data.other_cats).map(([name, info]) => (
+                <OtherCatCard key={name} name={name} info={info} />
+              ))}
             </div>
+          )}
+
+          {/* Open Positions */}
+          <div>
+            <div className="text-[#555] text-[10px] tracking-[0.2em] font-medium mb-3">
+              OPEN POSITIONS
+              {data.account.open_count > 0 && (
+                <span className="ml-2 text-[#888]">({data.account.open_count})</span>
+              )}
+            </div>
+            <PositionsTable positions={data.positions} />
+          </div>
+
+          {/* Signal Feed */}
+          <div>
+            <div className="text-[#555] text-[10px] tracking-[0.2em] font-medium mb-3">
+              SIGNAL FEED <span className="text-[#444]">last 20</span>
+            </div>
+            <SignalFeed signals={data.signals} />
+          </div>
+
+          {/* Bottom Panels */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <BirdGatesPanel birds={data.birds} />
+            <PerformancePanel cats={data.cats} />
           </div>
         </main>
       </div>

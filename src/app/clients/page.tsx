@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
+import HQNav from "@/components/hq/HQNav";
 
 const API_BASE = "https://api.guardiacontent.com";
 
@@ -12,7 +12,10 @@ interface Client {
   status: string;
   pin?: string;
   created_at?: string;
-  last_post?: string;
+  scheduled: number;
+  posted: number;
+  failed: number;
+  last_posted: string | null;
 }
 
 const TIER_COLORS: Record<string, string> = {
@@ -20,6 +23,18 @@ const TIER_COLORS: Record<string, string> = {
   pro: "#8b5cf6",
   spark: "#10b981",
 };
+
+function timeAgo(dateStr: string): string {
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  const diff = now - then;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
+}
 
 function ClientCard({ client }: { client: Client }) {
   const [showPin, setShowPin] = useState(false);
@@ -34,7 +49,6 @@ function ClientCard({ client }: { client: Client }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback for older browsers
       const input = document.createElement("input");
       input.value = lobbyUrl;
       document.body.appendChild(input);
@@ -46,16 +60,16 @@ function ClientCard({ client }: { client: Client }) {
     }
   };
 
+  const hasActivity = client.scheduled > 0 || client.posted > 0 || client.failed > 0;
+
   return (
     <div className="bg-[#0a0a0b] border border-[#1a1a1f] rounded-xl p-5 hover:border-[#2a2a2f] transition-colors">
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
-          {/* Business Name */}
           <h3 className="text-[#e8e8e8] font-semibold text-base truncate">
             {client.business_name.toUpperCase()}
           </h3>
 
-          {/* Client ID & Tier */}
           <div className="flex items-center gap-3 mt-1">
             <span className="text-[#555] text-xs font-mono">{client.id}</span>
             <span
@@ -68,11 +82,38 @@ function ClientCard({ client }: { client: Client }) {
               {client.status}
             </span>
           </div>
+
+          {/* Pipeline Stats */}
+          <div className="flex items-center gap-4 mt-3">
+            {hasActivity ? (
+              <>
+                <span className="text-[#555] text-xs font-mono">
+                  <span className="text-emerald-400">{client.scheduled}</span> scheduled
+                </span>
+                <span className="text-[#555] text-xs font-mono">
+                  <span className="text-[#888]">{client.posted}</span> posted
+                </span>
+                {client.failed > 0 && (
+                  <span className="text-[#555] text-xs font-mono">
+                    <span className="text-red-400">{client.failed}</span> failed
+                  </span>
+                )}
+              </>
+            ) : (
+              <span className="text-[#333] text-xs font-mono">No posts yet</span>
+            )}
+          </div>
+
+          {/* Last Posted */}
+          {client.last_posted && (
+            <p className="text-[#444] text-xs mt-1 font-mono">
+              Last posted {timeAgo(client.last_posted)}
+            </p>
+          )}
         </div>
 
         {/* Right side: PIN & Actions */}
         <div className="flex flex-col items-end gap-2">
-          {/* PIN */}
           {client.pin && (
             <div className="flex items-center gap-2">
               <span className="text-[#555] text-xs">PIN:</span>
@@ -88,7 +129,6 @@ function ClientCard({ client }: { client: Client }) {
             </div>
           )}
 
-          {/* Copy Link */}
           <button
             onClick={copyLink}
             className={`text-xs px-3 py-1.5 rounded-lg transition-all ${
@@ -101,13 +141,6 @@ function ClientCard({ client }: { client: Client }) {
           </button>
         </div>
       </div>
-
-      {/* Last Post */}
-      {client.last_post && (
-        <p className="text-[#444] text-xs mt-3">
-          Last post: {new Date(client.last_post).toLocaleDateString()}
-        </p>
-      )}
     </div>
   );
 }
@@ -125,14 +158,12 @@ export default function ClientsPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Group by tier
   const tiers = ["unleashed", "pro", "spark"];
   const grouped = tiers.map(tier => ({
     tier,
     clients: clients.filter(c => c.tier === tier)
   })).filter(g => g.clients.length > 0);
 
-  // Add any clients with unknown tiers
   const knownTiers = new Set(tiers);
   const otherClients = clients.filter(c => !knownTiers.has(c.tier));
   if (otherClients.length > 0) {
@@ -141,23 +172,8 @@ export default function ClientsPage() {
 
   return (
     <div className="min-h-screen bg-[#050506] text-[#e8e8e8]">
-      {/* Header */}
-      <header className="border-b border-[#1a1a1f] bg-[#0a0a0b]/50 px-6 py-4">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/hq" className="text-[#555] hover:text-[#888] text-sm transition-colors">
-              ← HQ
-            </Link>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-amber-500" />
-              <h1 className="text-amber-400 font-semibold text-sm tracking-wider">CLIENTS</h1>
-            </div>
-          </div>
-          <span className="text-[#555] text-xs font-mono">{clients.length} total</span>
-        </div>
-      </header>
+      <HQNav />
 
-      {/* Main Content */}
       <main className="max-w-4xl mx-auto p-6">
         {loading ? (
           <div className="flex items-center justify-center h-64">

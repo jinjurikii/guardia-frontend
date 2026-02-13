@@ -429,6 +429,18 @@ function AuthScreen({ mode, setupToken, setupData, onSuccess }: AuthScreenProps)
               support@guardiacontent.com
             </a>
           </p>
+
+          <div className="text-center mt-4">
+            <a
+              href="/"
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-[var(--accent)] border border-[var(--accent)]/30 rounded-xl hover:bg-[var(--accent)]/10 transition-all"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+              </svg>
+              Get Started
+            </a>
+          </div>
         </div>
       </div>
     </main>
